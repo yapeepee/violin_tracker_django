@@ -1,0 +1,443 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* ===== 變量定義 ===== */
+    :root {
+        /* 顏色系統 */
+        --color-violin: #8B4513;
+        /* 主色：溫暖的深褐色，像小提琴 */
+        --color-brass: #DAA520;
+        /* 次要色：金色，像銅管樂器 */
+        --color-curtain: #800020;
+        /* 強調色：酒紅色，像天鵝絨舞台簾幕 */
+        --color-score: #FFF8E7;
+        /* 背景色：溫暖的米色，像老琴譜 */
+        --color-piano: #2F1810;
+        /* 文字色：深木色，像古董鋼琴 */
+
+        /* 字體系統 */
+        --font-serif: "Baskerville", "Times New Roman", serif;
+        --font-sans: "Optima", "Segoe UI", sans-serif;
+
+        /* 間距系統 */
+        --spacing-xs: 0.5rem;
+        --spacing-sm: 1rem;
+        --spacing-md: 1.5rem;
+        --spacing-lg: 2rem;
+
+        /* 陰影系統 */
+        --shadow-sm: 0 2px 4px rgba(139, 69, 19, 0.1);
+        --shadow-md: 0 4px 8px rgba(139, 69, 19, 0.15);
+        --shadow-lg: 0 8px 16px rgba(139, 69, 19, 0.2);
+
+        /* 圓角系統 */
+        --radius-sm: 6px;
+        --radius-md: 12px;
+        --radius-lg: 25px;
+
+        /* 動畫系統 */
+        --transition-fast: 0.2s ease;
+        --transition-normal: 0.3s ease;
+        --transition-slow: 0.5s ease;
+    }
+
+    /* ===== 基礎樣式 ===== */
+    body {
+        background-color: var(--color-score);
+        font-family: var(--font-sans);
+        color: var(--color-piano);
+    }
+
+    /* 排版系統 */
+    .text-serif {
+        font-family: var(--font-serif);
+    }
+
+    .text-sans {
+        font-family: var(--font-sans);
+    }
+
+    /* ===== 組件樣式 ===== */
+    /* 標題組件 */
+    .page-title {
+        position: relative;
+        text-align: center;
+        margin: var(--spacing-lg) 0;
+        padding-bottom: var(--spacing-sm);
+        font-size: 2.5rem;
+        color: var(--color-violin);
+        font-family: var(--font-serif);
+    }
+
+    .page-title::after {
+        content: "♪ ♫ ♪";
+        display: block;
+        font-size: 1.5rem;
+        color: var(--color-brass);
+        margin-top: var(--spacing-xs);
+    }
+
+    /* 卡片組件 */
+    .card {
+        border: none;
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, #fff 0%, var(--color-score) 100%);
+        box-shadow: var(--shadow-md);
+        transition: transform var(--transition-normal),
+            box-shadow var(--transition-normal);
+        border-top: 3px solid var(--color-violin);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card-body {
+        padding: var(--spacing-lg);
+    }
+
+    .card-title {
+        font-family: var(--font-serif);
+        color: var(--color-violin);
+        font-size: 1.3rem;
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-xs);
+        border-bottom: 2px solid var(--color-brass);
+        position: relative;
+    }
+
+    .card-title::before {
+        content: "♪";
+        position: absolute;
+        left: -1.5rem;
+        color: var(--color-brass);
+        font-size: 1.2rem;
+    }
+
+    /* 統計卡片 */
+    .stat-card {
+        text-align: center;
+        padding: var(--spacing-md);
+        background: linear-gradient(135deg, #fff 0%, var(--color-score) 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: "♫";
+        position: absolute;
+        top: -1rem;
+        right: -1rem;
+        font-size: 4rem;
+        color: rgba(139, 69, 19, 0.1);
+        transform: rotate(15deg);
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--color-violin);
+        margin: var(--spacing-xs) 0;
+        font-family: var(--font-serif);
+    }
+
+    .stat-label {
+        color: var(--color-piano);
+        font-size: 1rem;
+        font-family: var(--font-serif);
+        position: relative;
+        display: inline-block;
+    }
+
+    .stat-label::after {
+        content: "";
+        display: block;
+        width: 50%;
+        height: 2px;
+        background: var(--color-brass);
+        margin: var(--spacing-xs) auto;
+    }
+
+    /* 按鈕組件 */
+    .btn {
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xs) var(--spacing-md);
+        font-family: var(--font-serif);
+        transition: all var(--transition-normal);
+    }
+
+    /* 首頁按鈕 */
+    .home-button {
+        position: relative;
+        font-family: var(--font-serif);
+        color: var(--color-violin);
+        border: 2px solid var(--color-violin);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xs) var(--spacing-md);
+        transition: all var(--transition-normal);
+        background: linear-gradient(to right, var(--color-violin) 50%, transparent 50%);
+        background-size: 200% 100%;
+        background-position: right bottom;
+        text-decoration: none;
+    }
+
+    .home-button:hover {
+        background-position: left bottom;
+        color: var(--color-score);
+    }
+
+    .home-button i {
+        margin-right: var(--spacing-xs);
+        transition: transform var(--transition-normal);
+    }
+
+    .home-button:hover i {
+        transform: translateX(-3px);
+    }
+
+    .home-button::after {
+        content: "♪";
+        position: absolute;
+        right: -10px;
+        top: -10px;
+        font-size: 1.2rem;
+        color: var(--color-brass);
+        opacity: 0;
+        transition: all var(--transition-normal);
+    }
+
+    .home-button:hover::after {
+        opacity: 1;
+        transform: rotate(15deg);
+    }
+
+    /* 表單組件 */
+    .date-range-form {
+        background-color: #fff;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        border-top: 3px solid var(--color-brass);
+    }
+
+    .form-control {
+        border-radius: var(--radius-lg);
+        border: 2px solid var(--color-brass);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-family: var(--font-sans);
+        background-color: var(--color-score);
+    }
+
+    .form-control:focus {
+        border-color: var(--color-violin);
+        box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.2);
+    }
+
+    /* 圖表容器 */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: var(--spacing-sm) 0;
+        padding: var(--spacing-sm);
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: var(--radius-sm);
+    }
+
+    /* 進度條 */
+    .progress {
+        height: 12px;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-score);
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        background-color: var(--color-brass);
+        transition: width 0.6s ease;
+    }
+
+    /* 裝飾元素 */
+    .decoration {
+        position: fixed;
+        opacity: 0.1;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    .decoration-1 {
+        top: 10%;
+        left: 5%;
+        font-size: 5rem;
+        transform: rotate(-15deg);
+    }
+
+    .decoration-2 {
+        bottom: 10%;
+        right: 5%;
+        font-size: 6rem;
+        transform: rotate(15deg);
+    }
+</style>
+
+<!-- 裝飾音符 -->
+<div class="decoration decoration-1">♪</div>
+<div class="decoration decoration-2">♫</div>
+
+<div class="container mt-4">
+    <!-- 頁面標題區 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="/" class="home-button">
+            <i class="fas fa-arrow-left"></i> 返回首頁
+        </a>
+    </div>
+
+    <h1 class="page-title">{{ student_name }}的練習分析</h1>
+
+    <!-- 日期選擇區 -->
+    <div class="date-range-form mb-4">
+        <form id="dateRangeForm" class="d-flex align-items-center flex-wrap justify-content-center">
+            <div class="btn-group me-3 mb-2 mb-md-0">
+                <button type="button" class="btn btn-outline-secondary" data-days="7">最近一週</button>
+                <button type="button" class="btn btn-outline-secondary" data-days="30">最近一月</button>
+                <button type="button" class="btn btn-outline-secondary" data-days="90">最近三月</button>
+                <button type="button" class="btn btn-outline-secondary" data-days="180">最近半年</button>
+            </div>
+            <div class="d-flex align-items-center flex-wrap">
+                <input type="date" id="startDate" class="form-control me-2 mb-2 mb-md-0" style="width: 150px;">
+                <span class="me-2 mb-2 mb-md-0">至</span>
+                <input type="date" id="endDate" class="form-control me-2 mb-2 mb-md-0" style="width: 150px;">
+                <button type="submit" class="btn btn-outline-primary mb-2 mb-md-0">更新</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 基本統計區 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-card">
+                <div class="stat-label">總練習時間</div>
+                <div class="stat-value">{{ stats.total_practice_time|default:0 }}<small class="ms-1">分鐘</small></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-card">
+                <div class="stat-label">練習次數</div>
+                <div class="stat-value">{{ stats.total_sessions|default:0 }}<small class="ms-1">次</small></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-card">
+                <div class="stat-label">平均評分</div>
+                <div class="stat-value">{{ stats.avg_rating|floatformat:1 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-card">
+                <div class="stat-label">平均每次時長</div>
+                <div class="stat-value">{{ stats.avg_session_length|floatformat:0 }}<small class="ms-1">分鐘</small></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖表區 -->
+    <div class="row g-4">
+        <!-- 每週練習總時數 -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">每週練習總時數</h5>
+                    <div class="chart-container">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 樂曲練習時間分布 -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">樂曲練習時間分布</h5>
+                    <div class="chart-container">
+                        <canvas id="pieceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近練習趨勢 -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">最近練習趨勢</h5>
+                    <div class="chart-container">
+                        <canvas id="recentTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 練習重點分析 -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">練習重點分析</h5>
+                    <div class="chart-container">
+                        <canvas id="focusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 休息日統計 -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">休息日統計</h5>
+                    <div id="restDayStats" class="text-center mb-3">
+                        <div class="row g-3">
+                            <div class="col-4">
+                                <div class="stat-label">總天數</div>
+                                <div class="stat-value" id="totalDays">-</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-label">練習天數</div>
+                                <div class="stat-value" id="practiceDays">-</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-label">休息天數</div>
+                                <div class="stat-value" id="restDays">-</div>
+                            </div>
+                        </div>
+                        <div class="progress mt-3" style="height: 10px;">
+                            <div id="practiceRatio" class="progress-bar bg-primary" role="progressbar"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="restDayChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 樂曲切換頻率 -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">樂曲切換頻率</h5>
+                    <div class="chart-container">
+                        <canvas id="switchingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module" src="{% static 'js/app.js' %}"></script>
+{% endblock %}

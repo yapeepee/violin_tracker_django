@@ -1,0 +1,173 @@
+/* 全局樣式 */
+:root {
+    --primary-color: #6a4c93;
+    --secondary-color: #8ac4d0;
+    --background-color: #f7f9fc;
+    --text-color: #2c3e50;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* 標題樣式 */
+h1 {
+    color: var(--primary-color);
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 表單樣式 */
+form {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+input, select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #e1e8ed;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(106, 76, 147, 0.1);
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    grid-column: 1 / -1;
+}
+
+button:hover {
+    background-color: #563a7a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 圖表容器樣式 */
+.chart-container {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-top: 2rem;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .container {
+        margin: 1rem auto;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    form {
+        grid-template-columns: 1fr;
+        padding: 1.5rem;
+    }
+}
+
+/* 動畫效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.container > * {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* 美化選擇框 */
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
+}
+
+/* 輸入框占位符樣式 */
+::placeholder {
+    color: #a0aec0;
+    opacity: 1;
+}
+
+/* 漸變背景 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(106, 76, 147, 0.1) 0%, rgba(138, 196, 208, 0.1) 100%);
+    z-index: -1;
+}
+
+/* 表單分組樣式 */
+.form-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 評分星星樣式 */
+select[name="rating"] option {
+    padding: 0.5rem;
+}
+
+/* 圖表標題樣式 */
+.chart-container h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
