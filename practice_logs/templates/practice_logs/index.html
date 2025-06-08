@@ -31,14 +31,14 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>🎵 練習時間統計</h2>
             <div id="analyticsLink">
-                <a href="#" class="btn btn-primary" onclick="goToAnalytics()" style="display: none;">
+                <a href="#" class="btn btn-primary" onclick="goToAnalytics()">
                     查看詳細分析 📊
                 </a>
             </div>
         </div>
         <div id="studentInfo" class="student-info" style="text-align: center; margin-bottom: 1rem;"></div>
         <div class="chart-wrapper">
-            <canvas id="practiceChart"></canvas>
+            <canvas id="weeklyChart"></canvas>
         </div>
     </div>
 </div>
@@ -49,115 +49,19 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script type="module">
+    import { loadWeeklyData } from '{% static "js/charts/charts.js" %}';
+    import { setupChartDefaults } from '{% static "js/charts/config.js" %}';
+
     function goToAnalytics() {
         const studentName = document.getElementById('studentName').value;
         if (studentName) {
             window.location.href = `/analytics/${encodeURIComponent(studentName)}/`;
+        } else {
+            alert('請先輸入學生姓名');
         }
     }
-
-    async function loadChartData(studentName) {
-        try {
-            const response = await fetch(`/api/chart-data?student_name=${encodeURIComponent(studentName)}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-
-            // 更新學生資訊和圖表容器
-            let chartHtml = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>🎵 練習時間統計</h2>
-                    <div id="analyticsLink">
-                        <a href="#" class="btn btn-primary" onclick="goToAnalytics()" 
-                           style="display: ${data.length > 0 ? 'inline-block' : 'none'}">
-                            查看詳細分析 📊
-                        </a>
-                    </div>
-                </div>
-            `;
-
-            if (!data || data.length === 0) {
-                chartHtml += `<p style="text-align: center; color: #666;">目前沒有練習記錄</p>`;
-                document.querySelector('.chart-container').innerHTML = chartHtml;
-                return;
-            }
-
-            // 添加學生資訊
-            const totalMinutes = data.reduce((sum, item) => sum + item.total_minutes, 0);
-            chartHtml += `
-                <div id="studentInfo" class="student-info" style="text-align: center; margin-bottom: 1rem;">
-                    <h3>${studentName} 的練習統計</h3>
-                    <p>總練習時間：${totalMinutes} 分鐘</p>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="practiceChart"></canvas>
-                </div>
-            `;
-
-            document.querySelector('.chart-container').innerHTML = chartHtml;
-
-            // 創建圖表
-            const ctx = document.getElementById('practiceChart');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(item => item.piece),
-                    datasets: [{
-                        label: '練習時間（分鐘）',
-                        data: data.map(item => item.total_minutes),
-                        backgroundColor: 'rgba(124, 77, 255, 0.2)',
-                        borderColor: 'rgba(124, 77, 255, 1)',
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        hoverBackgroundColor: 'rgba(124, 77, 255, 0.4)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                font: {
-                                    family: "'Noto Sans TC', sans-serif",
-                                    size: 14
-                                },
-                                padding: 20
-                            }
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Error loading chart data:', error);
-            document.querySelector('.chart-container').innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>🎵 練習時間統計</h2>
-                    <div id="analyticsLink">
-                        <a href="#" class="btn btn-primary" onclick="goToAnalytics()" style="display: none;">
-                            查看詳細分析 📊
-                        </a>
-                    </div>
-                </div>
-                <p style="text-align: center; color: #666;">載入資料時發生錯誤</p>
-            `;
-        }
-    }
+    window.goToAnalytics = goToAnalytics;
 
     // 當表單提交時更新圖表
     document.getElementById('practiceForm').addEventListener('submit', function () {
@@ -167,13 +71,14 @@
 
     // 頁面載入時檢查是否有當前學生
     document.addEventListener('DOMContentLoaded', function () {
+        setupChartDefaults();
         const currentStudent = window.INITIAL_STUDENT === "null" ? null : window.INITIAL_STUDENT;
         const savedStudent = localStorage.getItem('currentStudent');
         const studentToLoad = currentStudent || savedStudent;
 
         if (studentToLoad) {
             document.getElementById('studentName').value = studentToLoad;
-            loadChartData(studentToLoad);
+            loadWeeklyData(studentToLoad);
         }
     });
 </script>

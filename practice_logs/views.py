@@ -15,9 +15,22 @@ from .models import PracticeLog
 import logging
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
+from functools import wraps
 
 # 設置日誌記錄器
 logger = logging.getLogger(__name__)
+
+def api_view(f):
+    """API視圖裝飾器，用於處理API響應和錯誤。"""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            response = f(*args, **kwargs)
+            return response
+        except Exception as e:
+            logger.error(f"API錯誤: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=500)
+    return wrapper
 
 # 常量定義
 DEFAULT_DAYS = 30  # 預設顯示最近30天的數據
@@ -65,27 +78,6 @@ def get_date_range(request):
         start_date = end_date - timedelta(days=DEFAULT_DAYS)
     
     return start_date, end_date
-
-def api_view(func):
-    """
-    API視圖的裝飾器，統一處理異常並返回適當的錯誤響應。
-    
-    Args:
-        func: 要裝飾的視圖函數
-    
-    Returns:
-        function: 裝飾後的函數
-    """
-    def wrapper(request, *args, **kwargs):
-        try:
-            return func(request, *args, **kwargs)
-        except Exception as e:
-            logger.error(f"視圖 {func.__name__} 發生錯誤: {str(e)}")
-            return JsonResponse({
-                'error': str(e),
-                'error_type': e.__class__.__name__
-            }, status=500)
-    return wrapper
 
 # ============ 頁面視圖 ============
 

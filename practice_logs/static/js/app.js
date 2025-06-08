@@ -1,5 +1,5 @@
 import { setupChartDefaults } from './charts/config.js';
-import { setupDatePicker, handleDateRangeSubmit, handleQuickDateSelect } from './utils.js';
+import { setupDatePicker, handleDateRangeSubmit, handleQuickDateSelect, loadAllCharts } from './utils.js';
 import {
     loadWeeklyData,
     loadPieceData,
