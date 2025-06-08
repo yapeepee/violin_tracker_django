@@ -439,5 +439,45 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="module" src="{% static 'js/app.js' %}"></script>
+<script src="{% static 'practice_logs/js/utils.js' %}"></script>
+<script src="{% static 'practice_logs/js/config.js' %}"></script>
+<script>
+    // 先檢查 charts.js 是否為模組格式
+    // 如果是，需要移除 export 關鍵字，改為傳統函數宣告
+</script>
+<script src="{% static 'practice_logs/js/charts.js' %}"></script>
+<script>
+    (function () {
+        'use strict';
+
+        const studentName = '{{ student_name|escapejs }}'; // 防止 XSS
+
+        function initAnalyticsCharts() {
+            // 檢查函數是否存在
+            if (typeof loadWeeklyData === 'function') {
+                loadWeeklyData(studentName);
+            }
+            if (typeof loadPieceData === 'function') {
+                loadPieceData(studentName);
+            }
+            if (typeof loadRecentTrendData === 'function') {
+                loadRecentTrendData(studentName);
+            }
+            if (typeof loadFocusStats === 'function') {
+                loadFocusStats(studentName);
+            }
+            if (typeof loadRestDayStats === 'function') {
+                loadRestDayStats(studentName);
+            }
+            if (typeof loadSwitchingData === 'function') {
+                loadSwitchingData(studentName);
+            }
+        }
+
+        // 等待頁面載入
+        document.addEventListener('DOMContentLoaded', function () {
+            initAnalyticsCharts();
+        });
+    })();
+</script>
 {% endblock %}

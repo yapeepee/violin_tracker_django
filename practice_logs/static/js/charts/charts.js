@@ -2,10 +2,10 @@ import { chartColors, commonChartOptions } from './config.js';
 import { formatDate, handleError } from '../utils.js';
 
 // 存儲所有圖表實例
-export const charts = {};
+const charts = {};
 
 // 載入每週練習數據
-export async function loadWeeklyData(studentName) {
+async function loadWeeklyData(studentName) {
     try {
         const params = new URLSearchParams(window.location.search);
         params.set('student_name', studentName);
