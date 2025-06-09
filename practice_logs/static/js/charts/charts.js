@@ -4,7 +4,19 @@ import { formatDate, handleError } from '../utils.js';
 // 存儲所有圖表實例
 const charts = {};
 
-// 顯示載入狀態
+// 通用圖表載入函數
+async function loadChartData(chartId, fetchData, createChart) {
+    try {
+        showLoading(chartId);
+        const data = await fetchData();
+        await createChart(data);
+        hideLoading(chartId);
+    } catch (error) {
+        handleError(chartId, error);
+    }
+}
+
+// 載入狀態管理
 function showLoading(chartId) {
     const canvas = document.getElementById(chartId);
     if (!canvas) return;
@@ -12,7 +24,6 @@ function showLoading(chartId) {
     canvas.style.opacity = '0.5';
     const container = canvas.parentElement;
     
-    // 創建或更新載入指示器
     let loader = container.querySelector('.chart-loader');
     if (!loader) {
         loader = document.createElement('div');
@@ -35,7 +46,6 @@ function showLoading(chartId) {
     loader.style.display = 'block';
 }
 
-// 隱藏載入狀態
 function hideLoading(chartId) {
     const canvas = document.getElementById(chartId);
     if (!canvas) return;
@@ -47,30 +57,94 @@ function hideLoading(chartId) {
     }
 }
 
-// 通用的圖表載入錯誤處理
-async function loadChartData(chartId, fetchFn, createChartFn) {
-    showLoading(chartId);
-    try {
-        const data = await fetchFn();
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-            throw new Error('無數據');
+// 圖表配置生成器
+function createChartConfig(type, labels, datasets, customOptions = {}) {
+    return {
+        type,
+        data: { labels, datasets },
+        options: {
+            ...commonChartOptions,
+            ...customOptions
         }
-        await createChartFn(data);
-        hideLoading(chartId);
-    } catch (error) {
-        hideLoading(chartId);
-        handleError(chartId, error);
-        
-        // 顯示友好的錯誤訊息
-        const canvas = document.getElementById(chartId);
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#666';
-            ctx.textAlign = 'center';
-            ctx.font = '14px Arial';
-            ctx.fillText(error.message === '無數據' ? '暫無數據' : '載入失敗，請稍後重試', canvas.width / 2, canvas.height / 2);
-        }
+    };
+}
+
+// 統計信息更新
+function updateStatsInfo(response) {
+    const statsInfo = document.getElementById('focusStatsInfo');
+    if (!statsInfo) return;
+
+    // 優先使用 API 回傳的聚合欄位
+    const total_time = response.total_minutes ?? 0;
+    const avg_rating = response.avg_rating ?? 0;
+    const practice_count = response.total_sessions ?? 0;
+
+    // 找出主要練習重點
+    const data = response.data || [];
+    const mainFocus = data.length > 0 
+        ? data.reduce((a, b) => (b.percentage || 0) > (a.percentage || 0) ? b : a) 
+        : { focus_display: '無數據', percentage: 0 };
+
+    statsInfo.innerHTML = `
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <h5>總練習時間</h5>
+                    <p>${total_time} 分鐘</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <h5>平均評分</h5>
+                    <p>${avg_rating.toFixed(1)} 分</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <h5>練習次數</h5>
+                    <p>${practice_count} 次</p>
+                </div>
+            </div>
+            <div class="col-12 mt-3">
+                <div class="stat-item">
+                    <h5>主要練習重點</h5>
+                    <p>${mainFocus.focus_display} (${mainFocus.percentage || 0}%)</p>
+                </div>
+            </div>
+        </div>
+    `;
+    statsInfo.classList.remove('d-none');
+    setTimeout(() => statsInfo.classList.add('show'), 100);
+}
+
+// 圖表數據轉換器
+function transformChartData(data, type) {
+    switch (type) {
+        case 'weekly':
+            return {
+                labels: data.map(d => formatDate(new Date(d.date))),
+                datasets: [{
+                    label: '練習時間（分鐘）',
+                    data: data.map(d => d.total_minutes),
+                    borderColor: chartColors.primary,
+                    backgroundColor: `${chartColors.primary}30`,
+                    fill: true,
+                    tension: 0.4,
+                    yAxisID: 'y'
+                }]
+            };
+        case 'piece':
+            return {
+                labels: data.map(d => d.piece),
+                datasets: [{
+                    label: '練習時間比例（%）',
+                    data: data.map(d => d.dimensions.time_investment),
+                    backgroundColor: `${chartColors.primary}cc`
+                }]
+            };
+        // 可以根據需要添加更多類型
+        default:
+            return null;
     }
 }
 
@@ -82,131 +156,28 @@ export async function loadWeeklyData(studentName) {
         const params = new URLSearchParams(window.location.search);
         params.set('student_name', studentName);
         const response = await fetch(`/api/weekly-practice/?${params}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return response.json();
     };
 
     const createChart = async (data) => {
-        if (charts.weeklyChart) {
-            charts.weeklyChart.destroy();
-        }
-
-        const studentInfoElement = document.getElementById('studentInfo');
-        if (studentInfoElement && studentName) {
-            studentInfoElement.textContent = `學生：${studentName}`;
-        }
-
-        // 計算每天的練習次數
-        const practiceCountByDate = {};
-        data.forEach(d => {
-            const date = formatDate(new Date(d.date));
-            practiceCountByDate[date] = (practiceCountByDate[date] || 0) + 1;
-        });
-
-        charts.weeklyChart = new Chart(document.getElementById('weeklyChart'), {
-            type: 'line',
-            data: {
-                labels: data.map(d => formatDate(new Date(d.date))),
-                datasets: [{
-                    label: '練習時間（分鐘）',
-                    data: data.map(d => d.total_minutes),
-                    borderColor: chartColors.primary,
-                    backgroundColor: `${chartColors.primary}30`,
-                    fill: true,
-                    tension: 0.4,
-                    yAxisID: 'y',
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }, {
-                    label: '練習次數',
-                    data: data.map(d => practiceCountByDate[formatDate(new Date(d.date))]),
-                    borderColor: chartColors.secondary,
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    yAxisID: 'y1',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                ...commonChartOptions,
+        if (charts.weeklyChart) charts.weeklyChart.destroy();
+        
+        const chartData = transformChartData(data, 'weekly');
+        charts.weeklyChart = new Chart(
+            document.getElementById(chartId),
+            createChartConfig('line', chartData.labels, chartData.datasets, {
                 scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    },
                     y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
+                        beginAtZero: true,
                         title: {
                             display: true,
-                            text: '練習時間（分鐘）',
-                            color: chartColors.primary,
-                            font: {
-                                size: 13,
-                                weight: 'bold'
-                            }
-                        },
-                        grid: {
-                            color: `${chartColors.primary}15`
-                        },
-                        ticks: {
-                            color: chartColors.primary
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: '練習次數',
-                            color: chartColors.secondary,
-                            font: {
-                                size: 13,
-                                weight: 'bold'
-                            }
-                        },
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: chartColors.secondary,
-                            stepSize: 1
-                        }
-                    }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    axis: 'x',
-                    intersect: false
-                },
-                plugins: {
-                    ...commonChartOptions.plugins,
-                    tooltip: {
-                        ...commonChartOptions.plugins.tooltip,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += context.parsed.y;
-                                }
-                                return label;
-                            }
+                            text: '練習時間（分鐘）'
                         }
                     }
                 }
-            }
-        });
+            })
+        );
     };
 
     await loadChartData(chartId, fetchData, createChart);
@@ -223,7 +194,9 @@ export async function loadPieceData(studentName) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        const data = await response.json();
+        console.log('樂曲練習數據:', data);  // 添加日誌
+        return data;
     };
 
     const createChart = async (data) => {
@@ -231,20 +204,17 @@ export async function loadPieceData(studentName) {
             charts.pieceChart.destroy();
         }
 
+        console.log('正在創建樂曲練習圖表，數據:', data);  // 添加日誌
         // 按練習時間排序數據
-        data.sort((a, b) => b.total_minutes - a.total_minutes);
-
-        // 計算評分的縮放比例（將評分轉換為相對於最大練習時間的比例）
-        const maxMinutes = Math.max(...data.map(d => d.total_minutes));
-        const scaledRatings = data.map(d => (d.avg_rating / 5) * maxMinutes);
+        data.sort((a, b) => b.dimensions.time_investment - a.dimensions.time_investment);
 
         charts.pieceChart = new Chart(document.getElementById(chartId), {
             type: 'bar',
             data: {
                 labels: data.map(d => d.piece),
                 datasets: [{
-                    label: '練習時間（分鐘）',
-                    data: data.map(d => d.total_minutes),
+                    label: '練習時間比例（%）',
+                    data: data.map(d => d.dimensions.time_investment),
                     backgroundColor: `${chartColors.primary}cc`,
                     borderColor: chartColors.primary,
                     borderWidth: 1,
@@ -252,8 +222,8 @@ export async function loadPieceData(studentName) {
                     barThickness: 16,
                     minBarLength: 10
                 }, {
-                    label: '評分（相對比例）',
-                    data: scaledRatings,
+                    label: '平均評分',
+                    data: data.map(d => d.avg_rating),
                     backgroundColor: `${chartColors.secondary}cc`,
                     borderColor: chartColors.secondary,
                     borderWidth: 1,
@@ -270,7 +240,7 @@ export async function loadPieceData(studentName) {
                         position: 'top',
                         title: {
                             display: true,
-                            text: '練習時間（分鐘）',
+                            text: '練習時間比例（%）/ 評分',
                             color: chartColors.primary,
                             font: {
                                 size: 13,
@@ -310,44 +280,19 @@ export async function loadPieceData(studentName) {
                                 }
                                 if (context.parsed.x !== null) {
                                     if (context.datasetIndex === 0) {
-                                        label += `${context.parsed.x} 分鐘`;
+                                        label += `${context.parsed.x.toFixed(1)}%`;
+                                        // 添加練習次數信息
+                                        const piece = data[context.dataIndex];
+                                        label += ` (${piece.practice_count}次)`;
                                     } else {
-                                        // 將縮放後的值轉換回原始評分
-                                        const originalRating = (context.parsed.x / maxMinutes * 5).toFixed(1);
-                                        label += `${originalRating} 分`;
+                                        label += `${context.parsed.x.toFixed(1)}分`;
                                     }
                                 }
                                 return label;
-                            },
-                            title: function(tooltipItems) {
-                                // 在工具提示中顯示完整的曲目名稱
-                                return data[tooltipItems[0].dataIndex].piece;
                             }
                         }
-                    },
-                    legend: {
-                        position: 'top',
-                        align: 'start',
-                        labels: {
-                            boxWidth: 15,
-                            usePointStyle: true,
-                            pointStyle: 'rect',
-                            padding: 15
-                        }
                     }
-                },
-                layout: {
-                    padding: {
-                        top: 30,  // 為頂部圖例留出空間
-                        right: 20
-                    }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeInOutQuart'
-                },
-                barPercentage: 0.8,  // 控制條形組的寬度
-                categoryPercentage: 0.9  // 控制組內條形的間距
+                }
             }
         });
     };
@@ -429,48 +374,179 @@ export async function loadRecentTrendData(studentName) {
 // 載入練習重點分析
 export async function loadFocusStats(studentName) {
     const chartId = 'focusChart';
+    const pieceSelector = document.getElementById('pieceSelector');
+    const statsInfo = document.getElementById('focusStatsInfo');
+    
+    // 載入曲目列表
+    const loadPieceOptions = async () => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('student_name', studentName);
+        const response = await fetch(`/api/student-pieces/?${params}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const pieces = await response.json();
+        
+        // 清空現有選項
+        pieceSelector.innerHTML = '';
+        
+        // 添加"整體分析"選項
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.innerHTML = `
+            <div class="d-flex align-items-center">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItbXVzaWMiPjxwYXRoIGQ9Ik05IDIwYTIgMiAwIDEgMS00IDAgMiAyIDAgMCAxIDQgMHoiPjwvcGF0aD48cGF0aCBkPSJNMTkgMTZhMiAyIDAgMSAxLTQgMCAyIDIgMCAwIDEgNCAweiI+PC9wYXRoPjxwYXRoIGQ9Ik05IDE4VjVsOC0ydjEzIj48L3BhdGg+PC9zdmc+" 
+                    class="composer-avatar me-2" 
+                    width="24" 
+                    height="24"
+                    alt="整體分析">
+                <span>整體分析</span>
+            </div>
+        `;
+        pieceSelector.appendChild(defaultOption);
+        
+        // 添加曲目選項
+        pieces.forEach(piece => {
+            const option = document.createElement('option');
+            option.value = piece.piece;
+            option.innerHTML = `🎵 ${piece.piece} (${piece.percentage}%)`;
+            pieceSelector.appendChild(option);
+        });
+    };
     
     const fetchData = async () => {
         const params = new URLSearchParams(window.location.search);
         params.set('student_name', studentName);
+        const selectedPiece = pieceSelector.value;
+        if (selectedPiece) {
+            params.set('piece', selectedPiece);
+        }
         const response = await fetch(`/api/focus-stats/?${params}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        const jsonResponse = await response.json();
+        
+        // 確保數據結構完整
+        if (!jsonResponse.data || !Array.isArray(jsonResponse.data)) {
+            throw new Error('無效的數據格式');
+        }
+        
+        return jsonResponse;
     };
 
-    const createChart = async (data) => {
+    const createChart = async (response) => {
         if (charts.focusChart) {
             charts.focusChart.destroy();
         }
 
-        charts.focusChart = new Chart(document.getElementById(chartId), {
+        const data = response.data;
+        
+        // 確保數據非空
+        if (data.length === 0) {
+            throw new Error('暫無練習數據');
+        }
+        
+        // 更新統計信息
+        updateStatsInfo(response);
+
+        // 創建圖表配置
+        const chartConfig = {
             type: 'radar',
             data: {
-                labels: data.map(d => d.focus_display),
+                labels: data.map(d => d.focus_display || '未知'),
                 datasets: [{
                     label: '練習時間分布',
-                    data: data.map(d => d.total_minutes),
+                    data: data.map(d => d.percentage || 0),
                     backgroundColor: `${chartColors.primary}40`,
                     borderColor: chartColors.primary,
-                    borderWidth: 2
+                    borderWidth: 2,
+                    pointBackgroundColor: chartColors.primary,
+                    pointHoverBackgroundColor: chartColors.primary,
+                    pointHoverBorderColor: '#fff',
+                    pointHoverRadius: 8,
+                    pointHoverBorderWidth: 2
                 }]
             },
             options: {
                 ...commonChartOptions,
+                animation: {
+                    duration: 800,
+                    easing: 'easeInOutQuart'
+                },
                 scales: {
                     r: {
                         beginAtZero: true,
                         grid: {
                             color: 'rgba(139, 69, 19, 0.1)'
+                        },
+                        ticks: {
+                            callback: value => `${value}%`,
+                            backdropColor: 'rgba(255, 255, 255, 0.8)'
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            }
                         }
+                    }
+                },
+                plugins: {
+                    ...commonChartOptions.plugins,
+                    title: {
+                        display: true,
+                        text: `${response.piece || '整體'} - 練習重點分布`,
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: 20
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const focus = data[context.dataIndex] || {};
+                                return [
+                                    `練習時間: ${focus.percentage || 0}%`,
+                                    `總時間: ${focus.total_minutes || 0} 分鐘`,
+                                    `平均評分: ${focus.avg_rating || 0}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    line: {
+                        tension: 0.4
                     }
                 }
             }
-        });
+        };
+
+        charts.focusChart = new Chart(document.getElementById(chartId), chartConfig);
     };
 
+    // 獲取隨機音樂表情符號
+    const getRandomMusicEmoji = () => {
+        const emojis = ['🎵', '🎶', '🎼', '🎹', '🎻', '🎺', '🎸'];
+        return emojis[Math.floor(Math.random() * emojis.length)];
+    };
+
+    // 初始化曲目選擇器
+    await loadPieceOptions();
+    
+    // 添加選擇器變更事件
+    pieceSelector.addEventListener('change', () => {
+        statsInfo.classList.remove('show');
+        setTimeout(() => {
+            loadChartData(chartId, fetchData, createChart);
+            pieceSelector.classList.add('highlight-piece');
+            setTimeout(() => pieceSelector.classList.remove('highlight-piece'), 500);
+        }, 300);
+    });
+
+    // 載入初始數據
     await loadChartData(chartId, fetchData, createChart);
 }
 
@@ -633,7 +709,9 @@ export async function loadTimeEffectAnalysis(studentName) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        const data = await response.json();
+        console.log('時間效果分析數據:', data);  // 添加日誌
+        return data;
     };
 
     const createChart = async (data) => {
@@ -641,8 +719,9 @@ export async function loadTimeEffectAnalysis(studentName) {
             charts.timeEffectChart.destroy();
         }
 
+        console.log('正在創建時間效果分析圖表，數據:', data);
         // 按練習時間排序
-        data.sort((a, b) => b.total_minutes - a.total_minutes);
+        data.sort((a, b) => b.dimensions.time_investment - a.dimensions.time_investment);
         const topPieces = data.slice(0, 8); // 只顯示前8首曲子
 
         charts.timeEffectChart = new Chart(document.getElementById(chartId), {
@@ -651,19 +730,18 @@ export async function loadTimeEffectAnalysis(studentName) {
                 datasets: [{
                     label: '練習效果分析',
                     data: topPieces.map(d => ({
-                        x: d.total_minutes,
+                        x: d.dimensions.time_investment,
                         y: d.avg_rating,
                         piece: d.piece,
-                        efficiency: d.efficiency,
-                        progress: d.score_progress
+                        practice_count: d.practice_count,
+                        score_progress: d.dimensions.score_progress
                     })),
                     backgroundColor: topPieces.map(d => {
-                        // 根據效率等級設定顏色
-                        switch(d.efficiency_level) {
-                            case 'high': return chartColors.success + 'cc';
-                            case 'medium': return chartColors.primary + 'cc';
-                            default: return chartColors.secondary + 'cc';
-                        }
+                        // 根據進步程度設定顏色
+                        const progress = d.dimensions.score_progress;
+                        if (progress > 10) return chartColors.success + 'cc';
+                        if (progress > 0) return chartColors.primary + 'cc';
+                        return chartColors.secondary + 'cc';
                     }),
                     borderColor: chartColors.primary,
                     borderWidth: 1,
@@ -677,7 +755,7 @@ export async function loadTimeEffectAnalysis(studentName) {
                     x: {
                         title: {
                             display: true,
-                            text: '練習時間（分鐘）',
+                            text: '練習時間比例（%）',
                             color: chartColors.primary,
                             font: {
                                 size: 13,
@@ -713,20 +791,15 @@ export async function loadTimeEffectAnalysis(studentName) {
                         callbacks: {
                             label: function(context) {
                                 const point = context.raw;
-                                const efficiencyText = {
-                                    'high': '高',
-                                    'medium': '中',
-                                    'low': '低'
-                                }[point.efficiency_level] || '低';
-                                const progressText = point.progress >= 0 ? 
-                                    `進步 ${point.progress.toFixed(1)} 分` : 
-                                    `退步 ${Math.abs(point.progress).toFixed(1)} 分`;
+                                const progressText = point.score_progress >= 0 ? 
+                                    `進步 ${point.score_progress.toFixed(1)}%` : 
+                                    `退步 ${Math.abs(point.score_progress).toFixed(1)}%`;
                                 
                                 return [
                                     `曲目：${point.piece}`,
-                                    `練習時間：${point.x} 分鐘`,
+                                    `練習時間比例：${point.x.toFixed(1)}%`,
                                     `平均評分：${point.y.toFixed(1)} 分`,
-                                    `效率等級：${efficiencyText}`,
+                                    `練習次數：${point.practice_count} 次`,
                                     `評分變化：${progressText}`
                                 ];
                             }

@@ -488,12 +488,20 @@ def get_rest_day_stats(request):
 
 @api_exception_handler
 def get_focus_stats(request):
-    """獲取練習重點統計的API端點 - 保持原格式"""
+    """獲取練習重點統計的API端點 - 支持按曲目篩選"""
     student_name = RequestHelper.get_student_name(request)
     start_date, end_date = RequestHelper.get_date_range(request)
+    piece = request.GET.get('piece', None)  # 新增：獲取曲目參數
+    
+    # 基礎查詢
+    base_query = PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+    
+    # 如果指定了曲目，添加曲目過濾
+    if piece:
+        base_query = base_query.filter(piece=piece)
     
     # 獲取所有練習重點的統計數據
-    focus_stats = (PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+    focus_stats = (base_query
                   .values('focus')
                   .annotate(
                       total_minutes=Sum('minutes'),
@@ -520,7 +528,16 @@ def get_focus_stats(request):
         item['focus_display'] = focus_name
         data.append(item)
 
-    return JsonResponse(data, safe=False)
+    # 添加額外的統計信息
+    total_minutes = sum(item['total_minutes'] for item in data)
+    for item in data:
+        item['percentage'] = round((item['total_minutes'] / total_minutes * 100) if total_minutes > 0 else 0, 1)
+
+    return JsonResponse({
+        'piece': piece or '整體分析',
+        'data': data,
+        'total_minutes': total_minutes
+    }, safe=False)
 
 # ============ 額外的優化功能（可選使用） ============
 
@@ -557,3 +574,38 @@ def get_practice_summary(request):
             'end': end_date.strftime('%Y-%m-%d')
         }
     })
+
+@api_exception_handler
+def get_student_pieces(request):
+    """獲取學生練習過的所有曲目列表"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
+    
+    # 獲取基礎查詢集
+    base_query = PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+    
+    # 獲取所有曲目及其基本統計
+    pieces_data = (base_query
+                  .values('piece')
+                  .annotate(
+                      total_minutes=Sum('minutes'),
+                      practice_count=Count('id'),
+                      avg_rating=Avg('rating')
+                  )
+                  .order_by('-total_minutes'))
+    
+    # 計算總練習時間
+    total_practice_time = sum(piece['total_minutes'] for piece in pieces_data)
+    
+    # 格式化數據
+    result = []
+    for piece in pieces_data:
+        result.append({
+            'piece': piece['piece'],
+            'total_minutes': piece['total_minutes'],
+            'practice_count': piece['practice_count'],
+            'avg_rating': round(piece['avg_rating'], 1),
+            'percentage': round((piece['total_minutes'] / total_practice_time * 100) if total_practice_time > 0 else 0, 1)
+        })
+    
+    return JsonResponse(result, safe=False)

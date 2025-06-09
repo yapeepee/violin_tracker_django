@@ -24,4 +24,5 @@ urlpatterns = [
     path('api/rest-days/', views.get_rest_day_stats, name='rest_days'),
     path('api/piece-switching/', views.get_piece_switching_stats, name='piece_switching'),
     path('api/focus-stats/', views.get_focus_stats, name='focus_stats'),
+    path('api/student-pieces/', views.get_student_pieces, name='student_pieces'),
 ]
