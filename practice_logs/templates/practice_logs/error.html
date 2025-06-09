@@ -1,0 +1,85 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .error-container {
+        text-align: center;
+        padding: 2rem;
+        margin-top: 3rem;
+    }
+
+    .error-icon {
+        font-size: 4rem;
+        color: var(--color-violin);
+        margin-bottom: 1rem;
+    }
+
+    .error-title {
+        color: var(--color-violin);
+        font-family: var(--font-serif);
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .error-message {
+        color: var(--color-piano);
+        font-family: var(--font-sans);
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--color-brass);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-family: var(--font-sans);
+        transition: all var(--transition-normal);
+    }
+
+    .back-button:hover {
+        background-color: var(--color-violin);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .back-button i {
+        margin-right: 0.5rem;
+    }
+
+    .error-note {
+        margin-top: 2rem;
+        color: var(--color-piano);
+        opacity: 0.7;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container">
+    <div class="error-container">
+        <div class="error-icon">
+            {% if error_title == '找不到學生' %}
+            🎻
+            {% elif error_title == '驗證錯誤' %}
+            ⚠️
+            {% else %}
+            ❌
+            {% endif %}
+        </div>
+        <h1 class="error-title">{{ error_title|default:"發生錯誤" }}</h1>
+        <p class="error-message">{{ error_message }}</p>
+        <a href="{{ back_url|default:'/' }}" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            返回{{ back_text|default:"首頁" }}
+        </a>
+        {% if error_note %}
+        <p class="error-note">{{ error_note }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

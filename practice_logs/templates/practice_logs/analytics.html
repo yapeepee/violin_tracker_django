@@ -296,6 +296,13 @@
 
     <h1 class="page-title">{{ student_name }}的練習分析</h1>
 
+    {% if error %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
     <!-- 日期選擇區 -->
     <div class="date-range-form mb-4">
         <form id="dateRangeForm" class="d-flex align-items-center flex-wrap justify-content-center">
@@ -392,45 +399,25 @@
             </div>
         </div>
 
-        <!-- 休息日統計 -->
+        <!-- 曲目成效比較 -->
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">休息日統計</h5>
-                    <div id="restDayStats" class="text-center mb-3">
-                        <div class="row g-3">
-                            <div class="col-4">
-                                <div class="stat-label">總天數</div>
-                                <div class="stat-value" id="totalDays">-</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="stat-label">練習天數</div>
-                                <div class="stat-value" id="practiceDays">-</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="stat-label">休息天數</div>
-                                <div class="stat-value" id="restDays">-</div>
-                            </div>
-                        </div>
-                        <div class="progress mt-3" style="height: 10px;">
-                            <div id="practiceRatio" class="progress-bar bg-primary" role="progressbar"
-                                style="width: 0%"></div>
-                        </div>
-                    </div>
+                    <h5 class="card-title">曲目成效比較</h5>
                     <div class="chart-container">
-                        <canvas id="restDayChart"></canvas>
+                        <canvas id="pieceEffectivenessChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 樂曲切換頻率 -->
+        <!-- 時間效果分析 -->
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">樂曲切換頻率</h5>
+                    <h5 class="card-title">時間效果分析</h5>
                     <div class="chart-container">
-                        <canvas id="switchingChart"></canvas>
+                        <canvas id="timeEffectChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -439,45 +426,81 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'practice_logs/js/utils.js' %}"></script>
-<script src="{% static 'practice_logs/js/config.js' %}"></script>
-<script>
-    // 先檢查 charts.js 是否為模組格式
-    // 如果是，需要移除 export 關鍵字，改為傳統函數宣告
-</script>
-<script src="{% static 'practice_logs/js/charts.js' %}"></script>
-<script>
-    (function () {
-        'use strict';
+<script type="module">
+    // 等待 Chart.js 載入
+    async function waitForChart() {
+        if (typeof Chart !== 'undefined') return;
 
-        const studentName = '{{ student_name|escapejs }}'; // 防止 XSS
-
-        function initAnalyticsCharts() {
-            // 檢查函數是否存在
-            if (typeof loadWeeklyData === 'function') {
-                loadWeeklyData(studentName);
-            }
-            if (typeof loadPieceData === 'function') {
-                loadPieceData(studentName);
-            }
-            if (typeof loadRecentTrendData === 'function') {
-                loadRecentTrendData(studentName);
-            }
-            if (typeof loadFocusStats === 'function') {
-                loadFocusStats(studentName);
-            }
-            if (typeof loadRestDayStats === 'function') {
-                loadRestDayStats(studentName);
-            }
-            if (typeof loadSwitchingData === 'function') {
-                loadSwitchingData(studentName);
-            }
-        }
-
-        // 等待頁面載入
-        document.addEventListener('DOMContentLoaded', function () {
-            initAnalyticsCharts();
+        return new Promise((resolve) => {
+            const checkChart = () => {
+                if (typeof Chart !== 'undefined') {
+                    resolve();
+                } else {
+                    setTimeout(checkChart, 50);
+                }
+            };
+            checkChart();
         });
-    })();
+    }
+
+    async function initializeApp() {
+        try {
+            // 等待 Chart.js
+            await waitForChart();
+
+            // 載入模組
+            const [chartsModule, configModule, utilsModule] = await Promise.all([
+                import('{% static "js/charts/charts.js" %}'),
+                import('{% static "js/charts/config.js" %}'),
+                import('{% static "js/utils.js" %}')
+            ]);
+
+            const {
+                loadWeeklyData,
+                loadPieceData,
+                loadRecentTrendData,
+                loadFocusStats,
+                loadPieceEffectivenessData,
+                loadTimeEffectAnalysis
+            } = chartsModule;
+            const { setupChartDefaults } = configModule;
+            const { formatDate, handleError } = utilsModule;
+
+            const studentName = '{{ student_name|escapejs }}';
+
+            // 設置圖表預設值
+            setupChartDefaults();
+
+            // 載入所有圖表
+            function initAnalyticsCharts() {
+                if (!studentName || studentName.trim() === '') {
+                    console.warn('未提供學生姓名');
+                    return;
+                }
+
+                console.log(`開始載入 ${studentName} 的圖表`);
+
+                loadWeeklyData(studentName);
+                loadPieceData(studentName);
+                loadRecentTrendData(studentName);
+                loadFocusStats(studentName);
+                loadPieceEffectivenessData(studentName);
+                loadTimeEffectAnalysis(studentName);
+            }
+
+            // 頁面載入完成後執行
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initAnalyticsCharts);
+            } else {
+                initAnalyticsCharts();
+            }
+
+        } catch (error) {
+            console.error('初始化失敗:', error);
+        }
+    }
+
+    // 啟動應用
+    initializeApp();
 </script>
 {% endblock %}

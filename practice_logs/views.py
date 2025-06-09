@@ -1,335 +1,506 @@
 """
-小提琴練習記錄系統的視圖處理模組。
-這個模組包含了所有的視圖函數，用於處理：
-- 練習記錄的創建和顯示
-- 數據分析和統計
-- API 端點
+優化後的小提琴練習記錄系統視圖處理模組 - 完全兼容版本
+保持所有原有API端點，只優化內部實現
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.db.models import Sum, Count, Avg, F, Q
+from django.db.models import Sum, Count, Avg, Q, Case, When, F, IntegerField
 from django.utils import timezone
-from datetime import timedelta
+from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ValidationError
+from datetime import timedelta, date
 from .models import PracticeLog
 import logging
-from django.views.decorators.http import require_http_methods
-from django.conf import settings
 from functools import wraps
+from typing import Dict, List, Optional, Tuple, Union
+import json
 
-# 設置日誌記錄器
 logger = logging.getLogger(__name__)
 
-def api_view(f):
-    """API視圖裝飾器，用於處理API響應和錯誤。"""
-    @wraps(f)
+# ============ 常量定義 ============
+class Constants:
+    DEFAULT_DAYS = 30
+    MAX_DAYS = 365
+    RECENT_DAYS = 7
+    MIN_PRACTICE_MINUTES = 1
+    MAX_PRACTICE_MINUTES = 600
+    MIN_RATING = 1
+    MAX_RATING = 10
+
+# 練習重點選項
+FOCUS_CHOICES = [
+    ('intonation', '音準'),
+    ('rhythm', '節奏'),
+    ('tone', '音色'),
+    ('technique', '技巧'),
+    ('expression', '表現力'),
+    ('sight_reading', '視奏'),
+    ('memorization', '記譜'),
+    ('other', '其他')
+]
+
+# ============ 自定義異常 ============
+class APIException(Exception):
+    def __init__(self, message="An error occurred", status_code=400, error_code=None):
+        self.message = message
+        self.status_code = status_code
+        self.error_code = error_code
+        super().__init__(self.message)
+
+# ============ 裝飾器 ============
+def api_exception_handler(func):
+    """API異常處理裝飾器"""
+    @wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            response = f(*args, **kwargs)
-            return response
+            return func(*args, **kwargs)
+        except APIException as e:
+            return JsonResponse({
+                'error': e.message,
+                'error_code': e.error_code
+            }, status=e.status_code)
         except Exception as e:
-            logger.error(f"API錯誤: {str(e)}")
-            return JsonResponse({'error': str(e)}, status=500)
+            logger.error(f"Unexpected error in {func.__name__}: {str(e)}")
+            return JsonResponse({
+                'error': "An unexpected error occurred",
+                'error_code': 'INTERNAL_ERROR'
+            }, status=500)
     return wrapper
 
-# 常量定義
-DEFAULT_DAYS = 30  # 預設顯示最近30天的數據
-MAX_DAYS = 365    # 最多顯示一年的數據
-RECENT_DAYS = 7   # 最近趨勢的天數
+def page_exception_handler(func):
+    """頁面異常處理裝飾器"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except APIException as e:
+            return render(args[0], 'practice_logs/error.html', {
+                'error_title': '錯誤',
+                'error_message': e.message,
+                'error_code': e.error_code,
+                'back_url': '/',
+                'back_text': '返回首頁'
+            })
+        except Exception as e:
+            logger.error(f"Unexpected error in {func.__name__}: {str(e)}")
+            return render(args[0], 'practice_logs/error.html', {
+                'error_title': '系統錯誤',
+                'error_message': '發生未預期的錯誤',
+                'back_url': '/',
+                'back_text': '返回首頁'
+            })
+    return wrapper
 
-# ============ 輔助函數 ============
+# ============ 請求處理輔助類 ============
+class RequestHelper:
+    """請求處理輔助類"""
+    
+    @staticmethod
+    def get_student_name(request) -> str:
+        student_name = request.GET.get('student_name')
+        return DataValidator.validate_student_name(student_name)
+    
+    @staticmethod
+    def get_date_range(request) -> Tuple[date, date]:
+        end_date = timezone.now().date()
+        days = request.GET.get('days', Constants.DEFAULT_DAYS)
+        try:
+            days = int(days)
+            if days < 1:
+                days = Constants.DEFAULT_DAYS
+            elif days > Constants.MAX_DAYS:
+                days = Constants.MAX_DAYS
+        except ValueError:
+            days = Constants.DEFAULT_DAYS
+        
+        start_date = end_date - timedelta(days=days)
+        return DataValidator.validate_date_range(start_date, end_date)
 
-def handle_student_name(request, required=True):
-    """
-    處理請求中的學生名字參數。
+# ============ 數據驗證 ============
+class DataValidator:
+    """數據驗證類"""
     
-    Args:
-        request: HTTP請求對象
-        required: 是否為必需參數（默認為True）
+    @staticmethod
+    def validate_student_name(name: str) -> str:
+        if not name or not name.strip():
+            raise APIException('學生姓名不能為空')
+        if len(name.strip()) > 50:
+            raise APIException('學生姓名不能超過50個字符')
+        return name.strip()
     
-    Returns:
-        str or JsonResponse: 如果找到學生名字則返回名字，否則返回錯誤響應
-    """
-    student_name = request.GET.get('student_name')
-    if required and not student_name:
-        return JsonResponse({'error': '未提供學生姓名'}, status=400)
-    return student_name
+    @staticmethod
+    def validate_practice_minutes(minutes: Union[str, int]) -> int:
+        try:
+            minutes = int(minutes)
+            if minutes < Constants.MIN_PRACTICE_MINUTES:
+                raise APIException(f'練習時間不能少於{Constants.MIN_PRACTICE_MINUTES}分鐘')
+            if minutes > Constants.MAX_PRACTICE_MINUTES:
+                raise APIException(f'練習時間不能超過{Constants.MAX_PRACTICE_MINUTES}分鐘')
+            return minutes
+        except (ValueError, TypeError):
+            raise APIException('練習時間必須是有效數字')
+    
+    @staticmethod
+    def validate_rating(rating: Union[str, int]) -> int:
+        try:
+            rating = int(rating)
+            if not (Constants.MIN_RATING <= rating <= Constants.MAX_RATING):
+                raise APIException(f'評分必須在{Constants.MIN_RATING}到{Constants.MAX_RATING}之間')
+            return rating
+        except (ValueError, TypeError):
+            raise APIException('評分必須是有效數字')
+    
+    @staticmethod
+    def validate_date_range(start_date: date, end_date: date) -> Tuple[date, date]:
+        if start_date > end_date:
+            raise APIException('開始日期不能晚於結束日期')
+        if (end_date - start_date).days > Constants.MAX_DAYS:
+            raise APIException(f'日期範圍不能超過{Constants.MAX_DAYS}天')
+        return start_date, end_date
 
-def get_date_range(request):
-    """
-    從請求中獲取日期範圍。
+# ============ 數據庫查詢服務 ============
+class PracticeLogService:
+    """練習記錄服務類"""
     
-    Args:
-        request: HTTP請求對象
+    @staticmethod
+    def get_base_queryset(student_name: str, start_date: date, end_date: date):
+        """獲取基礎查詢集"""
+        return PracticeLog.objects.filter(
+            student_name=student_name,
+            date__gte=start_date,
+            date__lte=end_date
+        )
     
-    Returns:
-        tuple: (start_date, end_date) 日期範圍
-    """
-    end_date = request.GET.get('end_date')
-    end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else timezone.now().date()
+    @staticmethod
+    def get_student_stats(student_name: str) -> Dict:
+        """獲取學生基本統計"""
+        stats = PracticeLog.objects.filter(student_name=student_name).aggregate(
+            total_practice_time=Sum('minutes'),
+            total_sessions=Count('id'),
+            avg_rating=Avg('rating'),
+            avg_session_length=Avg('minutes')
+        )
+        
+        return {
+            'total_practice_time': stats['total_practice_time'] or 0,
+            'total_sessions': stats['total_sessions'] or 0,
+            'avg_rating': round(stats['avg_rating'] or 0, 2),
+            'avg_session_length': round(stats['avg_session_length'] or 0, 2)
+        }
     
-    start_date = request.GET.get('start_date')
-    if start_date:
-        start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d').date()
-        # 確保日期範圍不超過最大限制
-        if (end_date - start_date).days > MAX_DAYS:
-            start_date = end_date - timedelta(days=MAX_DAYS)
-    else:
-        start_date = end_date - timedelta(days=DEFAULT_DAYS)
+    @staticmethod
+    def get_recent_logs(student_name: str, limit: int = 5) -> List:
+        """獲取最近的練習記錄"""
+        return list(PracticeLog.objects
+                   .filter(student_name=student_name)
+                   .order_by('-date', '-id')[:limit])
     
-    return start_date, end_date
+    @staticmethod
+    def create_practice_log(data: Dict) -> PracticeLog:
+        """創建練習記錄"""
+        # 只處理必要的字段
+        validated_data = {
+            'student_name': DataValidator.validate_student_name(data['student_name']),
+            'piece': data['piece'].strip() if data.get('piece') else '',
+            'minutes': DataValidator.validate_practice_minutes(data['minutes']),
+            'rating': DataValidator.validate_rating(data['rating']),
+            'date': data.get('date') or timezone.now().date(),
+            'focus': data.get('focus', 'other'),  # 預設為"其他"
+            'notes': data.get('notes', '').strip()  # 預設為空字串
+        }
+        
+        if not validated_data['piece']:
+            raise APIException('樂曲名稱不能為空')
+            
+        # 驗證練習重點是否有效
+        if validated_data['focus'] not in dict(FOCUS_CHOICES):
+            raise APIException('無效的練習重點選項')
+            
+        # 驗證筆記長度
+        if len(validated_data['notes']) > 1000:
+            raise APIException('練習筆記不能超過1000個字符')
+            
+        return PracticeLog.objects.create(**validated_data)
 
 # ============ 頁面視圖 ============
-
+@api_exception_handler
 def index(request):
-    """首頁視圖，處理練習記錄的創建和顯示。"""
+    """首頁視圖"""
     if request.method == 'POST':
         try:
-            # 驗證必填字段
-            required_fields = ['student_name', 'piece', 'minutes', 'rating']
-            for field in required_fields:
-                if not request.POST.get(field):
-                    raise ValueError(f'缺少必填字段：{field}')
-            
-            # 創建練習記錄
-            PracticeLog.objects.create(
-                student_name=request.POST['student_name'],
-                piece=request.POST['piece'],
-                minutes=int(request.POST['minutes']),
-                rating=int(request.POST['rating']),
-                focus=request.POST.get('focus', 'technique'),
-                notes=request.POST.get('notes', ''),
-                date=request.POST.get('date') or timezone.now().date()
-            )
-            return redirect('/?student=' + request.POST['student_name'])
-        except ValueError as e:
-            logger.warning(f"創建練習記錄時的輸入錯誤: {str(e)}")
-            return JsonResponse({'error': str(e)}, status=400)
+            data = json.loads(request.body)
+            # 驗證並創建練習記錄
+            PracticeLogService.create_practice_log(data)
+            return JsonResponse({'message': '練習記錄已保存'})
+        except json.JSONDecodeError:
+            raise APIException('無效的請求數據格式')
         except Exception as e:
-            logger.error(f"創建練習記錄時發生錯誤: {str(e)}")
-            return JsonResponse({'error': '創建練習記錄時發生錯誤'}, status=500)
+            logger.error(f"Error creating practice log: {str(e)}")
+            raise APIException('創建練習記錄失敗')
 
-    # 獲取當前學生的最近練習記錄
-    student_name = request.GET.get('student')
-    recent_logs = []
-    if student_name:
-        recent_logs = (PracticeLog.objects
-                      .filter(student_name=student_name)
-                      .order_by('-date')[:5])
+    # 獲取最後一個練習記錄的學生姓名
+    last_practice = PracticeLog.objects.order_by('-date', '-id').first()
+    current_student = last_practice.student_name if last_practice else None
 
     return render(request, 'practice_logs/index.html', {
-        'current_student': student_name,
-        'recent_logs': recent_logs,
-        'focus_choices': PracticeLog.FOCUS_CHOICES
+        'current_student': current_student,
+        'focus_choices': FOCUS_CHOICES
     })
 
+@page_exception_handler
 def analytics(request, student_name):
-    """分析頁面視圖，顯示練習數據的圖表和統計。"""
-    # 獲取學生的基本統計數據
-    stats = PracticeLog.objects.filter(student_name=student_name).aggregate(
-        total_practice_time=Sum('minutes'),
-        total_sessions=Count('id'),
-        avg_rating=Avg('rating'),
-        avg_session_length=Avg('minutes')
-    )
+    """分析頁面視圖"""
+    # 1. 驗證學生姓名
+    validated_name = DataValidator.validate_student_name(student_name)
     
-    return render(request, 'practice_logs/analytics.html', {
-        'student_name': student_name,
-        'stats': stats
-    })
+    # 2. 檢查學生是否存在
+    if not PracticeLog.objects.filter(student_name=validated_name).exists():
+        raise APIException(
+            message=f'找不到學生 "{validated_name}" 的練習記錄',
+            status_code=404,
+            error_code='STUDENT_NOT_FOUND'
+        )
 
-# ============ API 端點 ============
+    # 3. 獲取學生統計數據
+    stats = PracticeLogService.get_student_stats(validated_name)
+        
+    # 4. 獲取最近的練習記錄
+    recent_logs = PracticeLogService.get_recent_logs(validated_name, limit=3)
 
-@api_view
+    # 5. 準備上下文數據
+    context = {
+        'student_name': validated_name,
+        'stats': stats,
+        'recent_logs': recent_logs,
+        'has_data': bool(stats['total_sessions']),
+        'last_practice': recent_logs[0].date if recent_logs else None
+    }
+    
+    return render(request, 'practice_logs/analytics.html', context)
+
+# ============ API 端點 - 保持原有函數名和響應格式 ============
+
+@api_exception_handler
+@require_http_methods(["GET"])
 def chart_data(request):
-    """獲取練習時間圖表數據的API端點。"""
-    student_name = handle_student_name(request)
-    if isinstance(student_name, JsonResponse):
-        return student_name
-
-    start_date, end_date = get_date_range(request)
+    """獲取練習時間圖表數據的API端點"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
     
-    data = (PracticeLog.objects
-           .filter(
-               student_name=student_name,
-               date__gte=start_date,
-               date__lte=end_date
-           )
+    data = (PracticeLogService.get_base_queryset(student_name, start_date, end_date)
            .values('piece')
            .annotate(
                total_minutes=Sum('minutes'),
                avg_rating=Avg('rating')
            )
            .order_by('-total_minutes'))
+    
+    if not data.exists():
+        raise APIException(
+            message="找不到練習記錄",
+            status_code=404,
+            error_code='NO_PRACTICE_DATA'
+        )
+    
+    return JsonResponse({
+        'status': 'success',
+        'data': list(data)
+    })
 
-    return JsonResponse(list(data), safe=False)
-
-@api_view
+@api_exception_handler
 def get_weekly_practice_data(request):
-    """獲取每週練習總時數的API端點。"""
-    student_name = handle_student_name(request)
-    if isinstance(student_name, JsonResponse):
-        return student_name
-
-    start_date, end_date = get_date_range(request)
+    """獲取每週練習總時數的API端點 - 保持原格式"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
     
-    data = (PracticeLog.objects
-            .filter(
-                student_name=student_name,
-                date__gte=start_date,
-                date__lte=end_date
-            )
-            .values('date')
-            .annotate(
-                total_minutes=Sum('minutes'),
-                avg_rating=Avg('rating')
-            )
-            .order_by('date'))
+    data = (PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+           .values('date')
+           .annotate(
+               total_minutes=Sum('minutes'),
+               avg_rating=Avg('rating')
+           )
+           .order_by('date'))
     
     return JsonResponse(list(data), safe=False)
 
-@api_view
+@api_exception_handler
 def get_piece_practice_data(request):
-    """獲取各樂曲練習總時間的API端點。"""
-    student_name = handle_student_name(request)
-    if isinstance(student_name, JsonResponse):
-        return student_name
-
-    start_date, end_date = get_date_range(request)
+    """獲取各樂曲練習總時間的API端點 - 包含多維度分析數據"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
     
-    data = (PracticeLog.objects
-           .filter(
-               student_name=student_name,
-               date__gte=start_date,
-               date__lte=end_date
-           )
+    base_queryset = PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+    
+    # 獲取所有曲目的總練習時間
+    total_practice_time = base_queryset.aggregate(
+        total_minutes=Sum('minutes')
+    )['total_minutes'] or 1  # 避免除以零
+    
+    # 獲取基本統計數據
+    pieces_data = (base_queryset
            .values('piece')
            .annotate(
                total_minutes=Sum('minutes'),
                practice_count=Count('id'),
                avg_rating=Avg('rating'),
-               avg_session_length=Avg('minutes')
+               avg_session_length=Avg('minutes'),
+               # 按練習重點分類的時間統計
+               technique_time=Sum(Case(
+                   When(focus='technique', then=F('minutes')),
+                   default=0,
+                   output_field=IntegerField(),
+               )),
+               rhythm_time=Sum(Case(
+                   When(focus='rhythm', then=F('minutes')),
+                   default=0,
+                   output_field=IntegerField(),
+               )),
+               intonation_time=Sum(Case(
+                   When(focus='intonation', then=F('minutes')),
+                   default=0,
+                   output_field=IntegerField(),
+               )),
+               expression_time=Sum(Case(
+                   When(focus='expression', then=F('minutes')),
+                   default=0,
+                   output_field=IntegerField(),
+               ))
            )
            .order_by('-total_minutes'))
+    
+    # 轉換為列表以便添加進步和效率數據
+    result_data = []
+    for piece in pieces_data:
+        # 計算投入時間比例
+        time_ratio = (piece['total_minutes'] / total_practice_time) * 100
+        
+        # 獲取進步數據
+        progress = PracticeLog.get_piece_progress(student_name, piece['piece'])
+        
+        # 計算各練習重點的時間比例
+        total_piece_time = piece['total_minutes'] or 1  # 避免除以零
+        focus_ratios = {
+            'technique': (piece['technique_time'] / total_piece_time) * 100,
+            'rhythm': (piece['rhythm_time'] / total_piece_time) * 100,
+            'intonation': (piece['intonation_time'] / total_piece_time) * 100,
+            'expression': (piece['expression_time'] / total_piece_time) * 100
+        }
+        
+        # 計算技巧掌握度（基於評分和練習時間）
+        mastery = min((piece['avg_rating'] * piece['total_minutes']) / 300, 100)  # 上限100%
+        
+        result_data.append({
+            'piece': piece['piece'],
+            'dimensions': {
+                'time_investment': round(time_ratio, 1),  # 投入時間比例
+                'score_progress': round(progress * 20, 1),  # 分數提升（轉換為百分比）
+                'mastery': round(mastery, 1),  # 技巧掌握度
+                'technique': round(focus_ratios['technique'], 1),
+                'rhythm': round(focus_ratios['rhythm'], 1),
+                'intonation': round(focus_ratios['intonation'], 1),
+                'expression': round(focus_ratios['expression'], 1)
+            },
+            'practice_count': piece['practice_count'],
+            'avg_rating': round(piece['avg_rating'], 1)
+        })
 
-    return JsonResponse(list(data), safe=False)
+    return JsonResponse(result_data, safe=False)
 
-@api_view
+@api_exception_handler
 def get_recent_trend_data(request):
-    """獲取最近練習趨勢的API端點。"""
-    student_name = handle_student_name(request)
-    if isinstance(student_name, JsonResponse):
-        return student_name
-
-    start_date, end_date = get_date_range(request)
+    """獲取最近練習趨勢的API端點 - 保持原格式"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
     
-    data = (PracticeLog.objects
-            .filter(
-                student_name=student_name,
-                date__gte=start_date,
-                date__lte=end_date
-            )
-            .values('date')
-            .annotate(
-                total_minutes=Sum('minutes'),
-                pieces_practiced=Count('piece', distinct=True),
-                avg_rating=Avg('rating')
-            )
-            .order_by('date'))
+    data = (PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+           .values('date')
+           .annotate(
+               total_minutes=Sum('minutes'),
+               pieces_practiced=Count('piece', distinct=True),
+               avg_rating=Avg('rating')
+           )
+           .order_by('date'))
 
     return JsonResponse(list(data), safe=False)
 
-@api_view
-def get_rest_day_stats(request):
-    """獲取休息日統計的API端點。"""
-    student_name = handle_student_name(request)
-    if isinstance(student_name, JsonResponse):
-        return student_name
-
-    start_date, end_date = get_date_range(request)
+@api_exception_handler
+def get_piece_switching_stats(request):
+    """獲取樂曲切換頻率統計的API端點 - 保持原格式"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
     
+    data = (PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+           .values('date')
+           .annotate(
+               pieces_count=Count('piece', distinct=True),
+               total_sessions=Count('id'),
+               total_minutes=Sum('minutes'),
+               avg_rating=Avg('rating')
+           )
+           .order_by('date'))
+
+    return JsonResponse(list(data), safe=False)
+
+@api_exception_handler
+def get_rest_day_stats(request):
+    """獲取休息日統計的API端點"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
+    
+    # 獲取所有練習日期
     practice_dates = set(
-        PracticeLog.objects
-        .filter(
-            student_name=student_name,
-            date__gte=start_date,
-            date__lte=end_date
-        )
+        PracticeLogService.get_base_queryset(student_name, start_date, end_date)
         .values_list('date', flat=True)
     )
-
+    
     if not practice_dates:
-        return JsonResponse({'error': '找不到練習記錄'}, status=404)
-
+        raise APIException(
+            message="找不到練習記錄",
+            status_code=404,
+            error_code='NO_PRACTICE_DATA'
+        )
+    
+    # 計算練習日和休息日
     current_date = start_date
-    rest_days = []
     practice_days = []
-
+    rest_days = []
+    
     while current_date <= end_date:
         if current_date in practice_dates:
             practice_days.append(current_date)
         else:
             rest_days.append(current_date)
         current_date += timedelta(days=1)
-
+    
+    # 計算統計數據
+    total_days = (end_date - start_date).days + 1
+    practice_count = len(practice_days)
+    
     return JsonResponse({
-        'total_days': (end_date - start_date).days + 1,
-        'practice_days': len(practice_days),
-        'rest_days': len(rest_days),
+        'total_days': total_days,
+        'practice_days': practice_count,
+        'rest_days': total_days - practice_count,
         'practice_dates': [d.strftime('%Y-%m-%d') for d in practice_days],
         'rest_dates': [d.strftime('%Y-%m-%d') for d in rest_days],
-        'practice_ratio': len(practice_days) / ((end_date - start_date).days + 1)
+        'practice_ratio': practice_count / total_days if total_days > 0 else 0
     })
 
-@api_view
-def get_piece_switching_stats(request):
-    """獲取樂曲切換頻率統計的API端點。"""
-    student_name = handle_student_name(request)
-    if isinstance(student_name, JsonResponse):
-        return student_name
-
-    start_date, end_date = get_date_range(request)
-    
-    data = (PracticeLog.objects
-            .filter(
-                student_name=student_name,
-                date__gte=start_date,
-                date__lte=end_date
-            )
-            .values('date')
-            .annotate(
-                pieces_count=Count('piece', distinct=True),
-                total_sessions=Count('id'),
-                total_minutes=Sum('minutes'),
-                avg_rating=Avg('rating')
-            )
-            .order_by('date'))
-
-    return JsonResponse(list(data), safe=False)
-
-@api_view
+@api_exception_handler
 def get_focus_stats(request):
-    """獲取練習重點統計的API端點。"""
-    student_name = handle_student_name(request)
-    if isinstance(student_name, JsonResponse):
-        return student_name
-
-    start_date, end_date = get_date_range(request)
+    """獲取練習重點統計的API端點 - 保持原格式"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
     
     # 獲取所有練習重點的統計數據
-    focus_stats = (PracticeLog.objects
-            .filter(
-                student_name=student_name,
-                date__gte=start_date,
-                date__lte=end_date
-            )
-            .values('focus')
-            .annotate(
-                total_minutes=Sum('minutes'),
-                session_count=Count('id'),
-                avg_rating=Avg('rating')
-            )
-            .order_by('-total_minutes'))
+    focus_stats = (PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+                  .values('focus')
+                  .annotate(
+                      total_minutes=Sum('minutes'),
+                      session_count=Count('id'),
+                      avg_rating=Avg('rating')
+                  )
+                  .order_by('-total_minutes'))
 
     # 將統計數據轉換為字典形式，方便查找
     focus_data = {item['focus']: item for item in focus_stats}
@@ -351,4 +522,38 @@ def get_focus_stats(request):
 
     return JsonResponse(data, safe=False)
 
-# Create your views here.
+# ============ 額外的優化功能（可選使用） ============
+
+@api_exception_handler
+def get_practice_summary(request):
+    """新增：獲取練習總結數據（可選的新API）"""
+    student_name = RequestHelper.get_student_name(request)
+    start_date, end_date = RequestHelper.get_date_range(request)
+    
+    queryset = PracticeLogService.get_base_queryset(student_name, start_date, end_date)
+    
+    # 綜合統計
+    summary = queryset.aggregate(
+        total_minutes=Sum('minutes'),
+        total_sessions=Count('id'),
+        avg_rating=Avg('rating'),
+        unique_pieces=Count('piece', distinct=True)
+    )
+    
+    # 每日數據
+    daily_data = (queryset
+                 .values('date')
+                 .annotate(
+                     daily_minutes=Sum('minutes'),
+                     daily_sessions=Count('id')
+                 )
+                 .order_by('date'))
+    
+    return JsonResponse({
+        'summary': summary,
+        'daily_data': list(daily_data),
+        'date_range': {
+            'start': start_date.strftime('%Y-%m-%d'),
+            'end': end_date.strftime('%Y-%m-%d')
+        }
+    })

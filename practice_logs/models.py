@@ -5,6 +5,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.db.models import Avg, F, ExpressionWrapper, FloatField
 
 class PracticeLog(models.Model):
     """
@@ -85,6 +86,7 @@ class PracticeLog(models.Model):
         indexes = [
             models.Index(fields=['student_name', 'date']),
             models.Index(fields=['date']),
+            models.Index(fields=['student_name', 'piece']),
         ]
 
     def __str__(self):
@@ -118,5 +120,43 @@ class PracticeLog(models.Model):
     def focus_display(self):
         """返回練習重點的顯示文字。"""
         return dict(self.FOCUS_CHOICES).get(self.focus, '其他')
+
+    @classmethod
+    def get_piece_progress(cls, student_name, piece):
+        """計算特定曲目的練習進步情況"""
+        logs = cls.objects.filter(
+            student_name=student_name,
+            piece=piece
+        ).order_by('date')
+        
+        if not logs:
+            return 0
+        
+        # 計算評分的移動平均
+        window_size = 3
+        ratings = list(logs.values_list('rating', flat=True))
+        
+        if len(ratings) < 2:
+            return 0
+            
+        # 計算開始和結束的移動平均
+        start_avg = sum(ratings[:window_size]) / min(window_size, len(ratings))
+        end_avg = sum(ratings[-window_size:]) / min(window_size, len(ratings))
+        
+        return end_avg - start_avg
+
+    @classmethod
+    def get_practice_efficiency(cls, student_name, piece):
+        """計算練習效率（評分提升/練習時間）"""
+        progress = cls.get_piece_progress(student_name, piece)
+        total_time = cls.objects.filter(
+            student_name=student_name,
+            piece=piece
+        ).aggregate(total_minutes=models.Sum('minutes'))['total_minutes'] or 0
+        
+        if total_time == 0:
+            return 0
+            
+        return progress / total_time
 
 # Create your models here.

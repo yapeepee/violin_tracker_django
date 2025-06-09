@@ -4,17 +4,25 @@
 {% block content %}
 <div class="container">
     <h1>🎻 小提琴練琴日誌</h1>
+
+    <!-- 錯誤提示區域 -->
+    <div id="errorAlert" class="alert alert-danger alert-dismissible fade d-none" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span id="errorMessage"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <form method='POST' id="practiceForm">
         {% csrf_token %}
         <div class="form-group" data-label="學生姓名">
             <input type="text" name="student_name" id="studentName" placeholder="請輸入學生姓名" required
-                value="{{ current_student|default:'' }}">
+                value="{{ current_student|default:'' }}" maxlength="50" pattern="[^<>]*">
         </div>
         <div class="form-group" data-label="曲目名稱">
-            <input type="text" name="piece" placeholder="請輸入練習曲目" required>
+            <input type="text" name="piece" placeholder="請輸入練習曲目" required maxlength="100">
         </div>
         <div class="form-group" data-label="練習時間">
-            <input type="number" name="minutes" placeholder="請輸入練習時間（分鐘）" min="1" required>
+            <input type="number" name="minutes" placeholder="請輸入練習時間（分鐘）" min="1" max="600" required>
         </div>
         <div class="form-group" data-label="練習評分">
             <select name="rating" required>
@@ -24,62 +32,290 @@
                 {% endfor %}
             </select>
         </div>
-        <button type="submit">記錄練習 ✨</button>
+        <div class="form-group" data-label="練習重點">
+            <select name="focus" required>
+                <option value="" disabled selected>請選擇練習重點</option>
+                {% for focus_code, focus_name in focus_choices %}
+                <option value="{{ focus_code }}">{{ focus_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" data-label="練習筆記">
+            <textarea name="notes" placeholder="記錄今天的練習心得（選填）" rows="3" maxlength="1000"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            記錄練習 ✨
+        </button>
     </form>
 
-    <div class="chart-container">
+    <div class="chart-container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>🎵 練習時間統計</h2>
             <div id="analyticsLink">
-                <a href="#" class="btn btn-primary" onclick="goToAnalytics()">
+                <a href="#" class="btn btn-primary" onclick="goToAnalytics(); return false;">
                     查看詳細分析 📊
                 </a>
             </div>
         </div>
-        <div id="studentInfo" class="student-info" style="text-align: center; margin-bottom: 1rem;"></div>
-        <div class="chart-wrapper">
+        <div id="studentInfo" class="student-info text-center mb-3"></div>
+        <div class="chart-wrapper position-relative">
+            <div id="chartLoading" class="position-absolute top-50 start-50 translate-middle d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">載入中...</span>
+                </div>
+            </div>
             <canvas id="weeklyChart"></canvas>
         </div>
     </div>
 </div>
 
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .form-group::before {
+        content: attr(data-label);
+        position: absolute;
+        top: -0.75rem;
+        left: 1rem;
+        padding: 0 0.5rem;
+        background-color: white;
+        font-size: 0.875rem;
+        color: #666;
+        z-index: 1;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: #7c4dff;
+        box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.1);
+        outline: none;
+    }
+
+    .form-group input::placeholder,
+    .form-group select::placeholder,
+    .form-group textarea::placeholder {
+        color: #999;
+    }
+
+    .form-group select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5l-5-5h10l-5 5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .btn-primary {
+        padding: 0.75rem 2rem;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(124, 77, 255, 0.2);
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .student-info {
+        font-size: 1.2rem;
+        color: #666;
+        margin: 1rem 0;
+    }
+</style>
+
 <!-- 將 Django 變量傳遞給 JavaScript -->
 <script>
     window.INITIAL_STUDENT = "{{ current_student|default:'null' }}";
+    window.CSRF_TOKEN = "{{ csrf_token }}";
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module">
+    // 導入所需模組
     import { loadWeeklyData } from '{% static "js/charts/charts.js" %}';
     import { setupChartDefaults } from '{% static "js/charts/config.js" %}';
+    import { handleError } from '{% static "js/utils.js" %}';
 
-    function goToAnalytics() {
+    // 等待 Chart.js 載入
+    async function waitForChart() {
+        if (typeof Chart !== 'undefined') return;
+
+        return new Promise((resolve) => {
+            const checkChart = () => {
+                if (typeof Chart !== 'undefined') {
+                    resolve();
+                } else {
+                    setTimeout(checkChart, 50);
+                }
+            };
+            checkChart();
+        });
+    }
+
+    // 顯示錯誤信息
+    function showError(message) {
+        const errorAlert = document.getElementById('errorAlert');
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('d-none');
+        errorAlert.classList.add('show');
+    }
+
+    // 顯示/隱藏載入動畫
+    function toggleLoading(show) {
+        const loadingSpinner = document.querySelector('.spinner-border');
+        const chartLoading = document.getElementById('chartLoading');
+        if (show) {
+            loadingSpinner.classList.remove('d-none');
+            chartLoading.classList.remove('d-none');
+        } else {
+            loadingSpinner.classList.add('d-none');
+            chartLoading.classList.add('d-none');
+        }
+    }
+
+    async function initializeApp() {
+        try {
+            // 等待 Chart.js
+            await waitForChart();
+
+            // 設置圖表預設值
+            setupChartDefaults();
+
+            // 頁面載入時檢查是否有當前學生
+            const currentStudent = window.INITIAL_STUDENT === "null" ? null : window.INITIAL_STUDENT;
+            const savedStudent = localStorage.getItem('currentStudent');
+            const studentToLoad = currentStudent || savedStudent;
+
+            if (studentToLoad) {
+                document.getElementById('studentName').value = studentToLoad;
+                try {
+                    toggleLoading(true);
+                    await loadWeeklyData(studentToLoad);
+                } catch (error) {
+                    showError('載入圖表數據時發生錯誤：' + error.message);
+                } finally {
+                    toggleLoading(false);
+                }
+            }
+
+            // 表單提交處理
+            document.getElementById('practiceForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const form = this;
+                const studentName = document.getElementById('studentName').value;
+
+                try {
+                    toggleLoading(true);
+                    const formData = new FormData(form);
+                    const data = {};
+                    formData.forEach((value, key) => {
+                        data[key] = value;
+                    });
+
+                    const response = await fetch('', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': window.CSRF_TOKEN,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.redirected) {
+                        // 如果後端返回重定向，我們就跟隨重定向
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || '提交練習記錄時發生錯誤');
+                    }
+
+                    // 保存當前學生
+                    localStorage.setItem('currentStudent', studentName);
+
+                    // 重置表單
+                    form.reset();
+                    document.getElementById('studentName').value = studentName;
+
+                    // 重新載入圖表
+                    await loadWeeklyData(studentName);
+
+                    // 顯示成功消息
+                    const successAlert = document.createElement('div');
+                    successAlert.className = 'alert alert-success alert-dismissible fade show';
+                    successAlert.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        練習記錄已保存成功！
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    form.insertAdjacentElement('beforebegin', successAlert);
+
+                    // 3秒後自動關閉成功消息
+                    setTimeout(() => {
+                        successAlert.remove();
+                    }, 3000);
+
+                } catch (error) {
+                    showError(error.message);
+                } finally {
+                    toggleLoading(false);
+                }
+            });
+
+        } catch (error) {
+            console.error('初始化失敗:', error);
+            showError('初始化應用時發生錯誤');
+        }
+    }
+
+    // 導航到分析頁面
+    window.goToAnalytics = function () {
         const studentName = document.getElementById('studentName').value;
         if (studentName) {
             window.location.href = `/analytics/${encodeURIComponent(studentName)}/`;
         } else {
-            alert('請先輸入學生姓名');
+            showError('請先輸入學生姓名');
         }
-    }
-    window.goToAnalytics = goToAnalytics;
+    };
 
-    // 當表單提交時更新圖表
-    document.getElementById('practiceForm').addEventListener('submit', function () {
-        const studentName = document.getElementById('studentName').value;
-        localStorage.setItem('currentStudent', studentName);
-    });
-
-    // 頁面載入時檢查是否有當前學生
-    document.addEventListener('DOMContentLoaded', function () {
-        setupChartDefaults();
-        const currentStudent = window.INITIAL_STUDENT === "null" ? null : window.INITIAL_STUDENT;
-        const savedStudent = localStorage.getItem('currentStudent');
-        const studentToLoad = currentStudent || savedStudent;
-
-        if (studentToLoad) {
-            document.getElementById('studentName').value = studentToLoad;
-            loadWeeklyData(studentToLoad);
-        }
+    // 啟動應用
+    initializeApp().catch(error => {
+        console.error('應用啟動失敗:', error);
+        showError('應用啟動失敗');
     });
 </script>
 {% endblock %}

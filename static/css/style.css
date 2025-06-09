@@ -1,13 +1,37 @@
-/* 全局樣式 */
+/* ========== 全局變量 ========== */
 :root {
+    /* 主題顏色 */
     --primary-color: #7c4dff;
+    --primary-light: #9d71ff;
+    --primary-dark: #6c3fff;
     --secondary-color: #03dac6;
+    
+    /* 功能顏色 */
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --error-color: #f44336;
+    
+    /* 中性色 */
     --background-color: #f5f7ff;
+    --surface-color: #ffffff;
     --text-color: #2c3e50;
+    --text-light: #8a94a6;
+    --border-color: #e1e8ed;
+    
+    /* 布局 */
     --border-radius: 12px;
     --box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    --container-width: 1200px;
+    
+    /* 間距 */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 2.5rem;
 }
 
+/* ========== 基礎樣式 ========== */
 body {
     font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: var(--background-color);
@@ -19,91 +43,151 @@ body {
 }
 
 .container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    max-width: var(--container-width);
+    margin: var(--spacing-lg) auto;
+    padding: 0 var(--spacing-sm);
 }
 
-/* 標題樣式 */
-h1 {
+/* ========== 排版 ========== */
+h1, h2, h3, h4, h5, h6 {
     color: var(--primary-color);
-    text-align: center;
-    font-size: 2.8rem;
-    margin-bottom: 2rem;
-    text-shadow: 2px 2px 4px rgba(124, 77, 255, 0.2);
+    margin-bottom: var(--spacing-md);
     font-weight: 700;
+}
+
+h1 {
+    font-size: 2.8rem;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(124, 77, 255, 0.2);
     letter-spacing: -1px;
 }
 
-/* 表單樣式 */
+h2 {
+    font-size: 1.8rem;
+    text-align: center;
+}
+
+/* ========== 表單元素 ========== */
+.form-group {
+    position: relative;
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -0.75rem;
+    left: 1rem;
+    padding: 0 0.5rem;
+    background-color: var(--surface-color);
+    font-size: 0.875rem;
+    color: var(--text-light);
+    z-index: 1;
+}
+
 form {
-    background: white;
-    padding: 2.5rem;
+    background: var(--surface-color);
+    padding: var(--spacing-xl);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    margin-bottom: 2rem;
+    margin-bottom: var(--spacing-lg);
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
+    gap: var(--spacing-md);
     border: 1px solid rgba(124, 77, 255, 0.1);
 }
 
-input, select {
+input,
+select,
+textarea {
     width: 100%;
-    padding: 1rem;
-    border: 2px solid #e1e8ed;
+    padding: var(--spacing-sm);
+    border: 2px solid var(--border-color);
     border-radius: var(--border-radius);
     font-size: 1rem;
     transition: all 0.3s ease;
     background-color: #f8faff;
 }
 
-input:hover, select:hover {
+input:hover,
+select:hover,
+textarea:hover {
     border-color: var(--secondary-color);
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus,
+textarea:focus {
     border-color: var(--primary-color);
     outline: none;
     box-shadow: 0 0 0 4px rgba(124, 77, 255, 0.15);
-    background-color: white;
+    background-color: var(--surface-color);
 }
 
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c4dff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
+}
+
+/* ========== 按鈕 ========== */
+.btn,
 button {
-    background: linear-gradient(135deg, var(--primary-color), #9d71ff);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: white;
-    padding: 1rem 2rem;
+    padding: var(--spacing-sm) var(--spacing-lg);
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
     font-size: 1.1rem;
     font-weight: 600;
     transition: all 0.3s ease;
-    grid-column: 1 / -1;
     text-transform: uppercase;
     letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
+.btn:hover,
 button:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(124, 77, 255, 0.3);
 }
 
+.btn:active,
 button:active {
     transform: translateY(0);
 }
 
-/* 圖表容器樣式 */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+/* ========== 圖表容器 ========== */
 .chart-container {
-    background: white;
-    padding: 2.5rem;
+    background: var(--surface-color);
+    padding: var(--spacing-xl);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    margin-top: 2rem;
+    margin-top: var(--spacing-lg);
     border: 1px solid rgba(124, 77, 255, 0.1);
-    height: 400px;
     position: relative;
-    overflow: hidden;
 }
 
 .chart-wrapper {
@@ -116,23 +200,39 @@ canvas {
     max-width: 100%;
 }
 
-/* 響應式設計 */
-@media (max-width: 768px) {
-    .container {
-        margin: 1rem auto;
-    }
-
-    h1 {
-        font-size: 2.2rem;
-    }
-
-    form {
-        grid-template-columns: 1fr;
-        padding: 1.5rem;
-    }
+/* ========== 學生信息 ========== */
+.student-info {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-color);
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: rgba(124, 77, 255, 0.05);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(124, 77, 255, 0.1);
 }
 
-/* 動畫效果 */
+/* ========== 錯誤提示 ========== */
+.error-message {
+    background: #fde8e8;
+    border: 1px solid #f8d7da;
+    color: var(--error-color);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    text-align: center;
+    margin: var(--spacing-sm) 0;
+    font-size: 0.9rem;
+}
+
+/* ========== 加載動畫 ========== */
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-width: 0.2rem;
+}
+
+/* ========== 動畫效果 ========== */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -148,23 +248,27 @@ canvas {
     animation: fadeIn 0.6s ease-out forwards;
 }
 
-/* 美化選擇框 */
-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c4dff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1em;
-    padding-right: 2.5rem;
+/* ========== 響應式設計 ========== */
+@media (max-width: 768px) {
+    :root {
+        --spacing-xl: 1.5rem;
+        --spacing-lg: 1rem;
+    }
+
+    .container {
+        margin: var(--spacing-sm) auto;
+    }
+
+    h1 {
+        font-size: 2.2rem;
+    }
+
+    form {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* 輸入框占位符樣式 */
-::placeholder {
-    color: #8a94a6;
-    opacity: 1;
-}
-
-/* 漸變背景 */
+/* ========== 背景效果 ========== */
 body::before {
     content: '';
     position: fixed;
@@ -178,38 +282,19 @@ body::before {
     z-index: -1;
 }
 
-/* 表單分組樣式 */
-.form-group {
-    position: relative;
-    display: flex;
-    flex-direction: column;
+/* ========== 工具類 ========== */
+.d-none {
+    display: none !important;
 }
 
-/* 評分星星樣式 */
-select[name="rating"] option {
-    padding: 0.8rem;
-    font-size: 1rem;
-}
-
-/* 圖表標題樣式 */
-.chart-container h2 {
-    color: var(--primary-color);
-    font-size: 1.8rem;
-    margin-bottom: 2rem;
+.text-center {
     text-align: center;
-    font-weight: 600;
 }
 
-/* 新增：表單輸入框標籤 */
-.form-group::before {
-    content: attr(data-label);
-    position: absolute;
-    top: -0.5rem;
-    left: 1rem;
-    padding: 0 0.5rem;
-    background-color: white;
-    color: var(--primary-color);
-    font-size: 0.85rem;
-    font-weight: 500;
-    z-index: 1;
+.mt-4 {
+    margin-top: var(--spacing-lg);
+}
+
+.mb-3 {
+    margin-bottom: var(--spacing-md);
 } 
