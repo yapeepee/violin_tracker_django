@@ -1,0 +1,436 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}選擇我的教師{% endblock %}
+
+{% block extra_css %}
+<style>
+.teacher-selection-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.selection-header {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid rgba(139, 69, 19, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.selection-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b4513, #d4a574, #8b4513);
+}
+
+.selection-title {
+    color: #2c3e50;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.current-teachers {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.current-teachers h3 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.teacher-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.teacher-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.teacher-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.teacher-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b4513, #d4a574);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.teacher-details h4 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.teacher-details p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.teacher-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-remove {
+    background: #dc3545;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.btn-remove:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.available-teachers {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.available-teachers h3 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.teacher-search {
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    border-color: #8b4513;
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    outline: none;
+}
+
+.available-teacher-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.available-teacher-card:hover {
+    border-color: #8b4513;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.1);
+}
+
+.btn-select {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-select:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+}
+
+.no-teachers {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.no-teachers-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.teacher-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 0.8rem;
+}
+
+.stat-item {
+    background: rgba(139, 69, 19, 0.1);
+    padding: 5px 10px;
+    border-radius: 12px;
+    text-align: center;
+    color: #8b4513;
+    font-weight: 500;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .teacher-selection-container {
+        padding: 0 15px;
+    }
+    
+    .teacher-card,
+    .available-teacher-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .teacher-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="teacher-selection-container">
+    <!-- 頁面標題 -->
+    <div class="selection-header">
+        <h1 class="selection-title">
+            👨‍🏫 選擇我的教師
+        </h1>
+        <p class="text-muted">選擇您的指導教師，他們將能查看您的練習記錄和提供專業回饋</p>
+    </div>
+
+    <!-- 當前教師 -->
+    {% if current_teachers %}
+        <div class="current-teachers">
+            <h3>
+                <i class="fas fa-user-check"></i>
+                我的教師
+            </h3>
+            
+            {% for relation in current_teachers %}
+                <div class="teacher-card">
+                    <div class="teacher-info">
+                        <div class="teacher-avatar">
+                            {{ relation.teacher.profile.display_name|default:relation.teacher.username|first|upper }}
+                        </div>
+                        <div class="teacher-details">
+                            <h4>{{ relation.teacher.profile.display_name|default:relation.teacher.username }}</h4>
+                            <p>{% if relation.teacher.email %}{{ relation.teacher.email }}{% endif %}</p>
+                            <div class="teacher-stats">
+                                <div class="stat-item">建立時間: {{ relation.created_at|date:"Y/m/d" }}</div>
+                                {% if relation.teacher.profile.specialization %}
+                                    <div class="stat-item">專長: {{ relation.teacher.profile.specialization }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="teacher-actions">
+                        <button class="btn-remove" onclick="removeTeacher({{ relation.id }})">
+                            <i class="fas fa-times"></i> 移除
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- 可選教師 -->
+    <div class="available-teachers">
+        <h3>
+            <i class="fas fa-search"></i>
+            選擇教師
+        </h3>
+        
+        <div class="teacher-search">
+            <input type="text" 
+                   class="search-input" 
+                   id="teacherSearch" 
+                   placeholder="搜尋教師姓名或專長..."
+                   onkeyup="filterTeachers()">
+        </div>
+        
+        {% if available_teachers %}
+            <div id="teachersList">
+                {% for teacher in available_teachers %}
+                    <div class="available-teacher-card" data-name="{% if teacher.profile %}{{ teacher.profile.display_name|default:teacher.username|lower }}{% else %}{{ teacher.username|lower }}{% endif %}" data-specialization="{% if teacher.profile %}{{ teacher.profile.specialization|default:''|lower }}{% else %}{% endif %}">
+                        <div class="teacher-info">
+                            <div class="teacher-avatar">
+                                {% if teacher.profile %}
+                                    {{ teacher.profile.display_name|default:teacher.username|first|upper }}
+                                {% else %}
+                                    {{ teacher.username|first|upper }}
+                                {% endif %}
+                            </div>
+                            <div class="teacher-details">
+                                <h4>
+                                    {% if teacher.profile %}
+                                        {{ teacher.profile.display_name|default:teacher.username }}
+                                    {% else %}
+                                        {{ teacher.username }}
+                                    {% endif %}
+                                </h4>
+                                <p>
+                                    {% if teacher.email %}{{ teacher.email }}{% endif %}
+                                    {% if teacher.profile and teacher.profile.specialization %} · 專長: {{ teacher.profile.specialization }}{% endif %}
+                                </p>
+                                <div class="teacher-stats">
+                                    <div class="stat-item">教學經驗: {% if teacher.profile %}{{ teacher.profile.years_experience|default:"未知" }}{% else %}未知{% endif %}年</div>
+                                    <div class="stat-item">學生數: {{ teacher.students_count|default:0 }}人</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="teacher-actions">
+                            <button class="btn-select" onclick="selectTeacher({{ teacher.id }})">
+                                <i class="fas fa-plus"></i> 選擇
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-teachers">
+                <div class="no-teachers-icon">👨‍🏫</div>
+                <h4>暫無可選擇的教師</h4>
+                <p>目前沒有註冊的教師帳號，請聯繫管理員。</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+async function selectTeacher(teacherId) {
+    try {
+        const response = await fetch('{% url "practice_logs:select_teacher" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                teacher_id: teacherId
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // 重新載入頁面以顯示更新後的教師列表
+            window.location.reload();
+        } else {
+            alert('選擇教師失敗：' + (data.error || '未知錯誤'));
+        }
+    } catch (error) {
+        console.error('選擇教師時發生錯誤:', error);
+        alert('選擇教師時發生錯誤，請稍後再試');
+    }
+}
+
+async function removeTeacher(relationId) {
+    if (!confirm('確定要移除這位教師嗎？')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`{% url "practice_logs:remove_teacher" 0 %}`.replace('0', relationId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // 重新載入頁面以顯示更新後的教師列表
+            window.location.reload();
+        } else {
+            alert('移除教師失敗：' + (data.error || '未知錯誤'));
+        }
+    } catch (error) {
+        console.error('移除教師時發生錯誤:', error);
+        alert('移除教師時發生錯誤，請稍後再試');
+    }
+}
+
+function filterTeachers() {
+    const searchTerm = document.getElementById('teacherSearch').value.toLowerCase();
+    const teacherCards = document.querySelectorAll('.available-teacher-card');
+    
+    teacherCards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        const specialization = card.getAttribute('data-specialization');
+        
+        if (name.includes(searchTerm) || specialization.includes(searchTerm)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+
+<!-- CSRF Token -->
+{% csrf_token %}
+{% endblock %}

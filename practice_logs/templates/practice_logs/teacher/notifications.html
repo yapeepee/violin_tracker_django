@@ -1,0 +1,568 @@
+<!-- 通知中心組件 -->
+<style>
+/* 通知圖標 */
+.notification-icon {
+    position: relative;
+    cursor: pointer;
+    padding: 10px;
+}
+
+.notification-bell {
+    font-size: 1.5rem;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.notification-icon:hover .notification-bell {
+    color: #2c5f3d;
+    animation: ring 0.5s ease-in-out;
+}
+
+@keyframes ring {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-15deg); }
+    75% { transform: rotate(15deg); }
+}
+
+.notification-count {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* 通知下拉框 */
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 350px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 1000;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.notification-dropdown.show {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.mark-all-read {
+    font-size: 0.85rem;
+    color: #2c5f3d;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.mark-all-read:hover {
+    text-decoration: underline;
+}
+
+.notification-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.notification-item.unread {
+    background: #f8f9fa;
+}
+
+.notification-item:hover {
+    background: #e8f5e9;
+}
+
+.notification-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #2c5f3d;
+}
+
+.notification-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.notification-type i {
+    font-size: 1.2rem;
+}
+
+.type-question { color: #ffc107; }
+.type-practice { color: #2196f3; }
+.type-achievement { color: #4caf50; }
+.type-lesson { color: #9c27b0; }
+.type-system { color: #666; }
+
+.notification-content {
+    font-size: 0.9rem;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.notification-time {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.notification-footer {
+    padding: 15px 20px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.view-all-link {
+    color: #2c5f3d;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.view-all-link:hover {
+    text-decoration: underline;
+}
+
+/* 空狀態 */
+.empty-notifications {
+    padding: 40px;
+    text-align: center;
+    color: #999;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+/* Toast 通知 */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    background: white;
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 300px;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast.hiding {
+    animation: slideOutRight 0.3s ease;
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.toast-icon {
+    font-size: 1.5rem;
+}
+
+.toast-success .toast-icon { color: #4caf50; }
+.toast-error .toast-icon { color: #f44336; }
+.toast-warning .toast-icon { color: #ff9800; }
+.toast-info .toast-icon { color: #2196f3; }
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.toast-message {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.toast-close {
+    cursor: pointer;
+    color: #999;
+    font-size: 1.2rem;
+}
+
+.toast-close:hover {
+    color: #333;
+}
+</style>
+
+<!-- 通知圖標 -->
+<div class="notification-icon" id="notificationIcon">
+    <i class="fas fa-bell notification-bell"></i>
+    <span class="notification-count" id="notificationCount" style="display: none;">0</span>
+</div>
+
+<!-- 通知下拉框 -->
+<div class="notification-dropdown" id="notificationDropdown">
+    <div class="notification-header">
+        <h3 class="notification-title">通知中心</h3>
+        <a href="#" class="mark-all-read" onclick="markAllAsRead(event)">全部標記為已讀</a>
+    </div>
+    
+    <div class="notification-list" id="notificationList">
+        <!-- 通知項目將動態載入 -->
+    </div>
+    
+    <div class="notification-footer">
+        <a href="{% url 'practice_logs:notifications_center' %}" class="view-all-link">查看所有通知</a>
+    </div>
+</div>
+
+<!-- Toast 容器 -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// 通知系統
+const NotificationSystem = {
+    unreadCount: 0,
+    notifications: [],
+    isDropdownOpen: false,
+    
+    init() {
+        this.bindEvents();
+        this.loadNotifications();
+        this.startPolling();
+    },
+    
+    bindEvents() {
+        const icon = document.getElementById('notificationIcon');
+        const dropdown = document.getElementById('notificationDropdown');
+        
+        icon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleDropdown();
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && !icon.contains(e.target)) {
+                this.closeDropdown();
+            }
+        });
+    },
+    
+    toggleDropdown() {
+        const dropdown = document.getElementById('notificationDropdown');
+        this.isDropdownOpen = !this.isDropdownOpen;
+        
+        if (this.isDropdownOpen) {
+            dropdown.classList.add('show');
+            this.loadNotifications();
+        } else {
+            dropdown.classList.remove('show');
+        }
+    },
+    
+    closeDropdown() {
+        const dropdown = document.getElementById('notificationDropdown');
+        dropdown.classList.remove('show');
+        this.isDropdownOpen = false;
+    },
+    
+    async loadNotifications() {
+        try {
+            const response = await fetch('{% url "practice_logs:api_notifications" %}');
+            const data = await response.json();
+            
+            this.notifications = data.notifications;
+            this.unreadCount = data.unread_count;
+            
+            this.updateUI();
+        } catch (error) {
+            console.error('Failed to load notifications:', error);
+        }
+    },
+    
+    updateUI() {
+        // 更新數字
+        const countElement = document.getElementById('notificationCount');
+        if (this.unreadCount > 0) {
+            countElement.textContent = this.unreadCount > 9 ? '9+' : this.unreadCount;
+            countElement.style.display = 'flex';
+        } else {
+            countElement.style.display = 'none';
+        }
+        
+        // 更新列表
+        const listElement = document.getElementById('notificationList');
+        
+        if (this.notifications.length === 0) {
+            listElement.innerHTML = `
+                <div class="empty-notifications">
+                    <div class="empty-icon">🔔</div>
+                    <p>暫無新通知</p>
+                </div>
+            `;
+            return;
+        }
+        
+        listElement.innerHTML = this.notifications.map(notif => `
+            <div class="notification-item ${notif.is_read ? '' : 'unread'}" 
+                 onclick="NotificationSystem.handleNotificationClick(${notif.id})">
+                <div class="notification-type type-${notif.type}">
+                    ${this.getIcon(notif.type)}
+                    <span>${this.getTypeText(notif.type)}</span>
+                </div>
+                <div class="notification-content">${notif.content}</div>
+                <div class="notification-time">${this.formatTime(notif.created_at)}</div>
+            </div>
+        `).join('');
+    },
+    
+    getIcon(type) {
+        const icons = {
+            'question': '<i class="fas fa-question-circle"></i>',
+            'practice': '<i class="fas fa-music"></i>',
+            'achievement': '<i class="fas fa-trophy"></i>',
+            'lesson': '<i class="fas fa-calendar-check"></i>',
+            'system': '<i class="fas fa-info-circle"></i>'
+        };
+        return icons[type] || '<i class="fas fa-bell"></i>';
+    },
+    
+    getTypeText(type) {
+        const types = {
+            'question': '學生提問',
+            'practice': '練習記錄',
+            'achievement': '成就達成',
+            'lesson': '課程提醒',
+            'system': '系統通知'
+        };
+        return types[type] || '通知';
+    },
+    
+    formatTime(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+        
+        if (diff < 60000) return '剛剛';
+        if (diff < 3600000) return Math.floor(diff / 60000) + '分鐘前';
+        if (diff < 86400000) return Math.floor(diff / 3600000) + '小時前';
+        if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+        
+        return date.toLocaleDateString('zh-TW');
+    },
+    
+    async handleNotificationClick(id) {
+        const notification = this.notifications.find(n => n.id === id);
+        
+        if (!notification.is_read) {
+            await this.markAsRead(id);
+        }
+        
+        if (notification.url) {
+            window.location.href = notification.url;
+        }
+    },
+    
+    async markAsRead(id) {
+        try {
+            await fetch(`{% url "practice_logs:mark_notification_read" 0 %}`.replace('0', id), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            this.loadNotifications();
+        } catch (error) {
+            console.error('Failed to mark notification as read:', error);
+        }
+    },
+    
+    async markAllAsRead(event) {
+        event.preventDefault();
+        
+        try {
+            await fetch('{% url "practice_logs:mark_all_notifications_read" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            this.loadNotifications();
+            this.showToast('success', '成功', '所有通知已標記為已讀');
+        } catch (error) {
+            console.error('Failed to mark all as read:', error);
+            this.showToast('error', '錯誤', '操作失敗，請稍後再試');
+        }
+    },
+    
+    showToast(type, title, message) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        toast.innerHTML = `
+            <div class="toast-icon">
+                ${this.getToastIcon(type)}
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <span class="toast-close" onclick="this.parentElement.remove()">×</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    },
+    
+    getToastIcon(type) {
+        const icons = {
+            'success': '<i class="fas fa-check-circle"></i>',
+            'error': '<i class="fas fa-times-circle"></i>',
+            'warning': '<i class="fas fa-exclamation-circle"></i>',
+            'info': '<i class="fas fa-info-circle"></i>'
+        };
+        return icons[type] || '<i class="fas fa-bell"></i>';
+    },
+    
+    startPolling() {
+        // 每30秒檢查一次新通知
+        setInterval(() => {
+            if (!this.isDropdownOpen) {
+                this.loadNotifications();
+            }
+        }, 30000);
+    },
+    
+    // WebSocket 支援（可選）
+    connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/notifications/`);
+        
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'new_notification') {
+                this.loadNotifications();
+                this.showToast('info', data.title, data.message);
+            }
+        };
+        
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+    }
+};
+
+// 初始化
+document.addEventListener('DOMContentLoaded', function() {
+    NotificationSystem.init();
+});
+
+// 全局函數
+function markAllAsRead(event) {
+    NotificationSystem.markAllAsRead(event);
+}
+
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>

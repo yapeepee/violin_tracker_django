@@ -1,0 +1,433 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}回答問題 - {{ question.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .answer-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .question-detail {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .question-header {
+        border-bottom: 2px solid #eee;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .question-title {
+        font-size: 1.8em;
+        color: #2c5f3d;
+        margin-bottom: 15px;
+    }
+    
+    .question-meta {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        color: #666;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .priority-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+    
+    .priority-high {
+        background: #ffebee;
+        color: #c62828;
+    }
+    
+    .priority-medium {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+    
+    .priority-low {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .question-content {
+        font-size: 1.1em;
+        line-height: 1.8;
+        color: #333;
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .answer-form {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .form-section {
+        margin-bottom: 25px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+        display: block;
+    }
+    
+    .answer-textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1em;
+        resize: vertical;
+        transition: border-color 0.3s ease;
+    }
+    
+    .answer-textarea:focus {
+        outline: none;
+        border-color: #2c5f3d;
+    }
+    
+    .char-count {
+        text-align: right;
+        color: #999;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+    
+    .options-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    
+    .custom-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        cursor: pointer;
+    }
+    
+    .custom-checkbox input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .custom-checkbox label {
+        cursor: pointer;
+        margin-bottom: 0;
+    }
+    
+    .help-text {
+        font-size: 0.9em;
+        color: #666;
+        margin-left: 28px;
+    }
+    
+    .existing-answers {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .answer-item {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        border-left: 4px solid #2c5f3d;
+    }
+    
+    .answer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .answer-author {
+        font-weight: 600;
+        color: #2c5f3d;
+    }
+    
+    .answer-time {
+        color: #999;
+        font-size: 0.9em;
+    }
+    
+    .answer-content {
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    .related-questions {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 25px;
+        margin-top: 30px;
+    }
+    
+    .related-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .related-item:last-child {
+        border-bottom: none;
+    }
+    
+    .related-link {
+        color: #2c5f3d;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .related-link:hover {
+        color: #1e7c5e;
+        text-decoration: underline;
+    }
+    
+    .btn-submit {
+        background: #2c5f3d;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.1em;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        background: #1e7c5e;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.1em;
+        font-weight: 500;
+        cursor: pointer;
+        margin-right: 15px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-cancel:hover {
+        background: #e0e0e0;
+        color: #333;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block teacher_content %}
+<div class="answer-container">
+    <!-- 問題詳情 -->
+    <div class="question-detail">
+        <div class="question-header">
+            <h1 class="question-title">{{ question.title }}</h1>
+            <div class="question-meta">
+                <div class="meta-item">
+                    <i class="fas fa-user"></i>
+                    <span>{{ question.student.profile.display_name|default:question.student.username }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>{{ question.created_at|date:"Y年m月d日 H:i" }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-tag"></i>
+                    <span>{{ question.category.name }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="priority-badge priority-{{ question.priority }}">
+                        {{ question.get_priority_display }}
+                    </span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-eye"></i>
+                    <span>{{ question.view_count }} 次查看</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="question-content">
+            {{ question.question_text|linebreaks }}
+        </div>
+    </div>
+    
+    <!-- 已有回答 -->
+    {% if existing_answers %}
+    <div class="existing-answers">
+        <h3 class="mb-3">已有回答</h3>
+        {% for answer in existing_answers %}
+        <div class="answer-item">
+            <div class="answer-header">
+                <span class="answer-author">
+                    <i class="fas fa-user-tie"></i> 
+                    {{ answer.teacher.profile.display_name|default:answer.teacher.username }}
+                </span>
+                <span class="answer-time">{{ answer.created_at|timesince }}前</span>
+            </div>
+            <div class="answer-content">
+                {{ answer.answer_text|linebreaks }}
+            </div>
+            {% if answer.is_public %}
+            <small class="text-muted"><i class="fas fa-globe"></i> 公開回答</small>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- 回答表單 -->
+    <form method="post" class="answer-form">
+        {% csrf_token %}
+        <h2 class="mb-4">撰寫回答</h2>
+        
+        <div class="form-section">
+            <label class="form-label" for="answer_text">詳細回答 *</label>
+            <textarea name="answer_text" id="answer_text" class="answer-textarea" 
+                      placeholder="請提供詳細的回答，幫助學生理解和解決問題..." required></textarea>
+            <div class="char-count">
+                <span id="charCount">0</span> / 2000 字
+            </div>
+        </div>
+        
+        <div class="options-section">
+            <h4 class="mb-3">回答選項</h4>
+            
+            <div class="custom-checkbox">
+                <input type="checkbox" id="is_public" name="is_public">
+                <label for="is_public">設為公開回答</label>
+            </div>
+            <p class="help-text">公開回答可被其他學生查看，有助於幫助更多人</p>
+            
+            <div class="custom-checkbox mt-3">
+                <input type="checkbox" id="add_to_faq" name="add_to_faq">
+                <label for="add_to_faq">加入常見問題 (FAQ)</label>
+            </div>
+            <p class="help-text">優質的問答可以加入FAQ，需要管理員審核</p>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{% url 'practice_logs:teacher_qa' %}" class="btn-cancel">
+                <i class="fas fa-times"></i> 取消
+            </a>
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-paper-plane"></i> 提交回答
+            </button>
+        </div>
+    </form>
+    
+    <!-- 相關問題 -->
+    {% if related_questions %}
+    <div class="related-questions">
+        <h3 class="mb-3">相關問題</h3>
+        {% for related in related_questions %}
+        <div class="related-item">
+            <a href="{% url 'practice_logs:answer_question' related.id %}" class="related-link">
+                {{ related.title }}
+            </a>
+            <div class="text-muted small mt-1">
+                {{ related.student.profile.display_name|default:related.student.username }} · 
+                {{ related.created_at|timesince }}前
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block page_js %}
+<script>
+// 字數統計
+const textarea = document.getElementById('answer_text');
+const charCount = document.getElementById('charCount');
+
+textarea.addEventListener('input', function() {
+    const length = this.value.length;
+    charCount.textContent = length;
+    
+    if (length > 2000) {
+        charCount.style.color = '#c62828';
+        this.value = this.value.substring(0, 2000);
+        charCount.textContent = 2000;
+    } else if (length > 1800) {
+        charCount.style.color = '#f57c00';
+    } else {
+        charCount.style.color = '#999';
+    }
+});
+
+// 自動保存草稿
+let autoSaveTimer;
+textarea.addEventListener('input', function() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+        localStorage.setItem('answer_draft_{{ question.id }}', this.value);
+        // 顯示保存提示
+        const savedHint = document.createElement('span');
+        savedHint.textContent = ' (已自動保存)';
+        savedHint.style.color = '#4caf50';
+        charCount.parentNode.appendChild(savedHint);
+        setTimeout(() => savedHint.remove(), 2000);
+    }, 1000);
+});
+
+// 載入草稿
+document.addEventListener('DOMContentLoaded', function() {
+    const draft = localStorage.getItem('answer_draft_{{ question.id }}');
+    if (draft) {
+        textarea.value = draft;
+        textarea.dispatchEvent(new Event('input'));
+    }
+});
+
+// 提交表單時清除草稿
+document.querySelector('.answer-form').addEventListener('submit', function() {
+    localStorage.removeItem('answer_draft_{{ question.id }}');
+});
+</script>
+{% endblock %}

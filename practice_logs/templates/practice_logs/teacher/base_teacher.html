@@ -1,0 +1,188 @@
+{% extends 'practice_logs/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* 教師系統導航樣式 */
+    .teacher-nav {
+        background: linear-gradient(135deg, #2c5f3d 0%, #1e7c5e 100%);
+        padding: 15px 0;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .teacher-nav .nav-link {
+        color: rgba(255,255,255,0.8);
+        padding: 10px 20px;
+        margin: 0 5px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .teacher-nav .nav-link:hover {
+        background: rgba(255,255,255,0.1);
+        color: white;
+    }
+    
+    .teacher-nav .nav-link.active {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+    
+    .teacher-nav .nav-link i {
+        margin-right: 8px;
+    }
+    
+    /* 快速操作按鈕 */
+    .quick-actions {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+    }
+    
+    .quick-action-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #2c5f3d;
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        font-size: 1.5em;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .quick-action-btn:hover {
+        background: #1e7c5e;
+        transform: scale(1.1);
+    }
+    
+    /* 通知徽章 */
+    .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ff4444;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75em;
+        font-weight: bold;
+    }
+</style>
+{% block page_css %}{% endblock %}
+{% endblock %}
+
+{% block navbar_extra %}
+<!-- 教師系統導航 -->
+<nav class="teacher-nav">
+    <div class="container">
+        <ul class="nav justify-content-center">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'teacher_hub' %}active{% endif %}" 
+                   href="{% url 'practice_logs:teacher_hub' %}">
+                    <i class="fas fa-tachometer-alt"></i> 儀表板
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'student' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="{% url 'practice_logs:teacher_students' %}">
+                    <i class="fas fa-users"></i> 學生管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'qa' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="{% url 'practice_logs:teacher_qa' %}">
+                    <i class="fas fa-question-circle"></i> 問答中心
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'resource' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="{% url 'practice_logs:teacher_resources' %}">
+                    <i class="fas fa-book"></i> 資源庫
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'lesson' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="{% url 'practice_logs:lesson_calendar' %}">
+                    <i class="fas fa-calendar-alt"></i> 課程管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'feedback' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="{% url 'practice_logs:feedback_center' %}">
+                    <i class="fas fa-comment-dots"></i> 回饋中心
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- 主要內容區域 -->
+{% block teacher_content %}{% endblock %}
+{% endblock %}
+
+{% block footer %}
+<!-- 快速操作按鈕 -->
+<div class="quick-actions">
+    <button class="quick-action-btn" id="quickNotifications" title="通知">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge d-none">0</span>
+    </button>
+    <button class="quick-action-btn" id="quickMessage" title="發送訊息">
+        <i class="fas fa-paper-plane"></i>
+    </button>
+</div>
+
+{{ block.super }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 檢查未讀通知
+function checkNotifications() {
+    fetch('{% url "practice_logs:api_pending_items" %}')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.querySelector('.notification-badge');
+            const total = (data.pending_questions || 0) + (data.unread_notifications || 0);
+            
+            if (total > 0) {
+                badge.textContent = total;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        });
+}
+
+// 初始化
+document.addEventListener('DOMContentLoaded', function() {
+    checkNotifications();
+    
+    // 每分鐘檢查一次
+    setInterval(checkNotifications, 60000);
+    
+    // 快速操作按鈕事件
+    document.getElementById('quickNotifications').addEventListener('click', function() {
+        window.location.href = '{% url "practice_logs:teacher_hub" %}#notifications';
+    });
+    
+    document.getElementById('quickMessage').addEventListener('click', function() {
+        // 可以打開發送訊息的模態框
+        alert('發送訊息功能開發中...');
+    });
+});
+</script>
+{% block page_js %}{% endblock %}
+{% endblock %}

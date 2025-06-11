@@ -1,0 +1,845 @@
+{% extends 'practice_logs/base.html' %}
+{% load static %}
+
+{% block title %}教師中心 - {{ user.profile.display_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 主容器 */
+.teacher-hub-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 歡迎區域 */
+.welcome-section {
+    background: linear-gradient(135deg, #2C5F7C 0%, #4A90E2 50%, #6DB3D1 100%);
+    color: white;
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.welcome-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-title {
+    font-size: 2.5rem;
+    font-weight: 300;
+    margin-bottom: 10px;
+    font-family: 'Georgia', serif;
+}
+
+.welcome-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* 快速統計卡片 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.stat-card.primary::before { background: #4A90E2; }
+.stat-card.success::before { background: #28a745; }
+.stat-card.warning::before { background: #ffc107; }
+.stat-card.info::before { background: #6DB3D1; }
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    opacity: 0.8;
+}
+
+.stat-card.primary .stat-icon { color: #4A90E2; }
+.stat-card.success .stat-icon { color: #28a745; }
+.stat-card.warning .stat-icon { color: #ffc107; }
+.stat-card.info .stat-icon { color: #6DB3D1; }
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.95rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 主要內容區域 */
+.main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+/* 區塊樣式 */
+.dashboard-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title i {
+    color: #4A90E2;
+}
+
+/* 學生進度卡片 */
+.student-progress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.student-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.student-card:hover {
+    border-color: #4A90E2;
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.1);
+}
+
+.student-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.student-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.student-badge {
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.student-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.student-stat {
+    text-align: center;
+}
+
+.student-stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #4A90E2;
+}
+
+.student-stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+.progress-bar-container {
+    background: #e9ecef;
+    height: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4A90E2, #6DB3D1);
+    transition: width 0.5s ease;
+}
+
+.student-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-student {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-view-details {
+    background: #4A90E2;
+    color: white;
+}
+
+.btn-view-details:hover {
+    background: #357ABD;
+    transform: translateY(-2px);
+}
+
+.btn-give-feedback {
+    background: #28a745;
+    color: white;
+}
+
+.btn-give-feedback:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+/* 待處理事項 */
+.pending-item {
+    padding: 15px;
+    border-left: 4px solid #ffc107;
+    background: #fffbf0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.pending-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 3px 10px rgba(255, 193, 7, 0.2);
+}
+
+.pending-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.pending-item-title {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.pending-item-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.priority-high {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.priority-medium {
+    color: #ffc107;
+}
+
+.priority-low {
+    color: #28a745;
+}
+
+/* 今日課程 */
+.lesson-timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.lesson-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.lesson-item {
+    position: relative;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.lesson-item::before {
+    content: '';
+    position: absolute;
+    left: -25px;
+    top: 20px;
+    width: 10px;
+    height: 10px;
+    background: #4A90E2;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.lesson-time {
+    font-weight: 600;
+    color: #4A90E2;
+    margin-bottom: 5px;
+}
+
+.lesson-student {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.lesson-topic {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* 問題列表 */
+.question-item {
+    padding: 15px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.question-item:hover {
+    border-color: #4A90E2;
+    background: #f8f9fa;
+}
+
+.question-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.question-student {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.question-type {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #e9ecef;
+    color: #495057;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    margin-top: 5px;
+}
+
+/* 圖表容器 */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-top: 20px;
+}
+
+/* 快速操作按鈕 */
+.quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    background: linear-gradient(135deg, #4A90E2, #6DB3D1);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+/* 空狀態 */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state-text {
+    font-size: 1.1rem;
+}
+
+/* 響應式設計 */
+@media (max-width: 1024px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .teacher-hub-container {
+        padding: 15px;
+    }
+    
+    .welcome-section {
+        padding: 25px;
+    }
+    
+    .welcome-title {
+        font-size: 1.8rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .student-progress-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="teacher-hub-container">
+    <!-- 歡迎區域 -->
+    <div class="welcome-section">
+        <div class="welcome-content">
+            <h1 class="welcome-title">歡迎回來，{{ user.profile.display_name }} 老師</h1>
+            <p class="welcome-subtitle">今天是 {{ today|date:"Y年m月d日" }}，讓我們一起幫助學生進步！</p>
+        </div>
+    </div>
+
+    <!-- 快速統計 -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value">{{ student_count }}</div>
+            <div class="stat-label">學生總數</div>
+        </div>
+        
+        <div class="stat-card success">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value">{{ active_students }}</div>
+            <div class="stat-label">本週活躍學生</div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-icon">❓</div>
+            <div class="stat-value">{{ pending_questions }}</div>
+            <div class="stat-label">待回答問題</div>
+        </div>
+        
+        <div class="stat-card info">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value">{{ pending_feedback }}</div>
+            <div class="stat-label">待回饋練習</div>
+        </div>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div class="main-grid">
+        <!-- 左側主要內容 -->
+        <div>
+            <!-- 學生進度概覽 -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        學生進度概覽
+                    </h2>
+                    <a href="{% url 'practice_logs:teacher_students' %}" class="btn btn-sm btn-outline-primary">
+                        查看全部
+                    </a>
+                </div>
+                
+                {% if student_progress_data %}
+                    <div class="student-progress-grid">
+                        {% for data in student_progress_data %}
+                            <div class="student-card">
+                                <div class="student-header">
+                                    <div class="student-name">
+                                        {{ data.student.profile.display_name|default:data.student.username }}
+                                    </div>
+                                    {% if data.progress %}
+                                        <div class="student-badge">{{ data.progress.current_level }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="student-stats">
+                                    <div class="student-stat">
+                                        <div class="student-stat-value">{{ data.practice_days }}</div>
+                                        <div class="student-stat-label">本週練習天數</div>
+                                    </div>
+                                    <div class="student-stat">
+                                        <div class="student-stat-value">{{ data.unanswered_questions }}</div>
+                                        <div class="student-stat-label">待答問題</div>
+                                    </div>
+                                    {% if data.progress %}
+                                        <div class="student-stat">
+                                            <div class="student-stat-value">{{ data.progress.overall_score|floatformat:1 }}</div>
+                                            <div class="student-stat-label">綜合評分</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if data.progress %}
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar-fill" style="width: {{ data.progress.progress_percentage }}%"></div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if data.recent_practice %}
+                                    <p class="text-muted small mb-2">
+                                        最近練習：{{ data.recent_practice.date|date:"m/d" }} - {{ data.recent_practice.minutes }}分鐘
+                                    </p>
+                                {% endif %}
+                                
+                                <div class="student-actions">
+                                    <a href="{% url 'practice_logs:student_detail' data.student.id %}" class="btn-student btn-view-details">
+                                        查看詳情
+                                    </a>
+                                    {% if data.recent_practice %}
+                                        <a href="{% url 'practice_logs:teacher_feedback_form' data.recent_practice.id %}" class="btn-student btn-give-feedback">
+                                            給予回饋
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <p class="empty-state-text">還沒有學生資料</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 練習趨勢圖表 -->
+            <div class="dashboard-section mt-4">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-area"></i>
+                        學生練習趨勢（過去7天）
+                    </h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="practiceTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側邊欄 -->
+        <div>
+            <!-- 今日課程 -->
+            <div class="dashboard-section mb-4">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-calendar-day"></i>
+                        今日課程
+                    </h2>
+                </div>
+                
+                {% if today_lessons %}
+                    <div class="lesson-timeline">
+                        {% for lesson in today_lessons %}
+                            <div class="lesson-item">
+                                <div class="lesson-time">{{ lesson.start_time|time:"H:i" }} - {{ lesson.end_time|time:"H:i" }}</div>
+                                <div class="lesson-student">
+                                    {{ lesson.student.profile.display_name|default:lesson.student.username }}
+                                </div>
+                                <div class="lesson-topic">{{ lesson.topic }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <p class="empty-state-text">今天沒有排定的課程</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 最新提問 -->
+            <div class="dashboard-section mb-4">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-question-circle"></i>
+                        最新學生提問
+                    </h2>
+                    <a href="{% url 'practice_logs:teacher_qa' %}" class="btn btn-sm btn-outline-primary">
+                        查看全部
+                    </a>
+                </div>
+                
+                {% if recent_questions %}
+                    {% for question in recent_questions %}
+                        <div class="question-item">
+                            <div class="question-title">{{ question.title|truncatechars:50 }}</div>
+                            <div class="question-student">
+                                {{ question.student.profile.display_name|default:question.student.username }}
+                            </div>
+                            <span class="question-type">{{ question.get_question_type_display }}</span>
+                            {% if question.priority == 'urgent' %}
+                                <span class="priority-high ms-2">緊急</span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❓</div>
+                        <p class="empty-state-text">暫無待回答的問題</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 快速操作 -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-bolt"></i>
+                        快速操作
+                    </h2>
+                </div>
+                
+                <div class="quick-actions">
+                    <a href="{% url 'practice_logs:teacher_resources' %}" class="quick-action-btn">
+                        <i class="fas fa-folder-open"></i>
+                        資源庫
+                    </a>
+                    <a href="{% url 'practice_logs:lesson_calendar' %}" class="quick-action-btn">
+                        <i class="fas fa-calendar-alt"></i>
+                        課程管理
+                    </a>
+                    <a href="{% url 'practice_logs:feedback_center' %}" class="quick-action-btn">
+                        <i class="fas fa-comments"></i>
+                        回饋中心
+                    </a>
+                    <a href="{% url 'practice_logs:teacher_qa' %}" class="quick-action-btn">
+                        <i class="fas fa-question"></i>
+                        問答中心
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// 練習趨勢圖表
+const ctx = document.getElementById('practiceTrendChart').getContext('2d');
+const practiceTrendData = {{ practice_trend_data|safe }};
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: practiceTrendData.map(d => d.date),
+        datasets: [{
+            label: '練習次數',
+            data: practiceTrendData.map(d => d.count),
+            borderColor: '#4A90E2',
+            backgroundColor: 'rgba(74, 144, 226, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            pointRadius: 5,
+            pointBackgroundColor: '#4A90E2',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 7
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                cornerRadius: 8,
+                titleFont: {
+                    size: 14,
+                    weight: 'normal'
+                },
+                bodyFont: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + ' 次練習';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    font: {
+                        size: 12
+                    }
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                }
+            },
+            x: {
+                ticks: {
+                    font: {
+                        size: 12
+                    }
+                },
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// 頁面載入動畫
+document.addEventListener('DOMContentLoaded', function() {
+    // 統計卡片動畫
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.6s ease';
+            
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+        }, index * 100);
+    });
+    
+    // 數字動畫
+    const statValues = document.querySelectorAll('.stat-value');
+    statValues.forEach(value => {
+        const finalValue = parseInt(value.textContent) || 0;
+        let currentValue = 0;
+        const increment = finalValue / 50;
+        
+        const timer = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= finalValue) {
+                currentValue = finalValue;
+                clearInterval(timer);
+            }
+            value.textContent = Math.floor(currentValue);
+        }, 20);
+    });
+});
+</script>
+{% endblock %}

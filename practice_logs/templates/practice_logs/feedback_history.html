@@ -1,0 +1,573 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}回饋歷史記錄{% endblock %}
+
+{% block extra_css %}
+<style>
+.history-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.page-header {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid rgba(139, 69, 19, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b4513, #d4a574, #8b4513);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: rgba(139, 69, 19, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(139, 69, 19, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.1);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #8b4513;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.feedback-list {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.feedback-item {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.feedback-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.feedback-item:last-child {
+    margin-bottom: 0;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.feedback-title {
+    color: #2c3e50;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    text-decoration: none;
+}
+
+.feedback-title:hover {
+    color: #8b4513;
+    text-decoration: none;
+}
+
+.feedback-meta {
+    color: #6c757d;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.practice-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.practice-detail {
+    color: #495057;
+}
+
+.practice-detail strong {
+    color: #2c3e50;
+}
+
+.feedback-preview {
+    color: #495057;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    max-height: 60px;
+    overflow: hidden;
+    position: relative;
+}
+
+.feedback-preview::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 30px;
+    height: 20px;
+    background: linear-gradient(to right, transparent, #f8f9fa);
+}
+
+.rating-summary {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.rating-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.stars {
+    color: #ffd700;
+}
+
+.feedback-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.badge-type {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    color: white;
+}
+
+.badge-mastery {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-retry {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-featured {
+    background: #ffd700;
+    color: #333;
+}
+
+.badge-unread {
+    background: #dc3545;
+    color: white;
+}
+
+.badge-read {
+    background: #28a745;
+    color: white;
+}
+
+.feedback-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-view {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-view:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-edit {
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-edit:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+
+.no-feedback {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.no-feedback-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.pagination-wrapper {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.pagination {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.pagination a,
+.pagination span {
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+    background: #8b4513;
+    color: white;
+    text-decoration: none;
+}
+
+.pagination .current {
+    background: #8b4513;
+    color: white;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .history-container {
+        padding: 0 15px;
+    }
+    
+    .page-header,
+    .feedback-list {
+        padding: 20px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .feedback-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .feedback-meta {
+        align-items: flex-start;
+        flex-direction: row;
+        gap: 10px;
+    }
+    
+    .practice-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .rating-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+.student-response-indicator {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #007bff;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.voice-indicator {
+    color: #8b4513;
+    font-size: 0.9rem;
+    margin-left: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <!-- 頁面標題 -->
+    <div class="page-header">
+        <h1 style="color: #2c3e50; margin-bottom: 10px;">
+            {% if view_type == 'teacher' %}
+                📋 我提供的回饋記錄
+            {% else %}
+                📬 我收到的回饋記錄
+            {% endif %}
+        </h1>
+        <p style="color: #6c757d; margin-bottom: 20px;">
+            {% if view_type == 'teacher' %}
+                查看您為學生提供的所有回饋記錄
+            {% else %}
+                查看教師為您提供的所有回饋記錄
+            {% endif %}
+        </p>
+        
+        <!-- 統計卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">{{ stats.total_feedbacks }}</span>
+                <div class="stat-label">總回饋數</div>
+            </div>
+            {% if view_type == 'student' %}
+            <div class="stat-card">
+                <span class="stat-value">{{ stats.unread_count }}</span>
+                <div class="stat-label">未讀回饋</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ stats.positive_count }}</span>
+                <div class="stat-label">掌握良好</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ stats.need_retry_count }}</span>
+                <div class="stat-label">建議重練</div>
+            </div>
+            {% else %}
+            <div class="stat-card">
+                <span class="stat-value">{{ stats.recent_count }}</span>
+                <div class="stat-label">本週新增</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 回饋列表 -->
+    <div class="feedback-list">
+        {% if page_obj.object_list %}
+            {% for feedback in page_obj.object_list %}
+            <div class="feedback-item">
+                <!-- 學生回應指示器 -->
+                {% if view_type == 'teacher' and feedback.student_response %}
+                <div class="student-response-indicator">
+                    💬 已回覆
+                </div>
+                {% endif %}
+                
+                <!-- 回饋標題 -->
+                <div class="feedback-header">
+                    <div>
+                        <a href="{% url 'practice_logs:feedback_detail' feedback.id %}" class="feedback-title">
+                            {% if view_type == 'teacher' %}
+                                {{ feedback.practice_log.student_name }} - 《{{ feedback.practice_log.piece }}》
+                            {% else %}
+                                {{ feedback.teacher_name }} - 《{{ feedback.practice_log.piece }}》
+                            {% endif %}
+                        </a>
+                        {% if feedback.voice_feedback %}
+                        <span class="voice-indicator">🎤 語音回饋</span>
+                        {% endif %}
+                    </div>
+                    <div class="feedback-meta">
+                        <div>{{ feedback.created_at|date:"m/d H:i" }}</div>
+                        {% if view_type == 'student' %}
+                            {% if feedback.student_read %}
+                                <span class="badge badge-read">已讀</span>
+                            {% else %}
+                                <span class="badge badge-unread">未讀</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- 練習記錄資訊 -->
+                <div class="practice-info">
+                    <div class="practice-detail">
+                        <strong>練習日期：</strong>{{ feedback.practice_log.date|date:"Y/m/d" }}
+                    </div>
+                    <div class="practice-detail">
+                        <strong>練習時間：</strong>{{ feedback.practice_log.minutes }} 分鐘
+                    </div>
+                    <div class="practice-detail">
+                        <strong>練習重點：</strong>{{ feedback.practice_log.get_focus_display }}
+                    </div>
+                    <div class="practice-detail">
+                        <strong>學生自評：</strong>{{ feedback.practice_log.rating }}/5
+                    </div>
+                </div>
+                
+                <!-- 評分總結 -->
+                <div class="rating-summary">
+                    <div class="rating-item">
+                        <span>🎯 技巧：</span>
+                        <span class="stars">{% for i in "12345" %}{% if forloop.counter <= feedback.technique_rating %}⭐{% else %}☆{% endif %}{% endfor %}</span>
+                        <span>{{ feedback.technique_rating }}/5</span>
+                    </div>
+                    <div class="rating-item">
+                        <span>🎵 音樂性：</span>
+                        <span class="stars">{% for i in "12345" %}{% if forloop.counter <= feedback.musicality_rating %}⭐{% else %}☆{% endif %}{% endfor %}</span>
+                        <span>{{ feedback.musicality_rating }}/5</span>
+                    </div>
+                    <div class="rating-item">
+                        <span>📈 進步：</span>
+                        <span class="stars">{% for i in "12345" %}{% if forloop.counter <= feedback.progress_rating %}⭐{% else %}☆{% endif %}{% endfor %}</span>
+                        <span>{{ feedback.progress_rating }}/5</span>
+                    </div>
+                    <div class="rating-item">
+                        <strong>綜合：{{ feedback.get_overall_rating }}/5</strong>
+                    </div>
+                </div>
+                
+                <!-- 回饋預覽 -->
+                <div class="feedback-preview">
+                    {{ feedback.get_feedback_summary }}
+                </div>
+                
+                <!-- 狀態標籤 -->
+                <div class="feedback-badges">
+                    <span class="badge badge-type">{{ feedback.get_feedback_type_display }}</span>
+                    <span class="badge badge-mastery">{{ feedback.get_mastery_level_display }}</span>
+                    {% if feedback.mastered_well %}
+                    <span class="badge badge-mastery">✅ 掌握良好</span>
+                    {% endif %}
+                    {% if feedback.need_retry %}
+                    <span class="badge badge-retry">🔄 建議重練</span>
+                    {% endif %}
+                    {% if feedback.is_featured %}
+                    <span class="badge badge-featured">⭐ 精選</span>
+                    {% endif %}
+                </div>
+                
+                <!-- 操作按鈕 -->
+                <div class="feedback-actions">
+                    <a href="{% url 'practice_logs:feedback_detail' feedback.id %}" class="btn-view">
+                        👁️ 查看詳情
+                    </a>
+                    {% if view_type == 'teacher' %}
+                    <a href="{% url 'practice_logs:teacher_feedback_form' feedback.practice_log.id %}" class="btn-edit">
+                        ✏️ 編輯回饋
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- 分頁 -->
+            {% if page_obj.has_other_pages %}
+            <div class="pagination-wrapper">
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">« 首頁</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">‹ 上一頁</a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span class="current">{{ num }}</span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a href="?page={{ num }}">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">下一頁 ›</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">末頁 »</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+        {% else %}
+            <!-- 無回饋記錄 -->
+            <div class="no-feedback">
+                <div class="no-feedback-icon">📭</div>
+                <h3 style="color: #6c757d; margin-bottom: 10px;">
+                    {% if view_type == 'teacher' %}
+                        尚未提供任何回饋
+                    {% else %}
+                        尚未收到任何回饋
+                    {% endif %}
+                </h3>
+                <p>
+                    {% if view_type == 'teacher' %}
+                        當您為學生的練習記錄提供回饋後，記錄將在此處顯示。
+                    {% else %}
+                        當教師為您的練習記錄提供回饋後，記錄將在此處顯示。
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

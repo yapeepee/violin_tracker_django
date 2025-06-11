@@ -1,0 +1,416 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}問答中心 - 教師系統{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qa-dashboard {
+        padding: 20px;
+    }
+    
+    .qa-header {
+        background: linear-gradient(135deg, #2c5f3d 0%, #1e7c5e 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .qa-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stat-number {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .pending-questions {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    }
+    
+    .question-item {
+        border-bottom: 1px solid #eee;
+        padding: 20px 0;
+        transition: background 0.2s ease;
+    }
+    
+    .question-item:hover {
+        background: #f8f9fa;
+        margin: 0 -25px;
+        padding: 20px 25px;
+    }
+    
+    .question-item:last-child {
+        border-bottom: none;
+    }
+    
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+    
+    .question-title {
+        font-size: 1.1em;
+        color: #2c5f3d;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .question-title:hover {
+        color: #1e7c5e;
+    }
+    
+    .question-meta {
+        display: flex;
+        gap: 15px;
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+    
+    .priority-badge {
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+    
+    .priority-high {
+        background: #ffebee;
+        color: #c62828;
+    }
+    
+    .priority-medium {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+    
+    .priority-low {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .category-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .category-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    
+    .category-icon {
+        font-size: 2em;
+        margin-bottom: 10px;
+    }
+    
+    .category-name {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .category-count {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .recent-answered {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .answer-preview {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border-left: 4px solid #2c5f3d;
+    }
+    
+    .faq-section {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    }
+    
+    .faq-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .faq-item:last-child {
+        border-bottom: none;
+    }
+    
+    .faq-question {
+        font-weight: 600;
+        color: #2c5f3d;
+        margin-bottom: 5px;
+    }
+    
+    .faq-answer {
+        color: #666;
+        font-size: 0.95em;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .btn-answer {
+        background: #2c5f3d;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.9em;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-answer:hover {
+        background: #1e7c5e;
+        transform: translateY(-2px);
+    }
+    
+    .view-all-link {
+        display: inline-block;
+        margin-top: 15px;
+        color: #2c5f3d;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .view-all-link:hover {
+        color: #1e7c5e;
+        text-decoration: underline;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+    
+    .empty-state i {
+        font-size: 3em;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qa-dashboard">
+    <div class="qa-header">
+        <h1><i class="fas fa-question-circle"></i> 問答中心</h1>
+        <p class="mt-2">管理學生提問，提供專業指導</p>
+    </div>
+    
+    <!-- 統計卡片 -->
+    <div class="qa-stats">
+        <div class="stat-card">
+            <div class="stat-number text-primary">{{ stats.total_questions }}</div>
+            <div class="stat-label">總問題數</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-warning">{{ stats.pending_count }}</div>
+            <div class="stat-label">待回答</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-success">{{ stats.answered_count }}</div>
+            <div class="stat-label">已回答</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-info">{{ stats.this_week }}</div>
+            <div class="stat-label">本週新增</div>
+        </div>
+    </div>
+    
+    <!-- 待回答問題 -->
+    <div class="pending-questions">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>待回答問題</h3>
+            <a href="{% url 'practice_logs:teacher_question_list' %}" class="btn btn-sm btn-outline-primary">
+                查看全部 <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        
+        {% if pending_questions %}
+            {% for question in pending_questions %}
+            <div class="question-item">
+                <div class="question-header">
+                    <div>
+                        <a href="{% url 'practice_logs:answer_question' question.id %}" class="question-title">
+                            {{ question.title }}
+                        </a>
+                        <div class="question-meta">
+                            <span><i class="fas fa-user"></i> {{ question.student.profile.display_name|default:question.student.username }}</span>
+                            <span><i class="fas fa-clock"></i> {{ question.created_at|timesince }}前</span>
+                            {% if question.category %}
+                            <span><i class="fas fa-tag"></i> {{ question.category.name }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="priority-badge priority-{{ question.priority }}">
+                        {{ question.get_priority_display }}
+                    </span>
+                </div>
+                <p class="text-muted mb-2">{{ question.question_text|truncatewords:20 }}</p>
+                <div class="action-buttons">
+                    <a href="{% url 'practice_logs:answer_question' question.id %}" class="btn-answer">
+                        <i class="fas fa-reply"></i> 回答
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if has_more_pending %}
+            <a href="{% url 'practice_logs:teacher_question_list' %}?status=pending" class="view-all-link">
+                查看更多待回答問題 →
+            </a>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>太棒了！目前沒有待回答的問題</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="row">
+        <!-- 問題分類統計 -->
+        <div class="col-md-6">
+            <h3 class="mb-3">問題分類分布</h3>
+            <div class="category-stats">
+                {% for cat_stat in category_stats %}
+                <div class="category-card" onclick="window.location.href='{% url 'practice_logs:teacher_question_list' %}?category={{ cat_stat.category__id }}'">
+                    <div class="category-icon" style="color: {{ cat_stat.category__color }}">
+                        <i class="{{ cat_stat.category__icon }}"></i>
+                    </div>
+                    <div class="category-name">{{ cat_stat.category__name }}</div>
+                    <div class="category-count">{{ cat_stat.count }} 個問題</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- 最近回答 -->
+        <div class="col-md-6">
+            <h3 class="mb-3">最近回答</h3>
+            <div class="recent-answered">
+                {% if recent_answered %}
+                    {% for question in recent_answered %}
+                    <div class="answer-preview">
+                        <h5 class="mb-2">
+                            <a href="{% url 'practice_logs:answer_question' question.id %}" class="text-decoration-none">
+                                {{ question.title }}
+                            </a>
+                        </h5>
+                        <p class="text-muted small mb-2">
+                            提問者：{{ question.student.profile.display_name|default:question.student.username }} · 
+                            {{ question.updated_at|timesince }}前回答
+                        </p>
+                        {% if question.answers.first %}
+                        <p class="mb-0">{{ question.answers.first.answer_text|truncatewords:15 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center">還沒有回答過問題</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 常見問題 -->
+    <div class="faq-section mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>常見問題 (FAQ)</h3>
+            <a href="{% url 'practice_logs:faq_management' %}" class="btn btn-sm btn-outline-secondary">
+                管理FAQ <i class="fas fa-cog"></i>
+            </a>
+        </div>
+        
+        {% if faqs %}
+            {% for faq in faqs %}
+            <div class="faq-item">
+                <div class="faq-question">{{ faq.question }}</div>
+                <div class="faq-answer">{{ faq.answer|truncatewords:30 }}</div>
+                <small class="text-muted">
+                    <i class="fas fa-eye"></i> {{ faq.view_count }} 次查看
+                </small>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted text-center">尚未建立常見問題</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 自動刷新待回答問題數量
+    setInterval(function() {
+        fetch('{% url "practice_logs:api_pending_items" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.pending_questions !== undefined) {
+                    document.querySelector('.stat-number.text-warning').textContent = data.pending_questions;
+                }
+            });
+    }, 30000); // 每30秒刷新一次
+});
+</script>
+{% endblock %}

@@ -1,0 +1,711 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}影片庫{% endblock %}
+
+{% block extra_css %}
+<style>
+.video-library-container {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.library-header {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid rgba(139, 69, 19, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.library-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b4513, #d4a574, #8b4513);
+}
+
+.library-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.library-title h1 {
+    color: #2c3e50;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.library-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    background: rgba(139, 69, 19, 0.1);
+    padding: 10px 15px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 80px;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #8b4513;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.filters-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.filters-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.filter-control {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.filter-control:focus {
+    border-color: #8b4513;
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    outline: none;
+}
+
+.btn-filter {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: fit-content;
+}
+
+.btn-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+}
+
+.btn-clear {
+    background: #6c757d;
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: fit-content;
+}
+
+.btn-clear:hover {
+    background: #545b62;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.video-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.video-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.video-thumbnail {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.video-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-placeholder {
+    color: #8b4513;
+    font-size: 3rem;
+    opacity: 0.7;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(139, 69, 19, 0.9);
+    color: white;
+    padding: 15px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.video-card:hover .play-overlay {
+    opacity: 1;
+}
+
+.video-info {
+    padding: 20px;
+}
+
+.video-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    line-height: 1.3;
+}
+
+.video-student {
+    color: #8b4513;
+    font-weight: 500;
+    margin-bottom: 5px;
+    font-size: 0.95rem;
+}
+
+.video-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.video-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    font-size: 0.85rem;
+}
+
+.stat-badge {
+    background: rgba(139, 69, 19, 0.1);
+    color: #8b4513;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rating-stars {
+    color: #ffc107;
+    margin-bottom: 10px;
+}
+
+.video-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-watch {
+    flex: 1;
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.btn-watch:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-info {
+    background: #6c757d;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-info:hover {
+    background: #545b62;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.pagination {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.page-link {
+    padding: 8px 12px;
+    border: 1px solid #8b4513;
+    color: #8b4513;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover, .page-link.active {
+    background: #8b4513;
+    color: white;
+    text-decoration: none;
+}
+
+.page-link.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.no-videos {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.no-videos-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.upload-prompt {
+    margin-top: 20px;
+}
+
+.btn-upload-link {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-upload-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(139, 69, 19, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .video-library-container {
+        padding: 0 15px;
+    }
+    
+    .library-header {
+        padding: 20px;
+    }
+    
+    .library-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .library-stats {
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    .filter-form {
+        grid-template-columns: 1fr;
+    }
+    
+    .video-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .video-thumbnail {
+        height: 180px;
+    }
+}
+
+@media (max-width: 576px) {
+    .video-stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .video-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="video-library-container">
+    <!-- 頁面標題和統計 -->
+    <div class="library-header">
+        <div class="library-title">
+            <h1>
+                🎥 影片庫
+            </h1>
+            <a href="{% url 'practice_logs:video_upload' %}" class="btn-upload-link">
+                <i class="fas fa-plus me-2"></i>上傳新影片
+            </a>
+        </div>
+        
+        <div class="library-stats">
+            <div class="stat-item">
+                <span class="stat-number">{{ total_videos }}</span>
+                <span class="stat-label">個影片</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ total_students }}</span>
+                <span class="stat-label">位學生</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ total_pieces }}</span>
+                <span class="stat-label">首曲目</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 篩選器 -->
+    <div class="filters-section">
+        <h3 class="filters-title">
+            <i class="fas fa-filter"></i>
+            篩選影片
+        </h3>
+        
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <label class="filter-label">學生姓名</label>
+                <input type="text" 
+                       name="student_name" 
+                       class="filter-control"
+                       placeholder="搜尋學生..."
+                       value="{{ current_filters.student_name }}">
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">曲目</label>
+                <select name="piece" class="filter-control">
+                    <option value="">所有曲目</option>
+                    {% for piece in all_pieces %}
+                        <option value="{{ piece }}" 
+                                {% if current_filters.piece == piece %}selected{% endif %}>
+                            {{ piece }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">週數</label>
+                <select name="week" class="filter-control">
+                    <option value="">所有週數</option>
+                    {% for week in all_weeks %}
+                        <option value="{{ week }}" 
+                                {% if current_filters.week == week|stringformat:"s" %}selected{% endif %}>
+                            第 {{ week }} 週
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">隱私設定</label>
+                <select name="privacy" class="filter-control">
+                    <option value="">全部</option>
+                    <option value="public" {% if current_filters.privacy == "public" %}selected{% endif %}>
+                        公開影片
+                    </option>
+                    <option value="teacher" {% if current_filters.privacy == "teacher" %}selected{% endif %}>
+                        僅教師可見
+                    </option>
+                    <option value="private" {% if current_filters.privacy == "private" %}selected{% endif %}>
+                        私人影片
+                    </option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn-filter">
+                <i class="fas fa-search me-1"></i>篩選
+            </button>
+            
+            <a href="{% url 'practice_logs:video_library' %}" class="btn-clear">
+                <i class="fas fa-times me-1"></i>清除
+            </a>
+        </form>
+    </div>
+
+    <!-- 影片網格 -->
+    {% if page_obj.object_list %}
+        <div class="video-grid">
+            {% for recording in page_obj.object_list %}
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        {% if recording.thumbnail %}
+                            <img src="{{ recording.thumbnail.url }}" alt="{{ recording.piece }}">
+                        {% else %}
+                            <div class="video-placeholder">🎬</div>
+                        {% endif %}
+                        
+                        <!-- 隱私標示 -->
+                        <div class="privacy-indicator" style="position: absolute; top: 10px; right: 10px; padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 500; color: white;
+                             {% if recording.privacy_level == 'public' %}background: #28a745;
+                             {% elif recording.privacy_level == 'teacher_only' %}background: #8b4513;
+                             {% else %}background: #6c757d;{% endif %}">
+                            {% if recording.privacy_level == 'public' %}
+                                🌍 公開
+                            {% elif recording.privacy_level == 'teacher_only' %}
+                                👨‍🏫 教師可見
+                            {% else %}
+                                🔒 私人
+                            {% endif %}
+                        </div>
+                        
+                        <div class="play-overlay">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="video-info">
+                        <h4 class="video-title">{{ recording.piece }}</h4>
+                        <div class="video-student">
+                            <i class="fas fa-user me-1"></i>{{ recording.student_name }}
+                        </div>
+                        
+                        <div class="video-meta">
+                            <span>{{ recording.recording_date|date:"Y/m/d"|default:recording.upload_date|date:"Y/m/d" }}</span>
+                            <span>{{ recording.upload_date|date:"Y/m/d" }} 上傳</span>
+                        </div>
+                        
+                        <div class="video-stats">
+                            <div class="stat-badge">
+                                <i class="fas fa-star"></i>
+                                {{ recording.self_rating }}/5
+                            </div>
+                            <div class="stat-badge">
+                                <i class="fas fa-eye"></i>
+                                {{ recording.view_count }}
+                            </div>
+                            {% if recording.duration %}
+                                <div class="stat-badge">
+                                    <i class="fas fa-clock"></i>
+                                    {{ recording.duration_display }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if recording.average_rating %}
+                            <div class="rating-stars">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= recording.average_rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="ms-2 text-muted">{{ recording.average_rating|floatformat:1 }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="video-actions">
+                            <a href="{% url 'practice_logs:video_player' recording.id %}" class="btn-watch">
+                                <i class="fas fa-play me-1"></i>觀看
+                            </a>
+                            <button class="btn-info" title="詳細資訊" onclick="showVideoInfo({{ recording.id }})">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- 分頁 -->
+        {% if page_obj.has_other_pages %}
+            <div class="pagination-container">
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if request.GET.student_name %}&student_name={{ request.GET.student_name }}{% endif %}{% if request.GET.piece %}&piece={{ request.GET.piece }}{% endif %}{% if request.GET.week %}&week={{ request.GET.week }}{% endif %}{% if request.GET.privacy %}&privacy={{ request.GET.privacy }}{% endif %}" 
+                           class="page-link">首頁</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.student_name %}&student_name={{ request.GET.student_name }}{% endif %}{% if request.GET.piece %}&piece={{ request.GET.piece }}{% endif %}{% if request.GET.week %}&week={{ request.GET.week }}{% endif %}{% if request.GET.privacy %}&privacy={{ request.GET.privacy }}{% endif %}" 
+                           class="page-link">上一頁</a>
+                    {% endif %}
+                    
+                    <span class="page-link active">
+                        第 {{ page_obj.number }} 頁，共 {{ page_obj.paginator.num_pages }} 頁
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.student_name %}&student_name={{ request.GET.student_name }}{% endif %}{% if request.GET.piece %}&piece={{ request.GET.piece }}{% endif %}{% if request.GET.week %}&week={{ request.GET.week }}{% endif %}{% if request.GET.privacy %}&privacy={{ request.GET.privacy }}{% endif %}" 
+                           class="page-link">下一頁</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.student_name %}&student_name={{ request.GET.student_name }}{% endif %}{% if request.GET.piece %}&piece={{ request.GET.piece }}{% endif %}{% if request.GET.week %}&week={{ request.GET.week }}{% endif %}{% if request.GET.privacy %}&privacy={{ request.GET.privacy }}{% endif %}" 
+                           class="page-link">末頁</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="no-videos">
+            <div class="no-videos-icon">📹</div>
+            <h3>還沒有影片</h3>
+            <p>目前沒有符合條件的影片，快來上傳第一個練習影片吧！</p>
+            <div class="upload-prompt">
+                <a href="{% url 'practice_logs:video_upload' %}" class="btn-upload-link">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>立即上傳
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- 詳細資訊模態框 -->
+<div class="modal fade" id="videoInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">影片詳細資訊</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="videoInfoContent">
+                <!-- 動態載入內容 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showVideoInfo(recordingId) {
+    // 此處可以添加AJAX請求來獲取詳細資訊
+    // 現在先顯示一個簡單的提示
+    const modal = new bootstrap.Modal(document.getElementById('videoInfoModal'));
+    document.getElementById('videoInfoContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">載入中...</span>
+            </div>
+            <p class="mt-3">載入影片詳細資訊中...</p>
+        </div>
+    `;
+    modal.show();
+    
+    // 這裡可以添加實際的API調用
+    setTimeout(() => {
+        document.getElementById('videoInfoContent').innerHTML = `
+            <p>影片ID: ${recordingId}</p>
+            <p>詳細資訊功能開發中...</p>
+        `;
+    }, 1000);
+}
+
+// 點擊影片卡片播放影片
+document.addEventListener('DOMContentLoaded', function() {
+    const videoCards = document.querySelectorAll('.video-card');
+    
+    videoCards.forEach(card => {
+        const playOverlay = card.querySelector('.play-overlay');
+        const watchBtn = card.querySelector('.btn-watch');
+        
+        if (playOverlay && watchBtn) {
+            playOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = watchBtn.href;
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

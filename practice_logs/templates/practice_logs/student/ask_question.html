@@ -1,0 +1,457 @@
+{% extends 'practice_logs/base.html' %}
+{% load static %}
+
+{% block title %}提出問題 - 小提琴練習系統{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ask-question-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .form-header h1 {
+        color: #2c5f3d;
+        margin-bottom: 10px;
+    }
+    
+    .form-header p {
+        color: #666;
+        font-size: 1.1em;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .required {
+        color: #ff5252;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1em;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #2c5f3d;
+        box-shadow: 0 0 0 3px rgba(44, 95, 61, 0.1);
+    }
+    
+    .form-textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+    
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .category-option {
+        position: relative;
+    }
+    
+    .category-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .category-label {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .category-option input[type="radio"]:checked + .category-label {
+        border-color: #2c5f3d;
+        background: #e8f5e9;
+    }
+    
+    .category-label:hover {
+        border-color: #2c5f3d;
+        background: #f5f5f5;
+    }
+    
+    .category-icon {
+        margin-right: 8px;
+        font-size: 1.2em;
+    }
+    
+    .priority-options {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+    }
+    
+    .priority-option {
+        flex: 1;
+        position: relative;
+    }
+    
+    .priority-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .priority-label {
+        display: block;
+        padding: 10px;
+        text-align: center;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid #e0e0e0;
+    }
+    
+    .priority-high {
+        color: #c62828;
+    }
+    
+    .priority-medium {
+        color: #f57c00;
+    }
+    
+    .priority-low {
+        color: #2e7d32;
+    }
+    
+    .priority-option input[type="radio"]:checked + .priority-label {
+        border-color: currentColor;
+        background: #f5f5f5;
+        font-weight: 600;
+    }
+    
+    .teacher-select {
+        margin-top: 10px;
+    }
+    
+    .help-text {
+        font-size: 0.9em;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .btn {
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-size: 1em;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: #2c5f3d;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #1e7c5e;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #666;
+    }
+    
+    .btn-secondary:hover {
+        background: #e0e0e0;
+        color: #333;
+    }
+    
+    .tips-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .tips-section h3 {
+        color: #2c5f3d;
+        margin-bottom: 15px;
+    }
+    
+    .tips-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .tips-list li {
+        padding-left: 25px;
+        position: relative;
+        margin-bottom: 10px;
+        color: #666;
+    }
+    
+    .tips-list li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #4caf50;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ask-question-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1><i class="fas fa-question-circle"></i> 向教師提問</h1>
+            <p>有任何關於練習的疑問嗎？讓我們來幫助您！</p>
+        </div>
+        
+        <!-- 提問技巧 -->
+        <div class="tips-section">
+            <h3><i class="fas fa-lightbulb"></i> 提問小技巧</h3>
+            <ul class="tips-list">
+                <li>標題要簡潔明確，讓教師快速了解問題</li>
+                <li>詳細描述您遇到的困難或疑惑</li>
+                <li>說明您已經嘗試過的方法</li>
+                <li>選擇合適的分類和優先級</li>
+            </ul>
+        </div>
+        
+        <form method="post" action="{% url 'practice_logs:student_ask_question' %}">
+            {% csrf_token %}
+            
+            <!-- 問題標題 -->
+            <div class="form-group">
+                <label class="form-label" for="title">
+                    問題標題 <span class="required">*</span>
+                </label>
+                <input type="text" id="title" name="title" class="form-control" 
+                       placeholder="例如：如何改善左手換把位的準確度？" required>
+            </div>
+            
+            <!-- 問題分類 -->
+            <div class="form-group">
+                <label class="form-label">
+                    問題分類 <span class="required">*</span>
+                </label>
+                <div class="category-grid">
+                    {% for category in categories %}
+                    <div class="category-option">
+                        <input type="radio" id="category_{{ category.id }}" name="category" 
+                               value="{{ category.id }}" required>
+                        <label class="category-label" for="category_{{ category.id }}">
+                            <i class="{{ category.icon }} category-icon" 
+                               style="color: {{ category.color }}"></i>
+                            {{ category.name }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 詳細描述 -->
+            <div class="form-group">
+                <label class="form-label" for="question_text">
+                    詳細描述 <span class="required">*</span>
+                </label>
+                <textarea id="question_text" name="question_text" 
+                          class="form-control form-textarea" 
+                          placeholder="請詳細描述您的問題，包括：
+- 您在練習什麼曲目或技巧
+- 遇到的具體困難
+- 已經嘗試過的解決方法
+- 期望得到什麼樣的幫助" required></textarea>
+            </div>
+            
+            <!-- 優先級 -->
+            <div class="form-group">
+                <label class="form-label">優先級</label>
+                <div class="priority-options">
+                    <div class="priority-option">
+                        <input type="radio" id="priority_low" name="priority" value="low">
+                        <label class="priority-label priority-low" for="priority_low">
+                            <i class="fas fa-flag"></i> 一般
+                        </label>
+                    </div>
+                    <div class="priority-option">
+                        <input type="radio" id="priority_medium" name="priority" 
+                               value="medium" checked>
+                        <label class="priority-label priority-medium" for="priority_medium">
+                            <i class="fas fa-flag"></i> 重要
+                        </label>
+                    </div>
+                    <div class="priority-option">
+                        <input type="radio" id="priority_high" name="priority" value="high">
+                        <label class="priority-label priority-high" for="priority_high">
+                            <i class="fas fa-flag"></i> 緊急
+                        </label>
+                    </div>
+                </div>
+                <p class="help-text">請根據問題的緊急程度選擇優先級</p>
+            </div>
+            
+            <!-- 指定教師 -->
+            {% if my_teachers %}
+            <div class="form-group">
+                <label class="form-label" for="teacher">指定教師（選填）</label>
+                <select id="teacher" name="teacher" class="form-control teacher-select">
+                    <option value="">-- 任何教師都可以回答 --</option>
+                    {% for teacher in my_teachers %}
+                    <option value="{{ teacher.id }}">
+                        {{ teacher.profile.display_name|default:teacher.username }}
+                        {% if teacher.profile.specialization %}
+                        ({{ teacher.profile.specialization }})
+                        {% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                <p class="help-text">如果不指定，所有您的教師都能看到並回答這個問題</p>
+            </div>
+            {% endif %}
+            
+            <!-- 操作按鈕 -->
+            <div class="form-actions">
+                <a href="{% url 'practice_logs:student_questions' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> 取消
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> 提交問題
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 表單驗證
+document.querySelector('form').addEventListener('submit', function(e) {
+    const title = document.getElementById('title').value.trim();
+    const questionText = document.getElementById('question_text').value.trim();
+    const category = document.querySelector('input[name="category"]:checked');
+    
+    if (!title || !questionText || !category) {
+        e.preventDefault();
+        alert('請填寫所有必填欄位');
+        return false;
+    }
+    
+    if (title.length < 5) {
+        e.preventDefault();
+        alert('標題至少需要5個字符');
+        return false;
+    }
+    
+    if (questionText.length < 20) {
+        e.preventDefault();
+        alert('問題描述至少需要20個字符');
+        return false;
+    }
+});
+
+// 自動保存草稿
+let autoSaveTimer;
+const titleInput = document.getElementById('title');
+const questionTextarea = document.getElementById('question_text');
+
+function saveDraft() {
+    const draft = {
+        title: titleInput.value,
+        question_text: questionTextarea.value,
+        category: document.querySelector('input[name="category"]:checked')?.value,
+        priority: document.querySelector('input[name="priority"]:checked')?.value,
+        teacher: document.getElementById('teacher')?.value
+    };
+    
+    localStorage.setItem('question_draft', JSON.stringify(draft));
+    
+    // 顯示保存提示
+    const savedHint = document.createElement('span');
+    savedHint.textContent = '草稿已自動保存';
+    savedHint.style.cssText = 'color: #4caf50; margin-left: 10px;';
+    document.querySelector('.form-header').appendChild(savedHint);
+    setTimeout(() => savedHint.remove(), 2000);
+}
+
+// 監聽輸入變化
+[titleInput, questionTextarea].forEach(input => {
+    input.addEventListener('input', function() {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(saveDraft, 1000);
+    });
+});
+
+// 載入草稿
+document.addEventListener('DOMContentLoaded', function() {
+    const draft = localStorage.getItem('question_draft');
+    if (draft) {
+        try {
+            const data = JSON.parse(draft);
+            if (data.title) titleInput.value = data.title;
+            if (data.question_text) questionTextarea.value = data.question_text;
+            if (data.category) {
+                const categoryRadio = document.querySelector(`input[name="category"][value="${data.category}"]`);
+                if (categoryRadio) categoryRadio.checked = true;
+            }
+            if (data.priority) {
+                const priorityRadio = document.querySelector(`input[name="priority"][value="${data.priority}"]`);
+                if (priorityRadio) priorityRadio.checked = true;
+            }
+            if (data.teacher && document.getElementById('teacher')) {
+                document.getElementById('teacher').value = data.teacher;
+            }
+        } catch (e) {
+            console.error('Failed to load draft:', e);
+        }
+    }
+});
+
+// 提交時清除草稿
+document.querySelector('form').addEventListener('submit', function() {
+    localStorage.removeItem('question_draft');
+});
+</script>
+{% endblock %}

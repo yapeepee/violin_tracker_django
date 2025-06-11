@@ -1,0 +1,792 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}上傳練習影片{% endblock %}
+
+{% block extra_css %}
+<style>
+.video-upload-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.upload-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid rgba(139, 69, 19, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b4513, #d4a574, #8b4513);
+}
+
+.upload-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.upload-header h1 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-family: 'Georgia', serif;
+}
+
+.upload-header p {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #8b4513;
+    margin-bottom: 20px;
+    animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.form-group {
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control {
+    width: 100%;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    border-color: #8b4513;
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    outline: none;
+    background: white;
+}
+
+.file-upload-area {
+    border: 3px dashed #8b4513;
+    border-radius: 15px;
+    padding: 40px 20px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.file-upload-area:hover {
+    border-color: #d4a574;
+    background: rgba(139, 69, 19, 0.05);
+}
+
+.file-upload-area.dragover {
+    border-color: #8b4513;
+    background: rgba(139, 69, 19, 0.1);
+    transform: scale(1.02);
+}
+
+.file-upload-content {
+    pointer-events: none;
+}
+
+.file-upload-icon {
+    font-size: 3rem;
+    color: #8b4513;
+    margin-bottom: 15px;
+}
+
+.file-upload-text {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.file-upload-hint {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.selected-file {
+    margin-top: 15px;
+    padding: 10px 15px;
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    border-radius: 8px;
+    color: #155724;
+}
+
+.rating-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 8px;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+}
+
+.star {
+    font-size: 1.8rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.star.active,
+.star:hover {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
+.rating-display {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.privacy-options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.privacy-option {
+    position: relative;
+}
+
+.privacy-option input[type="radio"] {
+    display: none;
+}
+
+.privacy-label {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+    gap: 15px;
+}
+
+.privacy-label:hover {
+    border-color: #8b4513;
+    background: rgba(139, 69, 19, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.15);
+}
+
+.privacy-option input[type="radio"]:checked + .privacy-label {
+    border-color: #8b4513;
+    background: linear-gradient(135deg, rgba(139, 69, 19, 0.1), rgba(212, 165, 116, 0.1));
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
+}
+
+.privacy-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.privacy-info {
+    flex: 1;
+}
+
+.privacy-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+    font-size: 1.1rem;
+}
+
+.privacy-desc {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.progress-container {
+    margin-top: 20px;
+    display: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.btn-upload {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 30px auto 0;
+    min-width: 200px;
+}
+
+.btn-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(139, 69, 19, 0.3);
+    color: white;
+}
+
+.btn-upload:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.upload-tips {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.upload-tips h5 {
+    color: #856404;
+    margin-bottom: 15px;
+}
+
+.upload-tips ul {
+    color: #856404;
+    margin-bottom: 0;
+}
+
+.alert {
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background: linear-gradient(45deg, #d4edda, #c3e6cb);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(45deg, #f8d7da, #f1b0b7);
+    color: #721c24;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .video-upload-container {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+    
+    .upload-card {
+        padding: 30px 20px;
+    }
+    
+    .file-upload-area {
+        padding: 30px 15px;
+    }
+    
+    .rating-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="video-upload-container">
+    <!-- 錯誤/成功提示區域 -->
+    <div id="alertContainer"></div>
+
+    <div class="upload-card">
+        <div class="upload-header">
+            <div class="upload-icon">🎥</div>
+            <h1>上傳練習影片</h1>
+            <p>分享您的演奏記錄，追蹤進步軌跡</p>
+        </div>
+
+        <form id="videoUploadForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="studentName" class="form-label">學生姓名 *</label>
+                        <input type="text" 
+                               name="student_name" 
+                               id="studentName" 
+                               class="form-control" 
+                               placeholder="請輸入學生姓名" 
+                               required
+                               value="{{ student_name|default:'' }}" 
+                               maxlength="50">
+                        <div class="form-text">演奏者的姓名</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="recordingDate" class="form-label">錄音日期 *</label>
+                        <input type="date" 
+                               name="recording_date" 
+                               id="recordingDate" 
+                               class="form-control" 
+                               required>
+                        <div class="form-text">錄製這個影片的日期</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="piece" class="form-label">演奏曲目 *</label>
+                <input type="text" 
+                       name="piece" 
+                       id="piece"
+                       class="form-control" 
+                       placeholder="例如：巴哈無伴奏小提琴組曲第一號 Allemande" 
+                       required 
+                       maxlength="200"
+                       list="piecesList">
+                <datalist id="piecesList">
+                    {% for piece in pieces %}
+                        <option value="{{ piece }}">
+                    {% endfor %}
+                </datalist>
+                <div class="form-text">您演奏的樂曲名稱</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">影片檔案 *</label>
+                <div class="file-upload-area" id="fileUploadArea">
+                    <div class="file-upload-content">
+                        <div class="file-upload-icon">📁</div>
+                        <div class="file-upload-text">點擊或拖拽影片檔案到此處</div>
+                        <div class="file-upload-hint">支持 MP4、AVI、MOV、WEBM 格式，建議大小不超過 100MB</div>
+                    </div>
+                </div>
+                <input type="file" 
+                       name="recording_file" 
+                       id="recordingFile" 
+                       class="hidden-file-input"
+                       accept="video/mp4,video/avi,video/mov,video/webm"
+                       required>
+                <div id="selectedFile" class="selected-file" style="display: none;"></div>
+                
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">準備上傳...</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">隱私設定 *</label>
+                <div class="privacy-options">
+                    <div class="privacy-option">
+                        <input type="radio" name="privacy_setting" id="privacyPublic" value="public" required>
+                        <label for="privacyPublic" class="privacy-label">
+                            <div class="privacy-icon">🌍</div>
+                            <div class="privacy-info">
+                                <div class="privacy-title">公開</div>
+                                <div class="privacy-desc">所有人都可以觀看此影片</div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="privacy-option">
+                        <input type="radio" name="privacy_setting" id="privacyTeacher" value="teacher_only" required>
+                        <label for="privacyTeacher" class="privacy-label">
+                            <div class="privacy-icon">👨‍🏫</div>
+                            <div class="privacy-info">
+                                <div class="privacy-title">僅教師可見</div>
+                                <div class="privacy-desc">只有您的老師可以觀看和回饋</div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="privacy-option">
+                        <input type="radio" name="privacy_setting" id="privacyPrivate" value="private" required>
+                        <label for="privacyPrivate" class="privacy-label">
+                            <div class="privacy-icon">🔒</div>
+                            <div class="privacy-info">
+                                <div class="privacy-title">私人</div>
+                                <div class="privacy-desc">只有您本人可以觀看</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-text">選擇誰可以觀看您的演奏影片</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">自我評分 *</label>
+                <div class="rating-container">
+                    <div class="star-rating">
+                        {% for i in "12345" %}
+                            <span class="star" data-rating="{{ forloop.counter }}">★</span>
+                        {% endfor %}
+                    </div>
+                    <div class="rating-display">
+                        <span id="ratingValue">0</span> / 5
+                    </div>
+                </div>
+                <input type="hidden" id="selfRating" name="self_rating" required>
+                <div class="form-text">對這次演奏的整體滿意度（1-5分）</div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes" class="form-label">練習筆記</label>
+                <textarea name="notes" 
+                          id="notes"
+                          class="form-control" 
+                          rows="4" 
+                          placeholder="記錄這次演奏的感受、技巧重點、需要改進的地方或心得..." 
+                          maxlength="1000"></textarea>
+                <div class="form-text">詳細記錄演奏內容和感受</div>
+            </div>
+
+            <button type="submit" class="btn-upload" id="uploadBtn">
+                <span id="uploadBtnText">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>
+                    上傳影片 ✨
+                </span>
+                <span id="uploadSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            </button>
+        </form>
+
+        <div class="upload-tips">
+            <h5><i class="fas fa-lightbulb me-2"></i>上傳小貼士</h5>
+            <ul>
+                <li>為了獲得最佳效果，建議在光線充足的環境下錄製</li>
+                <li>錄製時保持穩定，避免過度晃動</li>
+                <li>確保音質清晰，避免背景噪音干擾</li>
+                <li>建議影片長度控制在3-10分鐘之間</li>
+                <li>上傳完成後可以添加時間標記和評論</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('recordingFile');
+    const selectedFileDiv = document.getElementById('selectedFile');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const uploadForm = document.getElementById('videoUploadForm');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadBtnText = document.getElementById('uploadBtnText');
+    const uploadSpinner = document.getElementById('uploadSpinner');
+    
+    // 檔案上傳區域點擊事件
+    fileUploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    // 拖拽事件
+    fileUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.add('dragover');
+    });
+    
+    fileUploadArea.addEventListener('dragleave', () => {
+        fileUploadArea.classList.remove('dragover');
+    });
+    
+    fileUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    // 檔案選擇事件
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
+        // 檢查檔案類型
+        const allowedTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/webm'];
+        if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp4|avi|mov|webm)$/i)) {
+            showAlert('請選擇有效的影片檔案格式（MP4、AVI、MOV、WEBM）', 'danger');
+            return;
+        }
+        
+        // 檢查檔案大小 (100MB)
+        if (file.size > 100 * 1024 * 1024) {
+            showAlert('檔案大小不能超過 100MB', 'danger');
+            return;
+        }
+        
+        // 顯示選中的檔案
+        selectedFileDiv.innerHTML = `
+            <i class="fas fa-file-video me-2"></i>
+            已選擇：${file.name} (${formatFileSize(file.size)})
+        `;
+        selectedFileDiv.style.display = 'block';
+        
+        // 更新上傳區域樣式
+        fileUploadArea.innerHTML = `
+            <div class="file-upload-content">
+                <div class="file-upload-icon">✅</div>
+                <div class="file-upload-text">檔案已選擇</div>
+                <div class="file-upload-hint">點擊重新選擇檔案</div>
+            </div>
+        `;
+    }
+    
+    // 星級評分功能
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('selfRating');
+    const ratingValue = document.getElementById('ratingValue');
+    
+    stars.forEach((star, index) => {
+        star.addEventListener('click', function() {
+            const rating = index + 1;
+            ratingInput.value = rating;
+            ratingValue.textContent = rating;
+            
+            // 更新星星顯示
+            stars.forEach((s, i) => {
+                if (i < rating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const rating = index + 1;
+            stars.forEach((s, i) => {
+                if (i < rating) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#ddd';
+                }
+            });
+        });
+    });
+    
+    document.querySelector('.star-rating').addEventListener('mouseleave', function() {
+        const currentRating = parseInt(ratingInput.value) || 0;
+        stars.forEach((s, i) => {
+            if (i < currentRating) {
+                s.style.color = '#ffc107';
+                s.classList.add('active');
+            } else {
+                s.style.color = '#ddd';
+                s.classList.remove('active');
+            }
+        });
+    });
+    
+    // 表單提交處理
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // 表單驗證
+        if (!validateForm()) {
+            return;
+        }
+        
+        const formData = new FormData(uploadForm);
+        
+        // 顯示進度條和禁用按鈕
+        progressContainer.style.display = 'block';
+        uploadBtn.disabled = true;
+        uploadBtnText.classList.add('d-none');
+        uploadSpinner.classList.remove('d-none');
+        
+        try {
+            const xhr = new XMLHttpRequest();
+            
+            // 上傳進度事件
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressFill.style.width = percentComplete + '%';
+                    progressText.textContent = `上傳中... ${Math.round(percentComplete)}%`;
+                }
+            });
+            
+            // 完成事件
+            xhr.addEventListener('load', function() {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        showAlert('影片上傳成功！即將跳轉到影片庫...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '{% url "practice_logs:video_library" %}';
+                        }, 2000);
+                    } else {
+                        showAlert(response.error || '上傳失敗', 'danger');
+                        resetUploadState();
+                    }
+                } else {
+                    showAlert('上傳失敗，請稍後重試', 'danger');
+                    resetUploadState();
+                }
+            });
+            
+            // 錯誤事件
+            xhr.addEventListener('error', function() {
+                showAlert('網路錯誤，請檢查連接後重試', 'danger');
+                resetUploadState();
+            });
+            
+            // 發送請求
+            xhr.open('POST', '', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.send(formData);
+            
+        } catch (error) {
+            showAlert('上傳過程中發生錯誤', 'danger');
+            resetUploadState();
+        }
+    });
+    
+    function validateForm() {
+        const studentName = document.getElementById('studentName').value.trim();
+        const piece = document.getElementById('piece').value.trim();
+        const recordingDate = document.getElementById('recordingDate').value;
+        const privacySetting = document.querySelector('input[name="privacy_setting"]:checked');
+        const rating = document.getElementById('selfRating').value;
+        const file = document.getElementById('recordingFile').files[0];
+        
+        if (!studentName) {
+            showAlert('請填寫學生姓名', 'danger');
+            return false;
+        }
+        
+        if (!piece) {
+            showAlert('請填寫演奏曲目', 'danger');
+            return false;
+        }
+        
+        if (!recordingDate) {
+            showAlert('請選擇錄音日期', 'danger');
+            return false;
+        }
+        
+        if (!privacySetting) {
+            showAlert('請選擇隱私設定', 'danger');
+            return false;
+        }
+        
+        if (!rating || rating < 1 || rating > 5) {
+            showAlert('請選擇自我評分（1-5分）', 'danger');
+            return false;
+        }
+        
+        if (!file) {
+            showAlert('請選擇要上傳的影片檔案', 'danger');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function resetUploadState() {
+        progressContainer.style.display = 'none';
+        uploadBtn.disabled = false;
+        uploadBtnText.classList.remove('d-none');
+        uploadSpinner.classList.add('d-none');
+        progressFill.style.width = '0%';
+        progressText.textContent = '準備上傳...';
+    }
+    
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        alertContainer.appendChild(alert);
+        
+        // 3秒後自動關閉
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // 設置默認日期為今天
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('recordingDate').value = today;
+});
+</script>
+{% endblock %}

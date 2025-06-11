@@ -1,0 +1,732 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}資源庫 - 教師系統{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 資源庫容器 */
+.resource-library-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 頁面標題區 */
+.page-header {
+    background: linear-gradient(135deg, #2c5f3d 0%, #3d7c4f 100%);
+    color: white;
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+}
+
+.header-stats {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* 快速操作按鈕 */
+.quick-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-upload {
+    background: #2c5f3d;
+    color: white;
+}
+
+.btn-upload:hover {
+    background: #245030;
+    transform: translateY(-2px);
+}
+
+.btn-collections {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-collections:hover {
+    background: #138496;
+    transform: translateY(-2px);
+}
+
+/* 搜尋和篩選區 */
+.search-filter-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.search-bar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #2c5f3d;
+}
+
+.search-btn {
+    padding: 12px 30px;
+    background: #2c5f3d;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    background: #245030;
+}
+
+/* 篩選器 */
+.filters {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #2c5f3d;
+}
+
+/* 分類標籤 */
+.category-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.category-tag {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.category-tag {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.category-tag:hover,
+.category-tag.active {
+    background: #2c5f3d;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* 資源網格 */
+.resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.resource-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.resource-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.resource-thumbnail {
+    height: 180px;
+    background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #999;
+}
+
+.resource-type-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: rgba(255,255,255,0.9);
+}
+
+.type-pdf { color: #d32f2f; }
+.type-video { color: #f57c00; }
+.type-audio { color: #7b1fa2; }
+.type-image { color: #388e3c; }
+.type-link { color: #1976d2; }
+
+.resource-content {
+    padding: 20px;
+}
+
+.resource-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.resource-meta {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.resource-tags {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.resource-tag {
+    padding: 3px 8px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.resource-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.resource-btn {
+    flex: 1;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn-view {
+    background: #e8f5e9;
+    color: #2c5f3d;
+}
+
+.btn-view:hover {
+    background: #2c5f3d;
+    color: white;
+}
+
+.btn-download {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-download:hover {
+    background: #1976d2;
+    color: white;
+}
+
+/* 側邊欄 */
+.sidebar-section {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.sidebar-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.recent-item,
+.collection-item {
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.recent-item:hover,
+.collection-item:hover {
+    background: #f5f5f5;
+}
+
+.item-title {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.item-meta {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* 分頁 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 40px;
+}
+
+.page-link {
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    border-color: #2c5f3d;
+    color: #2c5f3d;
+}
+
+.page-link.active {
+    background: #2c5f3d;
+    color: white;
+    border-color: #2c5f3d;
+}
+
+/* 空狀態 */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.empty-message {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .resource-library-container {
+        padding: 10px;
+    }
+    
+    .page-header {
+        padding: 25px;
+    }
+    
+    .header-stats {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+    
+    .resources-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filters {
+        flex-direction: column;
+    }
+    
+    .filter-select {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="resource-library-container">
+    <!-- 頁面標題區 -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>📚 教學資源庫</h1>
+            <p>管理和分享您的教學資源，包括樂譜、練習曲、教學影片等</p>
+            
+            <div class="header-stats">
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.total_resources }}</div>
+                    <div class="stat-label">總資源數</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.shared_resources }}</div>
+                    <div class="stat-label">已分享</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.total_downloads }}</div>
+                    <div class="stat-label">總下載次數</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.collections_count }}</div>
+                    <div class="stat-label">收藏夾</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 快速操作 -->
+    <div class="quick-actions">
+        <a href="{% url 'practice_logs:upload_resource' %}" class="action-btn btn-upload">
+            <i class="fas fa-upload"></i>
+            上傳新資源
+        </a>
+        <a href="{% url 'practice_logs:manage_collections' %}" class="action-btn btn-collections">
+            <i class="fas fa-folder"></i>
+            管理收藏夾
+        </a>
+    </div>
+    
+    <!-- 搜尋和篩選 -->
+    <div class="search-filter-section">
+        <form method="get" class="search-form">
+            <div class="search-bar">
+                <input type="text" 
+                       name="search" 
+                       class="search-input" 
+                       placeholder="搜尋資源標題、描述、標籤..."
+                       value="{{ search_query }}">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i> 搜尋
+                </button>
+            </div>
+            
+            <div class="filters">
+                <select name="category" class="filter-select">
+                    <option value="">所有分類</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                
+                <select name="type" class="filter-select">
+                    <option value="">所有類型</option>
+                    <option value="pdf" {% if selected_type == 'pdf' %}selected{% endif %}>PDF文件</option>
+                    <option value="video" {% if selected_type == 'video' %}selected{% endif %}>教學影片</option>
+                    <option value="audio" {% if selected_type == 'audio' %}selected{% endif %}>音頻示範</option>
+                    <option value="image" {% if selected_type == 'image' %}selected{% endif %}>圖片</option>
+                    <option value="link" {% if selected_type == 'link' %}selected{% endif %}>外部連結</option>
+                    <option value="other" {% if selected_type == 'other' %}selected{% endif %}>其他</option>
+                </select>
+                
+                <select name="difficulty" class="filter-select">
+                    <option value="">所有程度</option>
+                    <option value="beginner" {% if selected_difficulty == 'beginner' %}selected{% endif %}>初級</option>
+                    <option value="intermediate" {% if selected_difficulty == 'intermediate' %}selected{% endif %}>中級</option>
+                    <option value="advanced" {% if selected_difficulty == 'advanced' %}selected{% endif %}>高級</option>
+                    <option value="all" {% if selected_difficulty == 'all' %}selected{% endif %}>不限</option>
+                </select>
+                
+                <select name="sort" class="filter-select">
+                    <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>最新上傳</option>
+                    <option value="-download_count" {% if sort_by == '-download_count' %}selected{% endif %}>最多下載</option>
+                    <option value="-view_count" {% if sort_by == '-view_count' %}selected{% endif %}>最多瀏覽</option>
+                    <option value="title" {% if sort_by == 'title' %}selected{% endif %}>標題排序</option>
+                </select>
+            </div>
+        </form>
+    </div>
+    
+    <!-- 分類標籤 -->
+    <div class="category-tags">
+        <a href="?" class="category-tag {% if not selected_category %}active{% endif %}">
+            <i class="fas fa-border-all"></i> 全部
+        </a>
+        {% for category in categories %}
+        <a href="?category={{ category.id }}" 
+           class="category-tag {% if selected_category == category.id|stringformat:"s" %}active{% endif %}"
+           style="{% if selected_category == category.id|stringformat:"s" %}background: {{ category.color }}; color: white;{% endif %}">
+            <i class="{{ category.icon }}"></i> {{ category.name }}
+        </a>
+        {% endfor %}
+    </div>
+    
+    <div class="row">
+        <!-- 主要內容區 -->
+        <div class="col-lg-9">
+            {% if resources %}
+            <!-- 資源網格 -->
+            <div class="resources-grid">
+                {% for resource in resources %}
+                <div class="resource-card">
+                    <div class="resource-thumbnail">
+                        {% if resource.thumbnail %}
+                        <img src="{{ resource.thumbnail.url }}" alt="{{ resource.title }}">
+                        {% else %}
+                        <i class="fas fa-file-alt"></i>
+                        {% endif %}
+                        <span class="resource-type-badge type-{{ resource.resource_type }}">
+                            {{ resource.get_resource_type_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="resource-content">
+                        <h3 class="resource-title">{{ resource.title }}</h3>
+                        
+                        <div class="resource-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-user"></i>
+                                {% if resource.teacher == user %}
+                                    我的資源
+                                {% else %}
+                                    {{ resource.teacher.profile.display_name|default:resource.teacher.username }}
+                                {% endif %}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-eye"></i> {{ resource.view_count }}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-download"></i> {{ resource.download_count }}
+                            </span>
+                        </div>
+                        
+                        {% if resource.tags %}
+                        <div class="resource-tags">
+                            {% for tag in resource.tags|slice:":3" %}
+                            <span class="resource-tag">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="resource-actions">
+                            <a href="{% url 'practice_logs:resource_detail' resource.id %}" class="resource-btn btn-view">
+                                <i class="fas fa-eye"></i> 查看
+                            </a>
+                            {% if resource.file %}
+                            <a href="{% url 'practice_logs:download_resource' resource.id %}" class="resource-btn btn-download">
+                                <i class="fas fa-download"></i> 下載
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- 分頁 -->
+            {% if resources.has_other_pages %}
+            <div class="pagination">
+                {% if resources.has_previous %}
+                <a href="?page={{ resources.previous_page_number }}&{{ request.GET.urlencode }}" class="page-link">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+                
+                {% for num in resources.paginator.page_range %}
+                    {% if resources.number == num %}
+                    <span class="page-link active">{{ num }}</span>
+                    {% elif num > resources.number|add:'-3' and num < resources.number|add:'3' %}
+                    <a href="?page={{ num }}&{{ request.GET.urlencode }}" class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if resources.has_next %}
+                <a href="?page={{ resources.next_page_number }}&{{ request.GET.urlencode }}" class="page-link">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <!-- 空狀態 -->
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="empty-message">
+                    {% if search_query or selected_category or selected_type or selected_difficulty %}
+                        沒有找到符合條件的資源
+                    {% else %}
+                        您還沒有上傳任何教學資源
+                    {% endif %}
+                </div>
+                <a href="{% url 'practice_logs:upload_resource' %}" class="action-btn btn-upload">
+                    <i class="fas fa-upload"></i>
+                    上傳第一個資源
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- 側邊欄 -->
+        <div class="col-lg-3">
+            <!-- 最近上傳 -->
+            {% if recent_uploads %}
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">
+                    <i class="fas fa-clock"></i> 最近上傳
+                </h3>
+                {% for resource in recent_uploads %}
+                <div class="recent-item" onclick="location.href='{% url 'practice_logs:resource_detail' resource.id %}'">
+                    <div class="item-title">{{ resource.title|truncatechars:30 }}</div>
+                    <div class="item-meta">
+                        <i class="fas fa-calendar"></i> {{ resource.created_at|date:"m/d" }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- 熱門資源 -->
+            {% if popular_resources %}
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">
+                    <i class="fas fa-fire"></i> 熱門資源
+                </h3>
+                {% for resource in popular_resources %}
+                <div class="recent-item" onclick="location.href='{% url 'practice_logs:resource_detail' resource.id %}'">
+                    <div class="item-title">{{ resource.title|truncatechars:30 }}</div>
+                    <div class="item-meta">
+                        <i class="fas fa-download"></i> {{ resource.download_count }} 次下載
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- 我的收藏夾 -->
+            {% if collections %}
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">
+                    <i class="fas fa-folder"></i> 我的收藏夾
+                </h3>
+                {% for collection in collections %}
+                <div class="collection-item" onclick="location.href='{% url 'practice_logs:collection_detail' collection.id %}'">
+                    <div class="item-title">{{ collection.name }}</div>
+                    <div class="item-meta">
+                        <i class="fas fa-file"></i> {{ collection.resource_count }} 個資源
+                    </div>
+                </div>
+                {% endfor %}
+                <a href="{% url 'practice_logs:manage_collections' %}" class="btn btn-link btn-sm mt-2">
+                    查看全部 <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// 初始化提示框
+document.addEventListener('DOMContentLoaded', function() {
+    // 平滑滾動到頂部
+    if (window.location.hash === '#top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
+</script>
+{% endblock %}

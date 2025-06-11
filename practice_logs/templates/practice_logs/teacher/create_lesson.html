@@ -1,0 +1,435 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}新增課程 - 教師系統{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 容器 */
+.create-lesson-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 頁面標題 */
+.page-title {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.page-subtitle {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* 表單卡片 */
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+/* 表單區塊 */
+.form-section {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c5f3d;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 表單元素 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.required {
+    color: #d32f2f;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2c5f3d;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* 選擇框樣式 */
+select.form-control {
+    cursor: pointer;
+}
+
+/* 時間輸入組 */
+.time-input-group {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.time-input-group .form-group {
+    flex: 1;
+}
+
+/* 快速選擇按鈕 */
+.quick-select-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.quick-btn {
+    padding: 8px 16px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-btn:hover {
+    background: #2c5f3d;
+    color: white;
+}
+
+.quick-btn.active {
+    background: #2c5f3d;
+    color: white;
+}
+
+/* 學生卡片樣式 */
+.student-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.student-card {
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.student-card:hover {
+    border-color: #2c5f3d;
+    background: #f8f9fa;
+}
+
+.student-card.selected {
+    border-color: #2c5f3d;
+    background: #e8f5e9;
+}
+
+.student-name {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.student-info {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* 提交按鈕區 */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #2c5f3d;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #245030;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* 提示訊息 */
+.form-hint {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* 載入中狀態 */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2c5f3d;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .create-lesson-container {
+        padding: 10px;
+    }
+    
+    .form-card {
+        padding: 20px;
+    }
+    
+    .time-input-group {
+        flex-direction: column;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-lesson-container">
+    <h1 class="page-title">📝 新增課程</h1>
+    <p class="page-subtitle">為學生安排新的課程時間</p>
+    
+    <div class="form-card">
+        <form method="post" id="createLessonForm">
+            {% csrf_token %}
+            
+            <!-- 基本資訊 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-user-graduate"></i> 選擇學生
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        學生 <span class="required">*</span>
+                    </label>
+                    <select name="student" class="form-control" required>
+                        <option value="">請選擇學生</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}">
+                            {{ student.profile.display_name|default:student.username }}
+                            {% if student.profile.skill_level %}
+                                ({{ student.profile.get_skill_level_display }})
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 時間設定 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-clock"></i> 時間設定
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        上課日期 <span class="required">*</span>
+                    </label>
+                    <input type="date" 
+                           name="lesson_date" 
+                           class="form-control" 
+                           value="{{ default_date|date:'Y-m-d' }}"
+                           min="{{ default_date|date:'Y-m-d' }}"
+                           required>
+                </div>
+                
+                <div class="time-input-group">
+                    <div class="form-group">
+                        <label class="form-label">
+                            開始時間 <span class="required">*</span>
+                        </label>
+                        <input type="time" 
+                               name="start_time" 
+                               class="form-control" 
+                               value="{{ default_time }}"
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            課程時長（分鐘）
+                        </label>
+                        <select name="duration_minutes" class="form-control">
+                            <option value="30">30分鐘</option>
+                            <option value="45">45分鐘</option>
+                            <option value="60" selected>60分鐘</option>
+                            <option value="90">90分鐘</option>
+                            <option value="120">120分鐘</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="quick-select-buttons">
+                    <button type="button" class="quick-btn" onclick="setTime('09:00')">上午9點</button>
+                    <button type="button" class="quick-btn" onclick="setTime('10:00')">上午10點</button>
+                    <button type="button" class="quick-btn" onclick="setTime('14:00')">下午2點</button>
+                    <button type="button" class="quick-btn" onclick="setTime('15:00')">下午3點</button>
+                    <button type="button" class="quick-btn" onclick="setTime('16:00')">下午4點</button>
+                    <button type="button" class="quick-btn" onclick="setTime('19:00')">晚上7點</button>
+                </div>
+            </div>
+            
+            <!-- 課程詳情 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i> 課程詳情
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label">課程類型</label>
+                    <select name="lesson_type" class="form-control">
+                        {% for value, display in lesson_types %}
+                        <option value="{{ value }}">{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">課程主題</label>
+                    <input type="text" 
+                           name="topic" 
+                           class="form-control" 
+                           placeholder="例如：巴哈小步舞曲練習">
+                    <div class="form-hint">簡短描述本次課程的主要內容</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">學習目標</label>
+                    <textarea name="objectives" 
+                              class="form-control" 
+                              placeholder="本次課程希望達成的目標..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">所需教材</label>
+                    <textarea name="materials_needed" 
+                              class="form-control" 
+                              placeholder="學生需要準備的樂譜或其他材料..."></textarea>
+                </div>
+            </div>
+            
+            <!-- 提交按鈕 -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="history.back()">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-check"></i> 創建課程
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// 設定時間
+function setTime(time) {
+    document.querySelector('input[name="start_time"]').value = time;
+    
+    // 更新按鈕狀態
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.includes(time.replace(':00', '點'))) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+// 表單提交處理
+document.getElementById('createLessonForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 創建中...';
+});
+
+// 自動設定最小日期為今天
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.querySelector('input[name="lesson_date"]');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    
+    // 如果沒有預設日期，設為今天
+    if (!dateInput.value) {
+        dateInput.value = today;
+    }
+});
+
+// 學生選擇增強（可選）
+const studentSelect = document.querySelector('select[name="student"]');
+studentSelect.addEventListener('change', function() {
+    // 可以在這裡加入根據學生調整預設設定的邏輯
+});
+</script>
+{% endblock %}

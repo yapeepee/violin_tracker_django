@@ -1,0 +1,531 @@
+{% extends 'practice_logs/base.html' %}
+{% load static %}
+
+{% block title %}教師儀表板 - {{ user.profile.display_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/classical_theme.css' %}">
+<style>
+.dashboard-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.welcome-section {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-section::before {
+    content: "🎼";
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+.stat-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.stat-card .icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.stat-card.students .icon { color: #007bff; }
+.stat-card.feedback .icon { color: #28a745; }
+.stat-card.pending .icon { color: #ffc107; }
+.stat-card.teaching .icon { color: #17a2b8; }
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.dashboard-section {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.student-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.student-card:hover {
+    border-color: #28a745;
+    box-shadow: 0 3px 10px rgba(40, 167, 69, 0.1);
+}
+
+.student-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.student-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.student-level {
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.student-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.practice-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.practice-item:last-child {
+    border-bottom: none;
+}
+
+.practice-student {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.practice-details {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.practice-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-feedback {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-feedback:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.action-btn.primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+}
+
+.action-btn.success {
+    background: linear-gradient(45deg, #28a745, #1e7e34);
+}
+
+.action-btn.info {
+    background: linear-gradient(45deg, #17a2b8, #138496);
+}
+
+.action-btn.warning {
+    background: linear-gradient(45deg, #ffc107, #e0a800);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    color: white;
+    text-decoration: none;
+}
+
+.action-btn i {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+.no-data {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.alert-info {
+    background: linear-gradient(45deg, #d1ecf1, #bee5eb);
+    border-color: #b6d7e5;
+    color: #0c5460;
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 15px;
+    }
+    
+    .stat-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .welcome-section {
+        padding: 20px;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .student-stats {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- 歡迎區域 -->
+    <div class="welcome-section">
+        <h1 class="mb-3">教師儀表板 - {{ user.profile.display_name }}</h1>
+        <p class="lead mb-0">
+            管理您的學生練習進度，提供專業指導與回饋
+        </p>
+    </div>
+
+    <!-- 統計卡片 -->
+    <div class="stat-cards">
+        <div class="stat-card students">
+            <span class="icon">👥</span>
+            <div class="stat-number">{{ students.count|default:"0" }}</div>
+            <div class="stat-label">學生人數</div>
+        </div>
+        
+        <div class="stat-card feedback">
+            <span class="icon">💬</span>
+            <div class="stat-number">{{ teaching_stats.total_feedback_given|default:"0" }}</div>
+            <div class="stat-label">總回饋數</div>
+        </div>
+        
+        <div class="stat-card pending">
+            <span class="icon">⏰</span>
+            <div class="stat-number">{{ recent_practices.count|default:"0" }}</div>
+            <div class="stat-label">待回饋練習</div>
+        </div>
+        
+        <div class="stat-card teaching">
+            <span class="icon">🎯</span>
+            <div class="stat-number">{{ teaching_stats.students_taught|default:"0" }}</div>
+            <div class="stat-label">指導過的學生</div>
+        </div>
+    </div>
+
+    <!-- 快速操作 -->
+    <div class="dashboard-section">
+        <h2 class="section-title">快速操作</h2>
+        <div class="quick-actions">
+            <a href="{% url 'practice_logs:index' %}" class="action-btn primary">
+                <i class="fas fa-list"></i>
+                查看所有練習記錄
+            </a>
+            <a href="{% url 'practice_logs:index' %}" class="action-btn info">
+                <i class="fas fa-chart-bar"></i>
+                學生分析報告
+            </a>
+            <a href="{% url 'practice_logs:profile' %}" class="action-btn warning">
+                <i class="fas fa-user-cog"></i>
+                個人資料設定
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 我的學生 -->
+        <div class="col-lg-6">
+            <div class="dashboard-section">
+                <h2 class="section-title">我的學生</h2>
+                {% if students %}
+                    {% for relation in students %}
+                        <div class="student-card">
+                            <div class="student-info">
+                                <div class="student-name">
+                                    {{ relation.student.profile.display_name|default:relation.student.username }}
+                                </div>
+                                {% if relation.student.profile.skill_level %}
+                                    <div class="student-level">
+                                        {{ relation.student.profile.get_skill_level_display }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="student-stats">
+                                {% with stats=relation.student.profile.get_practice_stats %}
+                                <div>
+                                    <strong>{{ stats.total_sessions }}</strong><br>
+                                    <small>總練習次數</small>
+                                </div>
+                                <div>
+                                    <strong>{{ stats.total_minutes }}</strong><br>
+                                    <small>總練習時間</small>
+                                </div>
+                                <div>
+                                    <strong>{{ stats.average_rating|floatformat:1 }}</strong><br>
+                                    <small>平均評分</small>
+                                </div>
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-data">
+                        目前還沒有學生
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 待回饋練習 -->
+        <div class="col-lg-6">
+            <div class="dashboard-section">
+                <h2 class="section-title">待回饋練習</h2>
+                {% if recent_practices %}
+                    {% for practice in recent_practices %}
+                        <div class="practice-item">
+                            <div>
+                                <div class="practice-student">{{ practice.student_name }}</div>
+                                <div class="practice-details">
+                                    {{ practice.date|date:"Y年m月d日" }} • 
+                                    {% if practice.focus %}{{ practice.focus }} • {% endif %}
+                                    {{ practice.minutes }} 分鐘 • 
+                                    評分: {{ practice.rating|floatformat:1 }}⭐
+                                    {% if practice.content %}
+                                        <br><small>{{ practice.content|truncatechars:30 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="practice-actions">
+                                <a href="#" class="btn-feedback" onclick="giveFeedback({{ practice.id }})">
+                                    <i class="fas fa-comment"></i>
+                                    給予回饋
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-data">
+                        目前沒有需要回饋的練習記錄
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示信息 -->
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>教師提示：</strong>
+        定期查看學生的練習記錄並給予回饋，可以幫助學生更好地改進練習效果。
+        您可以在練習記錄詳情頁面中添加詳細的指導意見。
+    </div>
+</div>
+
+<!-- 回饋模態框 -->
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">給予練習回饋</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="feedbackForm">
+                    <div class="mb-3">
+                        <label for="feedbackContent" class="form-label">回饋內容</label>
+                        <textarea class="form-control" id="feedbackContent" rows="4" 
+                                placeholder="請輸入您對這次練習的建議和指導..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacherRating" class="form-label">教師評分</label>
+                        <select class="form-control" id="teacherRating">
+                            <option value="">選擇評分</option>
+                            <option value="5">5 - 優秀</option>
+                            <option value="4">4 - 良好</option>
+                            <option value="3">3 - 一般</option>
+                            <option value="2">2 - 需要改進</option>
+                            <option value="1">1 - 需要加強</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="submitFeedback()">
+                    提交回饋
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPracticeId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 統計卡片動畫
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.6s ease';
+            
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+        }, index * 150);
+    });
+    
+    // 為數字添加動畫效果
+    const statNumbers = document.querySelectorAll('.stat-number');
+    statNumbers.forEach(number => {
+        const finalValue = parseInt(number.textContent) || 0;
+        let currentValue = 0;
+        const increment = finalValue / 50;
+        
+        const timer = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= finalValue) {
+                currentValue = finalValue;
+                clearInterval(timer);
+            }
+            number.textContent = Math.floor(currentValue);
+        }, 30);
+    });
+});
+
+function giveFeedback(practiceId) {
+    currentPracticeId = practiceId;
+    const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+    modal.show();
+}
+
+function submitFeedback() {
+    const content = document.getElementById('feedbackContent').value;
+    const rating = document.getElementById('teacherRating').value;
+    
+    if (!content.trim()) {
+        alert('請輸入回饋內容');
+        return;
+    }
+    
+    // 這裡可以添加實際的提交邏輯
+    // 使用 AJAX 提交到後端
+    console.log('Submitting feedback for practice:', currentPracticeId, {
+        content: content,
+        rating: rating
+    });
+    
+    // 暫時顯示成功消息
+    alert('回饋提交成功！');
+    
+    // 關閉模態框
+    const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+    modal.hide();
+    
+    // 清空表單
+    document.getElementById('feedbackForm').reset();
+}
+</script>
+{% endblock %}

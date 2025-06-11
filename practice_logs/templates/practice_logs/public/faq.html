@@ -1,0 +1,393 @@
+{% extends 'practice_logs/base.html' %}
+{% load static %}
+
+{% block title %}常見問題 - 小提琴練習系統{% endblock %}
+
+{% block extra_css %}
+<style>
+    .faq-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .faq-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    
+    .faq-header h1 {
+        color: #2c5f3d;
+        margin-bottom: 15px;
+    }
+    
+    .faq-header p {
+        color: #666;
+        font-size: 1.1em;
+    }
+    
+    .search-section {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 40px;
+    }
+    
+    .search-box {
+        position: relative;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+        font-size: 1.2em;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 15px 20px 15px 50px;
+        border: 2px solid #e0e0e0;
+        border-radius: 30px;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #2c5f3d;
+        box-shadow: 0 0 0 3px rgba(44, 95, 61, 0.1);
+    }
+    
+    .categories-section {
+        margin-bottom: 40px;
+    }
+    
+    .category-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    
+    .category-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .category-icon {
+        font-size: 2em;
+        margin-right: 15px;
+    }
+    
+    .category-title {
+        font-size: 1.5em;
+        color: #2c5f3d;
+        margin: 0;
+    }
+    
+    .faq-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .faq-item {
+        border-bottom: 1px solid #f0f0f0;
+        padding: 20px 0;
+    }
+    
+    .faq-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .faq-question {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: color 0.3s ease;
+    }
+    
+    .faq-question:hover {
+        color: #2c5f3d;
+    }
+    
+    .faq-question i {
+        font-size: 0.9em;
+        transition: transform 0.3s ease;
+    }
+    
+    .faq-question.active i {
+        transform: rotate(180deg);
+    }
+    
+    .faq-answer {
+        color: #666;
+        line-height: 1.8;
+        padding-left: 20px;
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .faq-answer.show {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .search-results {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .result-item {
+        padding: 20px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .result-item:last-child {
+        border-bottom: none;
+    }
+    
+    .result-category {
+        display: inline-block;
+        padding: 5px 12px;
+        background: #e3f2fd;
+        color: #1976d2;
+        border-radius: 15px;
+        font-size: 0.85em;
+        margin-bottom: 10px;
+    }
+    
+    .highlight {
+        background: #fff3e0;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+    
+    .no-results i {
+        font-size: 3em;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+    
+    .ask-question-cta {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        margin-top: 40px;
+    }
+    
+    .ask-question-cta h3 {
+        color: #2c5f3d;
+        margin-bottom: 15px;
+    }
+    
+    .btn-ask {
+        background: #2c5f3d;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .btn-ask:hover {
+        background: #1e7c5e;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="faq-container">
+    <div class="faq-header">
+        <h1><i class="fas fa-question-circle"></i> 常見問題</h1>
+        <p>找到您需要的答案，或向教師提出新問題</p>
+    </div>
+    
+    <!-- 搜尋框 -->
+    <div class="search-section">
+        <form method="get" action="{% url 'practice_logs:public_faq' %}">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" class="search-input" 
+                       placeholder="搜尋問題或關鍵字..." 
+                       value="{{ search_query }}">
+            </div>
+        </form>
+    </div>
+    
+    {% if search_results %}
+    <!-- 搜尋結果 -->
+    <div class="search-results">
+        <h2>搜尋結果</h2>
+        {% for faq in search_results %}
+        <div class="result-item">
+            {% if faq.category %}
+            <span class="result-category">
+                <i class="{{ faq.category.icon }}"></i> {{ faq.category.name }}
+            </span>
+            {% endif %}
+            <h4>{{ faq.question }}</h4>
+            <p>{{ faq.answer }}</p>
+        </div>
+        {% empty %}
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>找不到相關結果</h3>
+            <p>請嘗試其他關鍵字或瀏覽下方的分類</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- 分類顯示 -->
+    <div class="categories-section">
+        {% for category in categories %}
+        {% if category.faqs.all %}
+        <div class="category-card">
+            <div class="category-header">
+                <i class="{{ category.icon }} category-icon" style="color: {{ category.color }}"></i>
+                <h2 class="category-title">{{ category.name }}</h2>
+            </div>
+            
+            <ul class="faq-list">
+                {% for faq in category.faqs.all %}
+                <li class="faq-item">
+                    <div class="faq-question" onclick="toggleAnswer(this, {{ faq.id }})">
+                        <span>{{ faq.question }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        {{ faq.answer|linebreaks }}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- CTA區域 -->
+    <div class="ask-question-cta">
+        <h3>找不到您要的答案？</h3>
+        <p>登入後可以直接向教師提出問題</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'practice_logs:student_ask_question' %}" class="btn-ask">
+            <i class="fas fa-plus"></i> 提出新問題
+        </a>
+        {% else %}
+        <a href="{% url 'practice_logs:login' %}" class="btn-ask">
+            <i class="fas fa-sign-in-alt"></i> 登入提問
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 展開/收起答案
+function toggleAnswer(element, faqId) {
+    const answer = element.nextElementSibling;
+    const isOpen = answer.classList.contains('show');
+    
+    // 關閉所有其他答案
+    document.querySelectorAll('.faq-answer.show').forEach(item => {
+        item.classList.remove('show');
+        item.previousElementSibling.classList.remove('active');
+    });
+    
+    // 切換當前答案
+    if (!isOpen) {
+        answer.classList.add('show');
+        element.classList.add('active');
+        
+        // 追蹤查看次數
+        trackView(faqId);
+    }
+}
+
+// 追蹤FAQ查看次數
+function trackView(faqId) {
+    fetch(`{% url 'practice_logs:track_faq_view' 0 %}`.replace('0', faqId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    });
+}
+
+// 搜尋框自動提交
+let searchTimer;
+const searchInput = document.querySelector('.search-input');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        if (this.value.length >= 2) {
+            searchTimer = setTimeout(() => {
+                this.form.submit();
+            }, 500);
+        }
+    });
+}
+
+// 高亮搜尋關鍵字
+{% if search_query %}
+document.addEventListener('DOMContentLoaded', function() {
+    const query = '{{ search_query|escapejs }}';
+    const regex = new RegExp(`(${query})`, 'gi');
+    
+    document.querySelectorAll('.result-item p').forEach(element => {
+        element.innerHTML = element.innerHTML.replace(regex, '<span class="highlight">$1</span>');
+    });
+});
+{% endif %}
+</script>
+{% endblock %}

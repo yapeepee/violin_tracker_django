@@ -1,0 +1,928 @@
+<!-- 挑戰系統已移除 - 根據用戶要求專注於核心功能 -->
+<!-- {% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #8b4513;
+        --accent-color: #d4af37;
+        --success-color: #27ae60;
+        --warning-color: #e67e22;
+        --danger-color: #c0392b;
+        --info-color: #3498db;
+        --dark-color: #2c3e50;
+        --light-color: #fafafa;
+        --cream-color: #f8f6f0;
+        --wood-color: #8b4513;
+        --gold-color: #d4af37;
+        --shadow-card: 0 4px 20px rgba(44, 62, 80, 0.08);
+        --shadow-hover: 0 8px 25px rgba(44, 62, 80, 0.12);
+        --border-radius: 8px;
+        --transition: all 0.3s ease;
+    }
+
+    body {
+        background: linear-gradient(to bottom, #f8f6f0 0%, #e8e6e0 100%);
+        min-height: 100vh;
+        font-family: 'Georgia', 'Times New Roman', serif;
+        color: var(--dark-color);
+    }
+
+    .challenges-container {
+        padding: 2rem 1rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        color: white;
+    }
+
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .page-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        font-weight: 300;
+    }
+
+    .week-selector {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-card);
+        backdrop-filter: blur(10px);
+        text-align: center;
+    }
+
+    .week-navigation {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .week-nav-btn {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .week-nav-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .week-nav-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .week-display {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+    }
+
+    .week-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .week-stat {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(124, 77, 255, 0.1);
+        border-radius: 12px;
+    }
+
+    .week-stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .week-stat-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .challenges-section {
+        margin-bottom: 3rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        color: white;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .challenges-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .challenge-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-card);
+        backdrop-filter: blur(10px);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .challenge-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--info-color);
+    }
+
+    .challenge-card.completed::before {
+        background: var(--success-color);
+    }
+
+    .challenge-card.expired::before {
+        background: var(--danger-color);
+    }
+
+    .challenge-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .challenge-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .challenge-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin: 0;
+        flex: 1;
+    }
+
+    .challenge-badges {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .challenge-difficulty {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .challenge-difficulty.easy {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .challenge-difficulty.medium {
+        background: var(--warning-color);
+        color: white;
+    }
+
+    .challenge-difficulty.hard {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .challenge-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .challenge-status.active {
+        background: var(--info-color);
+        color: white;
+    }
+
+    .challenge-status.completed {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .challenge-status.expired {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .challenge-description {
+        color: #666;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+    }
+
+    .challenge-progress {
+        margin-bottom: 1.5rem;
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .progress-percentage {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .progress-bar {
+        height: 12px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--info-color);
+        border-radius: 10px;
+        transition: width 0.8s ease;
+        position: relative;
+    }
+
+    .challenge-card.completed .progress-fill {
+        background: var(--success-color);
+    }
+
+    .challenge-card.expired .progress-fill {
+        background: var(--danger-color);
+    }
+
+    .progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .challenge-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+        font-size: 0.9rem;
+    }
+
+    .challenge-reward {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .challenge-deadline {
+        color: #666;
+    }
+
+    .challenge-deadline.urgent {
+        color: var(--danger-color);
+        font-weight: 600;
+    }
+
+    .tasks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1rem;
+    }
+
+    .task-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-card);
+        backdrop-filter: blur(10px);
+        transition: var(--transition);
+        border-left: 4px solid var(--info-color);
+    }
+
+    .task-card.high-priority {
+        border-left-color: var(--danger-color);
+    }
+
+    .task-card.completed {
+        border-left-color: var(--success-color);
+        opacity: 0.8;
+    }
+
+    .task-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .task-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0;
+        flex: 1;
+    }
+
+    .task-priority {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .task-priority.high {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .task-priority.medium {
+        background: var(--warning-color);
+        color: white;
+    }
+
+    .task-priority.low {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .task-description {
+        color: #666;
+        line-height: 1.4;
+        margin-bottom: 1rem;
+    }
+
+    .task-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+
+    .task-due-date {
+        color: #666;
+    }
+
+    .task-due-date.overdue {
+        color: var(--danger-color);
+        font-weight: 600;
+    }
+
+    .task-complete-btn {
+        background: var(--success-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .task-complete-btn:hover {
+        background: #45a049;
+        transform: scale(1.05);
+    }
+
+    .task-complete-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 3rem;
+        color: white;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: white;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.6;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+
+    .action-btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .action-btn.primary {
+        background: var(--gradient-primary);
+        color: white;
+    }
+
+    .action-btn.secondary {
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--dark-color);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    @media (max-width: 768px) {
+        .challenges-grid,
+        .tasks-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+        }
+        
+        .week-navigation {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .challenge-header,
+        .task-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .challenge-badges {
+            flex-direction: row;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="challenges-container">
+    <!-- 頁面標題 -->
+    <div class="page-header">
+        <h1 class="page-title">♬ {{ student_name }} 的練習目標</h1>
+        <p class="page-subtitle">設定目標，精進技藝，追求音樂的完美境界</p>
+    </div>
+
+    <!-- 週選擇器 -->
+    <div class="week-selector">
+        <div class="week-navigation">
+            <button class="week-nav-btn" id="prevWeekBtn">← 上一週</button>
+            <div id="weekDisplay" class="week-display">載入中...</div>
+            <button class="week-nav-btn" id="nextWeekBtn">下一週 →</button>
+        </div>
+        <div id="weekStats" class="week-stats">
+            <div class="week-stat">
+                <div class="week-stat-number">-</div>
+                <div class="week-stat-label">完成挑戰</div>
+            </div>
+            <div class="week-stat">
+                <div class="week-stat-number">-</div>
+                <div class="week-stat-label">獲得積分</div>
+            </div>
+            <div class="week-stat">
+                <div class="week-stat-number">-</div>
+                <div class="week-stat-label">完成率</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 本週挑戰 -->
+    <div class="challenges-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                🏆 本週挑戰
+            </h2>
+        </div>
+        <div id="challengesGrid" class="challenges-grid">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>載入挑戰中...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 練習任務 -->
+    <div class="challenges-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                📋 練習任務
+            </h2>
+        </div>
+        <div id="tasksGrid" class="tasks-grid">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>載入任務中...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速操作按鈕 -->
+    <div class="action-buttons">
+        <a href="/dashboard/{{ student_name }}/" class="action-btn secondary">
+            🎮 返回儀表板
+        </a>
+        <a href="/" class="action-btn primary">
+            ✏️ 記錄練習
+        </a>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const studentName = '{{ student_name|escapejs }}';
+    let currentWeekStart = null;
+    
+    // 初始化
+    initializeWeek();
+    
+    // 週導航按鈕事件
+    document.getElementById('prevWeekBtn').addEventListener('click', () => navigateWeek(-1));
+    document.getElementById('nextWeekBtn').addEventListener('click', () => navigateWeek(1));
+    
+    function initializeWeek() {
+        // 獲取當週的週一
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        currentWeekStart = new Date(today.setDate(diff));
+        
+        loadWeekData();
+    }
+    
+    function navigateWeek(direction) {
+        const newDate = new Date(currentWeekStart);
+        newDate.setDate(newDate.getDate() + (direction * 7));
+        currentWeekStart = newDate;
+        
+        loadWeekData();
+    }
+    
+    function loadWeekData() {
+        updateWeekDisplay();
+        Promise.all([
+            loadChallenges(),
+            loadTasks(),
+            loadWeekStats()
+        ]).catch(error => {
+            console.error('載入週數據時發生錯誤:', error);
+        });
+    }
+    
+    function updateWeekDisplay() {
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        
+        const startStr = formatDate(currentWeekStart);
+        const endStr = formatDate(weekEnd);
+        
+        document.getElementById('weekDisplay').textContent = `${startStr} ~ ${endStr}`;
+        
+        // 更新按鈕狀態
+        const today = new Date();
+        const isCurrentWeek = isSameWeek(currentWeekStart, today);
+        const isFutureWeek = currentWeekStart > today;
+        
+        document.getElementById('nextWeekBtn').disabled = isFutureWeek;
+    }
+    
+    function formatDate(date) {
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+    
+    function isSameWeek(date1, date2) {
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+        const diff = Math.abs(d1 - d2);
+        return diff < 7 * 24 * 60 * 60 * 1000;
+    }
+    
+    async function loadChallenges() {
+        try {
+            const weekStartStr = currentWeekStart.toISOString().split('T')[0];
+            const response = await fetch(`/api/challenges/?student_name=${encodeURIComponent(studentName)}`);
+            const challenges = await response.json();
+            
+            displayChallenges(challenges);
+        } catch (error) {
+            document.getElementById('challengesGrid').innerHTML = '<div class="loading">載入挑戰失敗</div>';
+        }
+    }
+    
+    function displayChallenges(challenges) {
+        const grid = document.getElementById('challengesGrid');
+        
+        if (challenges.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🎯</div>
+                    <h3>本週還沒有挑戰</h3>
+                    <p>系統將自動為你生成個人化挑戰</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const challengesHtml = challenges.map(challenge => `
+            <div class="challenge-card ${challenge.is_completed ? 'completed' : ''} ${challenge.days_remaining < 0 ? 'expired' : ''}">
+                <div class="challenge-header">
+                    <h3 class="challenge-title">${challenge.title}</h3>
+                    <div class="challenge-badges">
+                        <span class="challenge-difficulty ${challenge.difficulty}">${challenge.difficulty}</span>
+                        <span class="challenge-status ${challenge.is_completed ? 'completed' : challenge.days_remaining < 0 ? 'expired' : 'active'}">
+                            ${challenge.is_completed ? '已完成' : challenge.days_remaining < 0 ? '已過期' : '進行中'}
+                        </span>
+                    </div>
+                </div>
+                
+                <p class="challenge-description">${challenge.description}</p>
+                
+                <div class="challenge-progress">
+                    <div class="progress-header">
+                        <span class="progress-label">進度</span>
+                        <span class="progress-percentage">${challenge.progress_percentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${challenge.progress_percentage}%"></div>
+                    </div>
+                    <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                        ${challenge.current_progress} / ${challenge.target_value}
+                    </div>
+                </div>
+                
+                <div class="challenge-meta">
+                    <div class="challenge-reward">
+                        <span>⭐</span>
+                        <span>${challenge.total_points} 積分</span>
+                    </div>
+                    <div class="challenge-deadline ${challenge.days_remaining <= 1 && challenge.days_remaining >= 0 ? 'urgent' : ''}">
+                        ${challenge.days_remaining < 0 ? '已過期' : 
+                          challenge.days_remaining === 0 ? '今天截止' :
+                          `${challenge.days_remaining}天剩餘`}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        grid.innerHTML = challengesHtml;
+    }
+    
+    async function loadTasks() {
+        try {
+            const response = await fetch(`/api/tasks/?student_name=${encodeURIComponent(studentName)}&status=active&limit=10`);
+            const tasks = await response.json();
+            
+            displayTasks(tasks);
+        } catch (error) {
+            document.getElementById('tasksGrid').innerHTML = '<div class="loading">載入任務失敗</div>';
+        }
+    }
+    
+    function displayTasks(tasks) {
+        const grid = document.getElementById('tasksGrid');
+        
+        if (tasks.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h3>目前沒有待辦任務</h3>
+                    <p>完成挑戰或練習記錄後可能會有新任務</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const tasksHtml = tasks.map(task => `
+            <div class="task-card ${task.priority === 'high' ? 'high-priority' : ''} ${task.is_completed ? 'completed' : ''}">
+                <div class="task-header">
+                    <h4 class="task-title">${task.title}</h4>
+                    <span class="task-priority ${task.priority}">${task.priority_display}</span>
+                </div>
+                
+                <p class="task-description">${task.description}</p>
+                
+                <div class="task-meta">
+                    <div class="task-due-date ${task.days_until_due < 0 ? 'overdue' : ''}">
+                        ${task.days_until_due < 0 ? '已逾期' :
+                          task.days_until_due === 0 ? '今天到期' :
+                          `${task.days_until_due}天後到期`}
+                    </div>
+                    ${!task.is_completed ? `
+                        <button class="task-complete-btn" onclick="completeTask(${task.id})">
+                            完成任務
+                        </button>
+                    ` : '<span style="color: #4caf50; font-weight: 600;">✅ 已完成</span>'}
+                </div>
+            </div>
+        `).join('');
+        
+        grid.innerHTML = tasksHtml;
+    }
+    
+    async function loadWeekStats() {
+        try {
+            // 這裡可以根據需要實現週統計API
+            // 目前使用模擬數據
+            const stats = {
+                completed_challenges: 2,
+                total_points: 120,
+                completion_rate: 75
+            };
+            
+            document.getElementById('weekStats').innerHTML = `
+                <div class="week-stat">
+                    <div class="week-stat-number">${stats.completed_challenges}</div>
+                    <div class="week-stat-label">完成挑戰</div>
+                </div>
+                <div class="week-stat">
+                    <div class="week-stat-number">${stats.total_points}</div>
+                    <div class="week-stat-label">獲得積分</div>
+                </div>
+                <div class="week-stat">
+                    <div class="week-stat-number">${stats.completion_rate}%</div>
+                    <div class="week-stat-label">完成率</div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('載入週統計失敗:', error);
+        }
+    }
+    
+    // 完成任務
+    window.completeTask = async function(taskId) {
+        try {
+            const response = await fetch(`/api/tasks/${taskId}/complete/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({ completion_notes: '' })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                showNotification(`任務「${result.task_title}」完成！獲得${result.points_earned}積分`, 'success');
+                loadTasks(); // 重新載入任務列表
+                loadWeekStats(); // 更新週統計
+            } else {
+                showNotification('完成任務失敗', 'error');
+            }
+        } catch (error) {
+            showNotification('完成任務時發生錯誤', 'error');
+        }
+    };
+    
+    // 獲取CSRF token
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+               document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+    }
+    
+    // 顯示通知
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+});
+</script>
+
+<style>
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+</style>
+
+{% endblock %} -->

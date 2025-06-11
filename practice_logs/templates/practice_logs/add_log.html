@@ -1,0 +1,374 @@
+{% extends 'practice_logs/base.html' %}
+{% load static %}
+
+{% block title %}新增練習記錄{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/classical_theme.css' %}">
+<style>
+.add-log-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.form-card {
+    background: white;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.form-header h1 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.form-header p {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control-classical {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #fff;
+}
+
+.form-control-classical:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.rating-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+}
+
+.star {
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.star.active,
+.star:hover {
+    color: #ffc107;
+}
+
+.rating-display {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.btn-primary-classical {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary-classical:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-secondary-classical {
+    background: #6c757d;
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-secondary-classical:hover {
+    background: #545b62;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+@media (max-width: 768px) {
+    .add-log-container {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+    
+    .form-card {
+        padding: 30px 20px;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-primary-classical,
+    .btn-secondary-classical {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="add-log-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1>新增練習記錄</h1>
+            <p>記錄您今天的小提琴練習情況</p>
+        </div>
+
+        <form method="post" id="practiceForm">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="student_name" class="form-label">學生姓名 *</label>
+                        <input type="text" 
+                               class="form-control-classical" 
+                               id="student_name" 
+                               name="student_name" 
+                               value="{{ current_student|default:'' }}" 
+                               required>
+                        <div class="form-text">請輸入練習者的姓名</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="date" class="form-label">練習日期 *</label>
+                        <input type="date" 
+                               class="form-control-classical" 
+                               id="date" 
+                               name="date" 
+                               required>
+                        <div class="form-text">選擇練習的日期</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label for="piece" class="form-label">練習曲目 *</label>
+                        <input type="text" 
+                               class="form-control-classical" 
+                               id="piece" 
+                               name="piece" 
+                               placeholder="例如：巴哈無伴奏小提琴組曲第一號" 
+                               required>
+                        <div class="form-text">今天主要練習的曲目</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="minutes" class="form-label">練習時間 (分鐘) *</label>
+                        <input type="number" 
+                               class="form-control-classical" 
+                               id="minutes" 
+                               name="minutes" 
+                               min="1" 
+                               max="600" 
+                               placeholder="60" 
+                               required>
+                        <div class="form-text">練習的總時間</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="focus" class="form-label">練習重點</label>
+                <select class="form-control-classical" id="focus" name="focus">
+                    <option value="">請選擇練習重點</option>
+                    {% for value, label in focus_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">本次練習的主要重點</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">練習評分 *</label>
+                <div class="rating-container">
+                    <div class="star-rating">
+                        {% for i in "12345" %}
+                            <span class="star" data-rating="{{ forloop.counter }}">★</span>
+                        {% endfor %}
+                    </div>
+                    <div class="rating-display">
+                        <span id="ratingValue">0</span> / 5
+                    </div>
+                </div>
+                <input type="hidden" id="rating" name="rating" required>
+                <div class="form-text">對本次練習的整體滿意度（1-5分）</div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes" class="form-label">練習筆記</label>
+                <textarea class="form-control-classical" 
+                          id="notes" 
+                          name="notes" 
+                          rows="4" 
+                          placeholder="記錄今天的練習內容、感受、需要改進的地方或下次練習的重點..."></textarea>
+                <div class="form-text">詳細記錄練習的內容、感受和需要注意的事項</div>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn-primary-classical">
+                    <i class="fas fa-save me-2"></i>
+                    保存練習記錄
+                </button>
+                <a href="{% url 'practice_logs:index' %}" class="btn-secondary-classical">
+                    <i class="fas fa-times me-2"></i>
+                    取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 設置默認日期為今天
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+    
+    // 星級評分功能
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('rating');
+    const ratingValue = document.getElementById('ratingValue');
+    
+    stars.forEach((star, index) => {
+        star.addEventListener('click', function() {
+            const rating = index + 1;
+            ratingInput.value = rating;
+            ratingValue.textContent = rating;
+            
+            // 更新星星顯示
+            stars.forEach((s, i) => {
+                if (i < rating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const rating = index + 1;
+            stars.forEach((s, i) => {
+                if (i < rating) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#ddd';
+                }
+            });
+        });
+    });
+    
+    document.querySelector('.star-rating').addEventListener('mouseleave', function() {
+        const currentRating = parseInt(ratingInput.value) || 0;
+        stars.forEach((s, i) => {
+            if (i < currentRating) {
+                s.style.color = '#ffc107';
+                s.classList.add('active');
+            } else {
+                s.style.color = '#ddd';
+                s.classList.remove('active');
+            }
+        });
+    });
+    
+    // 表單驗證
+    document.getElementById('practiceForm').addEventListener('submit', function(e) {
+        const rating = document.getElementById('rating').value;
+        if (!rating || rating < 1 || rating > 5) {
+            e.preventDefault();
+            alert('請選擇練習評分（1-5分）');
+            return false;
+        }
+        
+        const minutes = document.getElementById('minutes').value;
+        if (!minutes || minutes < 1 || minutes > 600) {
+            e.preventDefault();
+            alert('練習時間必須在1-600分鐘之間');
+            return false;
+        }
+        
+        return true;
+    });
+    
+    // 自動完成學生姓名
+    const studentNameInput = document.getElementById('student_name');
+    if (studentNameInput.value.trim() === '') {
+        studentNameInput.focus();
+    }
+});
+</script>
+{% endblock %}

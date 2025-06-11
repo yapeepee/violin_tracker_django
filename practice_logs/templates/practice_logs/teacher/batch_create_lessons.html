@@ -1,0 +1,558 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}批次排課 - 教師系統{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 容器 */
+.batch-create-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 頁面標題 */
+.page-title {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.page-subtitle {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* 表單卡片 */
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+/* 表單區塊 */
+.form-section {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c5f3d;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 表單元素 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.required {
+    color: #d32f2f;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2c5f3d;
+}
+
+/* 日期範圍 */
+.date-range {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 15px;
+    align-items: center;
+}
+
+.date-separator {
+    color: #999;
+    font-size: 1.2rem;
+}
+
+/* 星期選擇 */
+.weekday-selector {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.weekday-option {
+    position: relative;
+}
+
+.weekday-checkbox {
+    position: absolute;
+    opacity: 0;
+}
+
+.weekday-label {
+    display: block;
+    padding: 15px;
+    text-align: center;
+    background: #f0f0f0;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.weekday-checkbox:checked + .weekday-label {
+    background: #2c5f3d;
+    color: white;
+    border-color: #2c5f3d;
+}
+
+.weekday-label:hover {
+    border-color: #2c5f3d;
+    transform: translateY(-2px);
+}
+
+/* 預覽區 */
+.preview-section {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 30px;
+}
+
+.preview-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.preview-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.preview-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+.preview-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.preview-value {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.preview-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 20px;
+}
+
+.preview-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    position: relative;
+}
+
+.preview-day.has-lesson {
+    background: #e8f5e9;
+    border-color: #2c5f3d;
+    font-weight: 600;
+}
+
+.preview-day.out-of-range {
+    opacity: 0.3;
+}
+
+/* 提交按鈕 */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #2c5f3d;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #245030;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* 提示訊息 */
+.form-hint {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.warning-message {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.warning-icon {
+    color: #f39c12;
+    font-size: 1.2rem;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .batch-create-container {
+        padding: 10px;
+    }
+    
+    .form-card {
+        padding: 20px;
+    }
+    
+    .weekday-selector {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .date-range {
+        grid-template-columns: 1fr;
+    }
+    
+    .date-separator {
+        text-align: center;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="batch-create-container">
+    <h1 class="page-title">📅 批次排課</h1>
+    <p class="page-subtitle">為學生安排固定的每週課程</p>
+    
+    <div class="form-card">
+        <form method="post" id="batchCreateForm">
+            {% csrf_token %}
+            
+            <!-- 學生選擇 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-user-graduate"></i> 選擇學生
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        學生 <span class="required">*</span>
+                    </label>
+                    <select name="student" id="studentSelect" class="form-control" required>
+                        <option value="">請選擇學生</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}">
+                            {{ student.profile.display_name|default:student.username }}
+                            {% if student.profile.skill_level %}
+                                ({{ student.profile.get_skill_level_display }})
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 日期範圍 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-alt"></i> 日期範圍
+                </h2>
+                
+                <div class="date-range">
+                    <div class="form-group">
+                        <label class="form-label">
+                            開始日期 <span class="required">*</span>
+                        </label>
+                        <input type="date" 
+                               name="start_date" 
+                               id="startDate"
+                               class="form-control" 
+                               min="{{ 'now'|date:'Y-m-d' }}"
+                               required>
+                    </div>
+                    
+                    <div class="date-separator">至</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            結束日期 <span class="required">*</span>
+                        </label>
+                        <input type="date" 
+                               name="end_date" 
+                               id="endDate"
+                               class="form-control" 
+                               min="{{ 'now'|date:'Y-m-d' }}"
+                               required>
+                    </div>
+                </div>
+                
+                <div class="form-hint">
+                    <i class="fas fa-info-circle"></i> 
+                    系統將在此日期範圍內，為選定的星期安排課程
+                </div>
+            </div>
+            
+            <!-- 星期選擇 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-week"></i> 上課星期
+                </h2>
+                
+                <p class="form-hint" style="margin-bottom: 15px;">
+                    選擇每週固定的上課日
+                </p>
+                
+                <div class="weekday-selector">
+                    {% for value, label in weekdays %}
+                    <div class="weekday-option">
+                        <input type="checkbox" 
+                               name="weekdays" 
+                               value="{{ value }}" 
+                               id="weekday{{ value }}" 
+                               class="weekday-checkbox"
+                               onchange="updatePreview()">
+                        <label for="weekday{{ value }}" class="weekday-label">
+                            {{ label }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 時間設定 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-clock"></i> 時間設定
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        上課時間 <span class="required">*</span>
+                    </label>
+                    <input type="time" 
+                           name="start_time" 
+                           id="startTime"
+                           class="form-control" 
+                           value="14:00"
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">課程時長（分鐘）</label>
+                    <select name="duration_minutes" class="form-control">
+                        <option value="30">30分鐘</option>
+                        <option value="45">45分鐘</option>
+                        <option value="60" selected>60分鐘</option>
+                        <option value="90">90分鐘</option>
+                        <option value="120">120分鐘</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">課程類型</label>
+                    <select name="lesson_type" class="form-control">
+                        {% for value, display in lesson_types %}
+                        <option value="{{ value }}">{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 預覽區 -->
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <h3 class="preview-title">
+                    <i class="fas fa-eye"></i> 課程預覽
+                </h3>
+                
+                <div class="preview-info">
+                    <div class="preview-item">
+                        <div class="preview-label">學生</div>
+                        <div class="preview-value" id="previewStudent">-</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">日期範圍</div>
+                        <div class="preview-value" id="previewDateRange">-</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">預計課程數</div>
+                        <div class="preview-value" id="previewLessonCount">0 堂</div>
+                    </div>
+                </div>
+                
+                <div class="warning-message">
+                    <i class="fas fa-exclamation-triangle warning-icon"></i>
+                    <span>系統會自動跳過已有課程的時段，避免衝突</span>
+                </div>
+            </div>
+            
+            <!-- 提交按鈕 -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="history.back()">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-check"></i> 創建課程
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// 更新預覽
+function updatePreview() {
+    const studentSelect = document.getElementById('studentSelect');
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    const selectedWeekdays = document.querySelectorAll('input[name="weekdays"]:checked');
+    
+    // 檢查是否有足夠的資料顯示預覽
+    if (studentSelect.value && startDate.value && endDate.value && selectedWeekdays.length > 0) {
+        document.getElementById('previewSection').style.display = 'block';
+        
+        // 更新學生名稱
+        const studentName = studentSelect.options[studentSelect.selectedIndex].text;
+        document.getElementById('previewStudent').textContent = studentName;
+        
+        // 更新日期範圍
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+        const dateRange = `${start.toLocaleDateString('zh-TW')} ~ ${end.toLocaleDateString('zh-TW')}`;
+        document.getElementById('previewDateRange').textContent = dateRange;
+        
+        // 計算課程數
+        let lessonCount = 0;
+        const selectedDays = Array.from(selectedWeekdays).map(cb => parseInt(cb.value));
+        
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            // 注意：JavaScript的getDay()返回0-6，其中0是星期日
+            // 但Python的weekday()返回0-6，其中0是星期一
+            // 需要轉換：JS的1-6對應Python的0-5，JS的0對應Python的6
+            let jsDay = d.getDay();
+            let pyDay = jsDay === 0 ? 6 : jsDay - 1;
+            
+            if (selectedDays.includes(pyDay)) {
+                lessonCount++;
+            }
+        }
+        
+        document.getElementById('previewLessonCount').textContent = `${lessonCount} 堂`;
+    } else {
+        document.getElementById('previewSection').style.display = 'none';
+    }
+}
+
+// 監聽表單變更
+document.getElementById('studentSelect').addEventListener('change', updatePreview);
+document.getElementById('startDate').addEventListener('change', updatePreview);
+document.getElementById('endDate').addEventListener('change', updatePreview);
+
+// 日期驗證
+document.getElementById('startDate').addEventListener('change', function() {
+    const endDate = document.getElementById('endDate');
+    endDate.min = this.value;
+    if (endDate.value && endDate.value < this.value) {
+        endDate.value = this.value;
+    }
+    updatePreview();
+});
+
+// 表單提交確認
+document.getElementById('batchCreateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const selectedWeekdays = document.querySelectorAll('input[name="weekdays"]:checked');
+    if (selectedWeekdays.length === 0) {
+        alert('請至少選擇一個上課日');
+        return;
+    }
+    
+    const lessonCount = document.getElementById('previewLessonCount').textContent;
+    if (confirm(`確定要創建 ${lessonCount} 嗎？`)) {
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 創建中...';
+        this.submit();
+    }
+});
+</script>
+{% endblock %}

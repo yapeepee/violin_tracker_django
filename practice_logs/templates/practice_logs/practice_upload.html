@@ -1,0 +1,535 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}練習記錄上傳 - 小提琴練習追蹤系統{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/classical_theme.css' %}">
+<style>
+    .practice-form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .form-section {
+        margin-bottom: 3rem;
+    }
+    
+    .rating-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+    
+    .rating-item {
+        text-align: center;
+    }
+    
+    .rating-label {
+        font-family: 'Playfair Display', serif;
+        color: #722F37;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .rating-description {
+        font-size: 0.9rem;
+        color: #556B2F;
+        margin-bottom: 1rem;
+        font-style: italic;
+    }
+    
+    .rating-placeholder {
+        padding: 2rem;
+        text-align: center;
+        background: rgba(184, 134, 11, 0.05);
+        border-radius: 8px;
+        border: 2px dashed rgba(184, 134, 11, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/classical_animations.js' %}"></script>
+<script src="{% static 'js/video_upload.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="practice-form-container">
+    <!-- 頁面標題 -->
+    <h1 class="elegant-title">🎻 練習記錄上傳</h1>
+    
+    <!-- 主表單 -->
+    <form class="form-classical" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- 基本資訊區塊 -->
+        <div class="form-section parchment-card">
+            <h3>📝 基本練習資訊</h3>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label-classical" for="student_name">學生姓名</label>
+                    <input type="text" class="form-control form-control-classical" 
+                           id="student_name" name="student_name" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label-classical" for="practice_date">練習日期</label>
+                    <input type="date" class="form-control form-control-classical" 
+                           id="practice_date" name="date" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label class="form-label-classical" for="piece">練習曲目</label>
+                    <input type="text" class="form-control form-control-classical" 
+                           id="piece" name="piece" placeholder="例如：巴哈 G弦之歌" required>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label class="form-label-classical" for="minutes">練習時間 (分鐘)</label>
+                    <input type="number" class="form-control form-control-classical" 
+                           id="minutes" name="minutes" min="1" max="600" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label-classical" for="focus">練習重點</label>
+                <select class="form-control form-control-classical" id="focus" name="focus">
+                    <option value="technique">技巧練習</option>
+                    <option value="expression">表現力</option>
+                    <option value="rhythm">節奏</option>
+                    <option value="sight_reading">視奏</option>
+                    <option value="memorization">記譜</option>
+                    <option value="ensemble">重奏</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 影片上傳區塊 -->
+        <div class="form-section">
+            <h3>🎥 練習影片上傳</h3>
+            <div class="video-upload-area classical-border">
+                <div class="upload-icon">🎬</div>
+                <div class="upload-text">拖拽影片到此處或點擊選擇</div>
+                <div class="upload-hint">支援 MP4, AVI, MOV, WebM 格式，最大 100MB</div>
+            </div>
+        </div>
+        
+        <!-- 心情選擇區塊 -->
+        <div class="form-section parchment-card">
+            <h3>🎭 練習心情</h3>
+            <p class="text-muted mb-3">選擇最貼近今日練習時心情的古典作曲家風格</p>
+            
+            <div class="mood-selector">
+                <label class="mood-option" for="mood_joyful">
+                    <input type="radio" name="mood" value="joyful" id="mood_joyful" style="display: none;">
+                    <span class="mood-emoji">😊</span>
+                    <span class="mood-label">愉悅如莫札特</span>
+                </label>
+                
+                <label class="mood-option" for="mood_peaceful">
+                    <input type="radio" name="mood" value="peaceful" id="mood_peaceful" style="display: none;">
+                    <span class="mood-emoji">😌</span>
+                    <span class="mood-label">平靜如德布西</span>
+                </label>
+                
+                <label class="mood-option" for="mood_focused">
+                    <input type="radio" name="mood" value="focused" id="mood_focused" style="display: none;" checked>
+                    <span class="mood-emoji">🎯</span>
+                    <span class="mood-label">專注如巴哈</span>
+                </label>
+                
+                <label class="mood-option" for="mood_melancholic">
+                    <input type="radio" name="mood" value="melancholic" id="mood_melancholic" style="display: none;">
+                    <span class="mood-emoji">😔</span>
+                    <span class="mood-label">憂鬱如蕭邦</span>
+                </label>
+                
+                <label class="mood-option" for="mood_passionate">
+                    <input type="radio" name="mood" value="passionate" id="mood_passionate" style="display: none;">
+                    <span class="mood-emoji">🔥</span>
+                    <span class="mood-label">熱情如柴可夫斯基</span>
+                </label>
+                
+                <label class="mood-option" for="mood_contemplative">
+                    <input type="radio" name="mood" value="contemplative" id="mood_contemplative" style="display: none;">
+                    <span class="mood-emoji">🤔</span>
+                    <span class="mood-label">沉思如貝多芬</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- 動態評分區塊 (根據練習重點) -->
+        <div class="form-section parchment-card">
+            <h3>⭐ 練習重點自我評分</h3>
+            <p class="text-muted mb-3">根據選擇的練習重點，用音符為相關技能評分 (1-5 音符)</p>
+            
+            <div id="dynamic-rating-section" class="rating-section">
+                <!-- 動態載入評分項目 -->
+                <div class="rating-placeholder">
+                    <p class="text-center text-muted">請先選擇練習重點</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 練習筆記區塊 -->
+        <div class="form-section parchment-card">
+            <h3>📔 練習記錄</h3>
+            
+            <div class="mb-3">
+                <label class="form-label-classical" for="notes">練習心得與觀察</label>
+                <textarea class="form-control form-control-classical" id="notes" name="notes" 
+                         rows="4" placeholder="記錄今日練習的心得、發現的問題或突破..."></textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label-classical" for="student_notes_to_teacher">給老師的話</label>
+                <textarea class="form-control form-control-classical" id="student_notes_to_teacher" 
+                         name="student_notes_to_teacher" rows="3" 
+                         placeholder="想對老師說的話，或需要指導的地方..."></textarea>
+            </div>
+        </div>
+        
+        <!-- 提交按鈕 -->
+        <div class="text-center">
+            <button type="submit" class="btn-classical btn-lg">
+                🎼 提交練習記錄
+            </button>
+            <button type="button" class="btn-burgundy btn-lg ms-3" onclick="history.back()">
+                返回
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript 初始化 -->
+<script>
+// 練習重點評分配置 (與後端保持一致)
+const FOCUS_RATING_CONFIG = {
+    'technique': {
+        'name': '技巧練習',
+        'ratings': [
+            ['technique_bow_control', '運弓控制', '運弓技巧和控制力'],
+            ['technique_finger_position', '按弦準確度', '左手按弦位置準確性'],
+            ['technique_intonation', '音準', '音高準確度'],
+        ]
+    },
+    'expression': {
+        'name': '表現力',
+        'ratings': [
+            ['expression_dynamics', '力度變化', '音量強弱的表現控制'],
+            ['expression_phrasing', '樂句處理', '音樂線條與樂句表現'],
+            ['expression_emotion', '情感表達', '音樂情感的傳達'],
+        ]
+    },
+    'rhythm': {
+        'name': '節奏',
+        'ratings': [
+            ['rhythm_tempo_stability', '速度穩定度', '節拍速度保持穩定'],
+            ['rhythm_pattern_accuracy', '節奏型準確度', '複雜節奏型的準確演奏'],
+            ['technique_intonation', '音準配合', '節奏中的音準維持'],
+        ]
+    },
+    'sight_reading': {
+        'name': '視奏',
+        'ratings': [
+            ['sight_reading_fluency', '視奏流暢度', '第一次看譜演奏的流暢程度'],
+            ['sight_reading_accuracy', '視奏準確度', '音符、節奏讀譜準確度'],
+            ['rhythm_tempo_stability', '速度控制', '視奏時的速度穩定性'],
+        ]
+    },
+    'memorization': {
+        'name': '記譜',
+        'ratings': [
+            ['memorization_stability', '記憶穩定度', '背譜演奏的穩定程度'],
+            ['memorization_confidence', '記譜信心', '背譜演奏的自信程度'],
+            ['technique_intonation', '音準穩定', '背譜時的音準維持'],
+        ]
+    },
+    'ensemble': {
+        'name': '重奏',
+        'ratings': [
+            ['ensemble_listening', '聆聽配合', '與其他聲部的聆聽配合'],
+            ['ensemble_timing', '時間同步', '與其他樂器的時間同步'],
+            ['expression_dynamics', '音量平衡', '在合奏中的音量控制'],
+        ]
+    },
+    'other': {
+        'name': '其他',
+        'ratings': [
+            ['technique_bow_control', '技巧表現', '整體技巧展現'],
+            ['expression_emotion', '音樂表現', '整體音樂性表現'],
+            ['rhythm_tempo_stability', '穩定度', '整體演奏穩定性'],
+        ]
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化心情選擇器
+    initMoodSelector();
+    
+    // 設置表單驗證
+    setupFormValidation();
+    
+    // 設置今日日期
+    document.getElementById('practice_date').value = new Date().toISOString().split('T')[0];
+    
+    // 初始化動態評分系統
+    initDynamicRatingSystem();
+    
+    // 初始化浮動音符效果
+    if (window.classicalAnimations) {
+        window.classicalAnimations.createFloatingNotes();
+    }
+});
+
+function initMoodSelector() {
+    document.querySelectorAll('.mood-option').forEach(option => {
+        option.addEventListener('click', function() {
+            // 移除其他選中狀態
+            document.querySelectorAll('.mood-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 添加選中狀態
+            this.classList.add('selected');
+            
+            // 選中對應的radio button
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // 播放音效
+            if (window.classicalAnimations) {
+                window.classicalAnimations.playHoverSound();
+            }
+        });
+    });
+    
+    // 設置預設選中項
+    document.querySelector('input[name="mood"]:checked').closest('.mood-option').classList.add('selected');
+}
+
+function initDynamicRatingSystem() {
+    const focusSelect = document.getElementById('focus');
+    
+    if (!focusSelect) {
+        console.error('練習重點選擇器未找到');
+        return;
+    }
+    
+    console.log('初始化動態評分系統，當前選項:', focusSelect.value);
+    
+    // 監聽練習重點變化
+    focusSelect.addEventListener('change', function() {
+        console.log('練習重點變更為:', this.value);
+        updateRatingSection(this.value);
+    });
+    
+    // 初始化預設評分區塊
+    updateRatingSection(focusSelect.value);
+}
+
+function updateRatingSection(focusType) {
+    const ratingSection = document.getElementById('dynamic-rating-section');
+    
+    if (!ratingSection) {
+        console.error('評分區域元素未找到');
+        return;
+    }
+    
+    console.log('更新評分區塊，類型:', focusType);
+    
+    if (!FOCUS_RATING_CONFIG[focusType]) {
+        console.error('找不到配置:', focusType);
+        ratingSection.innerHTML = '<div class="rating-placeholder"><p class="text-center text-muted">找不到對應的評分配置</p></div>';
+        return;
+    }
+    
+    const config = FOCUS_RATING_CONFIG[focusType];
+    let html = '';
+    
+    config.ratings.forEach(([fieldName, displayName, description]) => {
+        html += `
+            <div class="rating-item">
+                <label class="rating-label">${displayName}</label>
+                <p class="rating-description">${description}</p>
+                <div class="rating-stars" data-field="${fieldName}">
+                    <span class="rating-star musical-note" data-value="1"></span>
+                    <span class="rating-star musical-note" data-value="2"></span>
+                    <span class="rating-star musical-note" data-value="3"></span>
+                    <span class="rating-star musical-note" data-value="4"></span>
+                    <span class="rating-star musical-note" data-value="5"></span>
+                </div>
+                <input type="hidden" name="${fieldName}" value="3">
+            </div>
+        `;
+    });
+    
+    ratingSection.innerHTML = html;
+    console.log('評分HTML已更新，共有', config.ratings.length, '個評分項目');
+    
+    // 重新初始化星級評分
+    initRatingStars();
+    
+    // 添加動畫效果
+    ratingSection.style.animation = 'fadeInUp 0.5s ease-out';
+    
+    // 確保動畫後清除樣式
+    setTimeout(() => {
+        ratingSection.style.animation = '';
+    }, 500);
+}
+
+function initRatingStars() {
+    document.querySelectorAll('.rating-stars').forEach(ratingContainer => {
+        const stars = ratingContainer.querySelectorAll('.rating-star');
+        const hiddenInput = ratingContainer.parentElement.querySelector('input[type="hidden"]');
+        const currentRating = parseInt(hiddenInput.value);
+        
+        // 設置初始評分顯示
+        updateStarDisplay(stars, currentRating);
+        
+        stars.forEach((star, index) => {
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.value);
+                hiddenInput.value = rating;
+                updateStarDisplay(stars, rating);
+                
+                // 播放音效
+                if (window.classicalAnimations) {
+                    window.classicalAnimations.playHoverSound();
+                }
+                
+                // 添加點擊動畫
+                this.style.animation = 'starTwinkle 0.5s ease-in-out';
+                setTimeout(() => {
+                    this.style.animation = '';
+                }, 500);
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.dataset.value);
+                updateStarDisplay(stars, rating);
+            });
+        });
+        
+        ratingContainer.addEventListener('mouseleave', function() {
+            const currentRating = parseInt(hiddenInput.value);
+            updateStarDisplay(stars, currentRating);
+        });
+    });
+}
+
+function updateStarDisplay(stars, rating) {
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+        } else {
+            star.classList.remove('active');
+        }
+    });
+}
+
+function setupFormValidation() {
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 基本驗證
+        if (!this.checkValidity()) {
+            this.reportValidity();
+            return;
+        }
+        
+        // 顯示提交動畫
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '🎵 提交中...';
+        submitBtn.disabled = true;
+        
+        // 模擬提交過程
+        setTimeout(() => {
+            // 播放成功音效
+            if (window.classicalAnimations) {
+                window.classicalAnimations.playSuccessChord();
+            }
+            
+            // 顯示成功消息
+            showSuccessMessage();
+            
+            // 重置按鈕
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            // 實際提交表單 (移除preventDefault)
+            // this.submit();
+        }, 2000);
+    });
+}
+
+function showSuccessMessage() {
+    const successModal = document.createElement('div');
+    successModal.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        ">
+            <div style="
+                background: linear-gradient(135deg, #FDF5E6, #F4F1E8);
+                border-radius: 20px;
+                padding: 3rem;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                border: 3px solid #B8860B;
+                max-width: 500px;
+            ">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                <h2 style="font-family: 'Playfair Display', serif; color: #722F37; margin-bottom: 1rem;">
+                    練習記錄提交成功！
+                </h2>
+                <p style="font-family: 'Crimson Text', serif; color: #556B2F; font-size: 1.2rem;">
+                    您的練習記錄已成功保存，繼續保持優秀的練習習慣！
+                </p>
+                <button onclick="this.closest('div').remove()" 
+                        style="
+                            background: linear-gradient(135deg, #B8860B, #FFBF00);
+                            border: none;
+                            color: #191970;
+                            font-family: 'Playfair Display', serif;
+                            font-weight: 600;
+                            padding: 0.75rem 2rem;
+                            border-radius: 8px;
+                            margin-top: 1rem;
+                            cursor: pointer;
+                        ">
+                    繼續練習
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(successModal);
+    
+    // 3秒後自動關閉
+    setTimeout(() => {
+        successModal.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

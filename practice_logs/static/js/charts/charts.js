@@ -1,13 +1,35 @@
 import { chartColors, commonChartOptions } from './config.js';
 import { formatDate, handleError } from '../utils.js';
 
-// 存儲所有圖表實例
-const charts = {};
+// 使用全局圖表存儲
+const charts = window.globalCharts || {};
+
+// 安全銷毀圖表函數
+function destroyChart(chartId) {
+    if (window.globalCharts && window.globalCharts[chartId]) {
+        try {
+            window.globalCharts[chartId].destroy();
+            console.log(`🗑️ 銷毀圖表: ${chartId}`);
+        } catch (error) {
+            console.warn(`⚠️ 銷毀圖表時發生錯誤 ${chartId}:`, error);
+        }
+        delete window.globalCharts[chartId];
+    }
+}
+
+// 銷毀所有圖表函數
+function destroyAllCharts() {
+    if (window.destroyAllGlobalCharts) {
+        window.destroyAllGlobalCharts();
+    }
+}
 
 // 通用圖表載入函數
 async function loadChartData(chartId, fetchData, createChart) {
     try {
         showLoading(chartId);
+        // 先銷毀舊圖表
+        destroyChart(chartId);
         const data = await fetchData();
         await createChart(data);
         hideLoading(chartId);
@@ -74,41 +96,54 @@ function updateStatsInfo(response) {
     const statsInfo = document.getElementById('focusStatsInfo');
     if (!statsInfo) return;
 
-    // 優先使用 API 回傳的聚合欄位
+    console.log('📈 更新統計信息:', response.piece || '整體分析');
+
+    // 使用 API 回傳的統計資料
     const total_time = response.total_minutes ?? 0;
     const avg_rating = response.avg_rating ?? 0;
     const practice_count = response.total_sessions ?? 0;
+    const selectedPiece = response.piece || '整體分析';
 
-    // 找出主要練習重點
+    console.log('📊 統計數據:', { total_time, avg_rating, practice_count, selectedPiece });
+
+    // 找出主要練習重點 - 只考慮有時間投入的重點
     const data = response.data || [];
-    const mainFocus = data.length > 0 
-        ? data.reduce((a, b) => (b.percentage || 0) > (a.percentage || 0) ? b : a) 
+    const activeData = data.filter(item => (item.total_minutes || 0) > 0);
+    const mainFocus = activeData.length > 0 
+        ? activeData.reduce((a, b) => (b.percentage || 0) > (a.percentage || 0) ? b : a) 
         : { focus_display: '無數據', percentage: 0 };
 
+    // 根據選擇的曲目更新標題
+    const titleText = selectedPiece === '整體分析' ? '整體練習統計' : `${selectedPiece} 練習統計`;
+
     statsInfo.innerHTML = `
+        <div class="mb-2">
+            <small class="text-muted">${titleText}</small>
+        </div>
         <div class="row text-center">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-item">
-                    <h5>總練習時間</h5>
-                    <p>${total_time} 分鐘</p>
+                    <h6 class="mb-1">總練習時間</h6>
+                    <p class="mb-0 fw-bold text-primary">${total_time} 分鐘</p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-item">
-                    <h5>平均評分</h5>
-                    <p>${avg_rating.toFixed(1)} 分</p>
+                    <h6 class="mb-1">平均評分</h6>
+                    <p class="mb-0 fw-bold text-success">${avg_rating > 0 ? avg_rating.toFixed(1) : '0.0'} 分</p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-item">
-                    <h5>練習次數</h5>
-                    <p>${practice_count} 次</p>
+                    <h6 class="mb-1">練習次數</h6>
+                    <p class="mb-0 fw-bold text-info">${practice_count} 次</p>
                 </div>
             </div>
-            <div class="col-12 mt-3">
+            <div class="col-md-3">
                 <div class="stat-item">
-                    <h5>主要練習重點</h5>
-                    <p>${mainFocus.focus_display} (${mainFocus.percentage || 0}%)</p>
+                    <h6 class="mb-1">主要重點</h6>
+                    <p class="mb-0 fw-bold text-warning">${mainFocus.focus_display}</p>
+                    <small class="text-muted">(${mainFocus.percentage || 0}%)</small>
                 </div>
             </div>
         </div>
@@ -161,10 +196,9 @@ export async function loadWeeklyData(studentName) {
     };
 
     const createChart = async (data) => {
-        if (charts.weeklyChart) charts.weeklyChart.destroy();
-        
         const chartData = transformChartData(data, 'weekly');
-        charts.weeklyChart = new Chart(
+        window.globalCharts = window.globalCharts || {};
+        window.globalCharts[chartId] = new Chart(
             document.getElementById(chartId),
             createChartConfig('line', chartData.labels, chartData.datasets, {
                 scales: {
@@ -178,6 +212,7 @@ export async function loadWeeklyData(studentName) {
                 }
             })
         );
+        console.log('📊 週練習圖表已創建');
     };
 
     await loadChartData(chartId, fetchData, createChart);
@@ -200,15 +235,12 @@ export async function loadPieceData(studentName) {
     };
 
     const createChart = async (data) => {
-        if (charts.pieceChart) {
-            charts.pieceChart.destroy();
-        }
-
-        console.log('正在創建樂曲練習圖表，數據:', data);  // 添加日誌
+        console.log('正在創建樂曲練習圖表，數據:', data);
         // 按練習時間排序數據
         data.sort((a, b) => b.dimensions.time_investment - a.dimensions.time_investment);
 
-        charts.pieceChart = new Chart(document.getElementById(chartId), {
+        window.globalCharts = window.globalCharts || {};
+        window.globalCharts[chartId] = new Chart(document.getElementById(chartId), {
             type: 'bar',
             data: {
                 labels: data.map(d => d.piece),
@@ -315,11 +347,7 @@ export async function loadRecentTrendData(studentName) {
     };
 
     const createChart = async (data) => {
-        if (charts.recentTrendChart) {
-            charts.recentTrendChart.destroy();
-        }
-
-        charts.recentTrendChart = new Chart(document.getElementById(chartId), {
+        charts[chartId] = new Chart(document.getElementById(chartId), {
             type: 'line',
             data: {
                 labels: data.map(d => formatDate(new Date(d.date))),
@@ -374,7 +402,7 @@ export async function loadRecentTrendData(studentName) {
 // 載入練習重點分析
 export async function loadFocusStats(studentName) {
     const chartId = 'focusChart';
-    const pieceSelector = document.getElementById('pieceSelector');
+    let pieceSelector = document.getElementById('pieceSelector'); // 使用let以便重新分配
     const statsInfo = document.getElementById('focusStatsInfo');
     
     // 載入曲目列表
@@ -387,59 +415,72 @@ export async function loadFocusStats(studentName) {
         }
         const pieces = await response.json();
         
+        // 記住當前選擇的值
+        const currentValue = pieceSelector ? pieceSelector.value : '';
+        
+        // 重新獲取選擇器元素（確保是最新的）
+        pieceSelector = document.getElementById('pieceSelector');
+        
         // 清空現有選項
         pieceSelector.innerHTML = '';
         
         // 添加"整體分析"選項
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
-        defaultOption.innerHTML = `
-            <div class="d-flex align-items-center">
-                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItbXVzaWMiPjxwYXRoIGQ9Ik05IDIwYTIgMiAwIDEgMS00IDAgMiAyIDAgMCAxIDQgMHoiPjwvcGF0aD48cGF0aCBkPSJNMTkgMTZhMiAyIDAgMSAxLTQgMCAyIDIgMCAwIDEgNCAweiI+PC9wYXRoPjxwYXRoIGQ9Ik05IDE4VjVsOC0ydjEzIj48L3BhdGg+PC9zdmc+" 
-                    class="composer-avatar me-2" 
-                    width="24" 
-                    height="24"
-                    alt="整體分析">
-                <span>整體分析</span>
-            </div>
-        `;
+        defaultOption.textContent = '🎵 整體分析';
         pieceSelector.appendChild(defaultOption);
         
         // 添加曲目選項
         pieces.forEach(piece => {
             const option = document.createElement('option');
             option.value = piece.piece;
-            option.innerHTML = `🎵 ${piece.piece} (${piece.percentage}%)`;
+            option.textContent = `🎵 ${piece.piece} (${piece.percentage}%)`;
             pieceSelector.appendChild(option);
         });
+        
+        // 嘗試恢復之前的選擇，如果該曲目在新數據中不存在則回到整體分析
+        const pieceExists = pieces.some(piece => piece.piece === currentValue);
+        if (currentValue && pieceExists) {
+            pieceSelector.value = currentValue;
+        } else {
+            pieceSelector.value = '';
+        }
     };
     
-    const fetchData = async () => {
-        const params = new URLSearchParams(window.location.search);
-        params.set('student_name', studentName);
-        const selectedPiece = pieceSelector.value;
-        if (selectedPiece) {
-            params.set('piece', selectedPiece);
-        }
-        const response = await fetch(`/api/focus-stats/?${params}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const jsonResponse = await response.json();
-        
-        // 確保數據結構完整
-        if (!jsonResponse.data || !Array.isArray(jsonResponse.data)) {
-            throw new Error('無效的數據格式');
-        }
-        
-        return jsonResponse;
+    // 創建動態的 fetchData 函數，每次都獲取最新的選擇器值
+    const createFetchDataFunction = () => {
+        return async () => {
+            const params = new URLSearchParams(window.location.search);
+            params.set('student_name', studentName);
+            
+            // 每次都重新獲取選擇器元素，確保獲取最新的值
+            const currentSelector = document.getElementById('pieceSelector');
+            const selectedPiece = currentSelector ? currentSelector.value : '';
+            
+            if (selectedPiece) {
+                params.set('piece', selectedPiece);
+            }
+            
+            console.log('🎵 載入練習重點分析:', selectedPiece || '整體分析');
+            console.log('📊 API參數:', params.toString());
+            
+            const response = await fetch(`/api/focus-stats/?${params}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const jsonResponse = await response.json();
+            
+            // 確保數據結構完整
+            if (!jsonResponse.data || !Array.isArray(jsonResponse.data)) {
+                throw new Error('無效的數據格式');
+            }
+            
+            console.log('Focus stats response:', jsonResponse);
+            return jsonResponse;
+        };
     };
 
     const createChart = async (response) => {
-        if (charts.focusChart) {
-            charts.focusChart.destroy();
-        }
-
         const data = response.data;
         
         // 確保數據非空
@@ -524,7 +565,7 @@ export async function loadFocusStats(studentName) {
             }
         };
 
-        charts.focusChart = new Chart(document.getElementById(chartId), chartConfig);
+        charts[chartId] = new Chart(document.getElementById(chartId), chartConfig);
     };
 
     // 獲取隨機音樂表情符號
@@ -536,15 +577,34 @@ export async function loadFocusStats(studentName) {
     // 初始化曲目選擇器
     await loadPieceOptions();
     
-    // 添加選擇器變更事件
-    pieceSelector.addEventListener('change', () => {
+    // 獲取動態的 fetchData 函數
+    const fetchData = createFetchDataFunction();
+    
+    // 重新獲取選擇器元素（確保獲取更新後的元素）
+    pieceSelector = document.getElementById('pieceSelector');
+    
+    // 清除之前的事件監聽器（如果存在）
+    const existingHandler = pieceSelector._changeHandler;
+    if (existingHandler) {
+        pieceSelector.removeEventListener('change', existingHandler);
+    }
+    
+    // 創建新的事件處理函數
+    const changeHandler = () => {
+        console.log('🎼 曲目選擇變更為:', pieceSelector.value || '整體分析');
         statsInfo.classList.remove('show');
         setTimeout(() => {
-            loadChartData(chartId, fetchData, createChart);
+            // 使用動態的 fetchData 函數
+            loadChartData(chartId, createFetchDataFunction(), createChart);
             pieceSelector.classList.add('highlight-piece');
             setTimeout(() => pieceSelector.classList.remove('highlight-piece'), 500);
         }, 300);
-    });
+    };
+    
+    // 添加新的選擇器變更事件
+    pieceSelector.addEventListener('change', changeHandler);
+    // 保存處理函數引用以便後續清除
+    pieceSelector._changeHandler = changeHandler;
 
     // 載入初始數據
     await loadChartData(chartId, fetchData, createChart);
@@ -565,10 +625,6 @@ export async function loadPieceEffectivenessData(studentName) {
     };
 
     const createChart = async (data) => {
-        if (charts.pieceEffectivenessChart) {
-            charts.pieceEffectivenessChart.destroy();
-        }
-
         // 只取前6首曲子
         const topPieces = data.slice(0, 6);
 
@@ -603,7 +659,7 @@ export async function loadPieceEffectivenessData(studentName) {
             pointHoverRadius: 6
         }));
 
-        charts.pieceEffectivenessChart = new Chart(document.getElementById(chartId), {
+        charts[chartId] = new Chart(document.getElementById(chartId), {
             type: 'radar',
             data: {
                 labels: dimensions,
@@ -680,7 +736,7 @@ export async function loadPieceEffectivenessData(studentName) {
         // 添加點擊事件處理
         const canvas = document.getElementById(chartId);
         canvas.onclick = function(evt) {
-            const points = charts.pieceEffectivenessChart.getElementsAtEventForMode(
+            const points = window.globalCharts[chartId].getElementsAtEventForMode(
                 evt,
                 'nearest',
                 { intersect: true },
@@ -715,16 +771,12 @@ export async function loadTimeEffectAnalysis(studentName) {
     };
 
     const createChart = async (data) => {
-        if (charts.timeEffectChart) {
-            charts.timeEffectChart.destroy();
-        }
-
         console.log('正在創建時間效果分析圖表，數據:', data);
         // 按練習時間排序
         data.sort((a, b) => b.dimensions.time_investment - a.dimensions.time_investment);
         const topPieces = data.slice(0, 8); // 只顯示前8首曲子
 
-        charts.timeEffectChart = new Chart(document.getElementById(chartId), {
+        charts[chartId] = new Chart(document.getElementById(chartId), {
             type: 'scatter',
             data: {
                 datasets: [{
@@ -891,4 +943,7 @@ function createRecentTrendDatasets(data) {
         yAxisID: 'y2',
         borderWidth: 2
     }];
-} 
+}
+
+// 導出銷毀函數給外部使用
+export { destroyAllCharts };

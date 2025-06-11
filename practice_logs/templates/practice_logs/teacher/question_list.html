@@ -1,0 +1,428 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}問題列表 - 教師系統{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-list-container {
+        padding: 20px;
+    }
+    
+    .filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    
+    .filter-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-group label {
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .questions-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table th {
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+        white-space: nowrap;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .question-title-link {
+        color: #2c5f3d;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .question-title-link:hover {
+        color: #1e7c5e;
+        text-decoration: underline;
+    }
+    
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+    
+    .status-pending {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+    
+    .status-answered {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .status-closed {
+        background: #f5f5f5;
+        color: #757575;
+    }
+    
+    .priority-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .priority-high {
+        background: #ff5252;
+    }
+    
+    .priority-medium {
+        background: #ffa726;
+    }
+    
+    .priority-low {
+        background: #66bb6a;
+    }
+    
+    .category-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+    
+    .category-tag i {
+        margin-right: 5px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-action {
+        padding: 5px 12px;
+        border-radius: 5px;
+        font-size: 0.85em;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-answer {
+        background: #2c5f3d;
+        color: white;
+    }
+    
+    .btn-answer:hover {
+        background: #1e7c5e;
+    }
+    
+    .btn-close {
+        background: #f5f5f5;
+        color: #666;
+    }
+    
+    .btn-close:hover {
+        background: #e0e0e0;
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+    }
+    
+    .search-box input {
+        padding-left: 40px;
+    }
+    
+    .sort-icon {
+        margin-left: 5px;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+    }
+    
+    .sort-active .sort-icon {
+        opacity: 1;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+    
+    .empty-state i {
+        font-size: 4em;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block teacher_content %}
+<div class="question-list-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>問題列表</h1>
+        <a href="{% url 'practice_logs:teacher_qa' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回問答中心
+        </a>
+    </div>
+    
+    <!-- 篩選區域 -->
+    <div class="filter-section">
+        <form method="get" id="filterForm">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>搜尋</label>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="q" class="form-control" 
+                               placeholder="搜尋問題標題、內容或學生姓名..."
+                               value="{{ current_filters.q }}">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label>狀態</label>
+                    <select name="status" class="form-control">
+                        <option value="all">全部狀態</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>優先級</label>
+                    <select name="priority" class="form-control">
+                        <option value="all">全部優先級</option>
+                        {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if current_filters.priority == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>分類</label>
+                    <select name="category" class="form-control">
+                        <option value="all">全部分類</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if current_filters.category == category.id|stringformat:"i" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-filter"></i> 篩選
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- 問題列表 -->
+    <div class="questions-table">
+        {% if page_obj %}
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th width="40%">
+                        <a href="?sort=title&{{ request.GET.urlencode }}" class="text-dark text-decoration-none">
+                            問題標題
+                            <i class="fas fa-sort sort-icon"></i>
+                        </a>
+                    </th>
+                    <th>學生</th>
+                    <th>分類</th>
+                    <th>
+                        <a href="?sort=-priority&{{ request.GET.urlencode }}" class="text-dark text-decoration-none">
+                            優先級
+                            <i class="fas fa-sort sort-icon"></i>
+                        </a>
+                    </th>
+                    <th>狀態</th>
+                    <th>
+                        <a href="?sort=-created_at&{{ request.GET.urlencode }}" class="text-dark text-decoration-none {% if current_filters.sort == '-created_at' %}sort-active{% endif %}">
+                            提問時間
+                            <i class="fas fa-sort sort-icon"></i>
+                        </a>
+                    </th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for question in page_obj %}
+                <tr>
+                    <td>
+                        <a href="{% url 'practice_logs:answer_question' question.id %}" class="question-title-link">
+                            {{ question.title }}
+                        </a>
+                        <div class="text-muted small mt-1">
+                            {{ question.question_text|truncatewords:15 }}
+                        </div>
+                    </td>
+                    <td>{{ question.student.profile.display_name|default:question.student.username }}</td>
+                    <td>
+                        {% if question.category %}
+                        <span class="category-tag">
+                            <i class="{{ question.category.icon }}"></i>
+                            {{ question.category.name }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="priority-indicator priority-{{ question.priority }}"></span>
+                        {{ question.get_priority_display }}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ question.status }}">
+                            {{ question.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ question.created_at|date:"Y/m/d H:i" }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if question.status == 'pending' %}
+                            <a href="{% url 'practice_logs:answer_question' question.id %}" class="btn-action btn-answer">
+                                <i class="fas fa-reply"></i> 回答
+                            </a>
+                            {% elif question.status == 'answered' %}
+                            <button class="btn-action btn-close" onclick="closeQuestion({{ question.id }})">
+                                <i class="fas fa-times"></i> 關閉
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- 分頁 -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="p-3">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">
+                        上一頁
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&{{ request.GET.urlencode }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">
+                        下一頁
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>沒有找到相關問題</h3>
+            <p>嘗試調整篩選條件或搜尋關鍵字</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block page_js %}
+<script>
+// 自動提交篩選表單
+document.querySelectorAll('#filterForm select').forEach(select => {
+    select.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+});
+
+// 關閉問題
+function closeQuestion(questionId) {
+    if (!confirm('確定要關閉這個問題嗎？')) {
+        return;
+    }
+    
+    fetch(`{% url 'practice_logs:mark_question_closed' 0 %}`.replace('0', questionId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || '操作失敗');
+        }
+    });
+}
+</script>
+{% endblock %}

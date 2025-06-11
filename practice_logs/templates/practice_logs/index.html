@@ -1,8 +1,283 @@
 {% extends "practice_logs/base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<style>
+/* 模態框樣式 */
+.auth-modal {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.auth-modal-content {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b4513, #d4a574, #8b4513);
+}
+
+.modal-header {
+    background: none;
+    border: none;
+    padding: 30px 30px 0;
+    text-align: center;
+}
+
+.modal-title {
+    font-family: 'Georgia', serif;
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.violin-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    animation: gentle-bounce 2s ease-in-out infinite;
+}
+
+@keyframes gentle-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.modal-body {
+    padding: 20px 30px 30px;
+}
+
+.form-group-modal {
+    margin-bottom: 20px;
+}
+
+.form-label-modal {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control-modal {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.form-control-modal:focus {
+    border-color: #8b4513;
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    outline: none;
+    background: white;
+}
+
+.btn-auth-modal {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-auth-modal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(139, 69, 19, 0.3);
+    color: white;
+}
+
+.modal-footer {
+    border: none;
+    padding: 0 30px 30px;
+    text-align: center;
+}
+
+.auth-switch {
+    color: #6c757d;
+    margin-top: 15px;
+}
+
+.auth-switch a {
+    color: #8b4513;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+/* 浮動音符動畫 */
+.floating-notes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.note {
+    position: absolute;
+    color: rgba(139, 69, 19, 0.2);
+    font-size: 1.5rem;
+    animation: float 6s ease-in-out infinite;
+}
+
+.note:nth-child(1) { left: 10%; animation-delay: -1s; }
+.note:nth-child(2) { left: 30%; animation-delay: -3s; }
+.note:nth-child(3) { left: 50%; animation-delay: -2s; }
+.note:nth-child(4) { left: 70%; animation-delay: -4s; }
+.note:nth-child(5) { left: 90%; animation-delay: -5s; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(100px) rotate(0deg); opacity: 0; }
+    10%, 90% { opacity: 1; }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+/* 增強表單樣式 */
+.container {
+    position: relative;
+}
+
+.practice-form-container {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
+    border-radius: 20px;
+    padding: 40px;
+    margin: 20px auto;
+    max-width: 800px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid rgba(139, 69, 19, 0.1);
+}
+
+.form-group {
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control {
+    width: 100%;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    border-color: #8b4513;
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    outline: none;
+    background: white;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.rating-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 8px;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+}
+
+.star {
+    font-size: 1.8rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.star.active,
+.star:hover {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
+.rating-display {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(139, 69, 19, 0.3);
+    color: white;
+}
+
+/* 成功提示樣式 */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+.alert-success {
+    background: linear-gradient(45deg, #d4edda, #c3e6cb);
+    color: #155724;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
+    <!-- 浮動音符背景 -->
+    <div class="floating-notes">
+        <div class="note">♪</div>
+        <div class="note">♫</div>
+        <div class="note">♪</div>
+        <div class="note">♫</div>
+        <div class="note">♪</div>
+    </div>
+
     <h1>🎻 小提琴練琴日誌</h1>
 
     <!-- 錯誤提示區域 -->
@@ -12,42 +287,119 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <form method='POST' id="practiceForm">
-        {% csrf_token %}
-        <div class="form-group" data-label="學生姓名">
-            <input type="text" name="student_name" id="studentName" placeholder="請輸入學生姓名" required
-                value="{{ current_student|default:'' }}" maxlength="50" pattern="[^<>]*">
-        </div>
-        <div class="form-group" data-label="曲目名稱">
-            <input type="text" name="piece" placeholder="請輸入練習曲目" required maxlength="100">
-        </div>
-        <div class="form-group" data-label="練習時間">
-            <input type="number" name="minutes" placeholder="請輸入練習時間（分鐘）" min="1" max="600" required>
-        </div>
-        <div class="form-group" data-label="練習評分">
-            <select name="rating" required>
-                <option value="" disabled selected>請選擇今日練習評分</option>
-                {% for i in "12345" %}
-                <option value="{{ i }}">{{ i }} 星 ⭐</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group" data-label="練習重點">
-            <select name="focus" required>
-                <option value="" disabled selected>請選擇練習重點</option>
-                {% for focus_code, focus_name in focus_choices %}
-                <option value="{{ focus_code }}">{{ focus_name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group" data-label="練習筆記">
-            <textarea name="notes" placeholder="記錄今天的練習心得（選填）" rows="3" maxlength="1000"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">
-            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-            記錄練習 ✨
-        </button>
-    </form>
+    <!-- 練習表單容器 -->
+    <div class="practice-form-container">
+        <form method='POST' id="practiceForm">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="studentName" class="form-label">學生姓名 *</label>
+                        <input type="text" 
+                               name="student_name" 
+                               id="studentName" 
+                               class="form-control" 
+                               placeholder="請輸入學生姓名" 
+                               required
+                               value="{{ current_student|default:'' }}" 
+                               maxlength="50" 
+                               pattern="[^<>]*">
+                        <div class="form-text">練習者的姓名</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="practiceDate" class="form-label">練習日期 *</label>
+                        <input type="date" 
+                               name="date" 
+                               id="practiceDate" 
+                               class="form-control" 
+                               required>
+                        <div class="form-text">選擇練習的日期</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label for="piece" class="form-label">練習曲目 *</label>
+                        <input type="text" 
+                               name="piece" 
+                               id="piece"
+                               class="form-control" 
+                               placeholder="例如：巴哈無伴奏小提琴組曲第一號" 
+                               required 
+                               maxlength="100">
+                        <div class="form-text">今天主要練習的曲目</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="minutes" class="form-label">練習時間 (分鐘) *</label>
+                        <input type="number" 
+                               name="minutes" 
+                               id="minutes"
+                               class="form-control" 
+                               placeholder="60" 
+                               min="1" 
+                               max="600" 
+                               required>
+                        <div class="form-text">練習的總時間</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="focus" class="form-label">練習重點</label>
+                <select name="focus" id="focus" class="form-control">
+                    <option value="">請選擇練習重點</option>
+                    {% for focus_code, focus_name in focus_choices %}
+                    <option value="{{ focus_code }}">{{ focus_name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">本次練習的主要重點</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">練習評分 *</label>
+                <div class="rating-container">
+                    <div class="star-rating">
+                        {% for i in "12345" %}
+                            <span class="star" data-rating="{{ forloop.counter }}">★</span>
+                        {% endfor %}
+                    </div>
+                    <div class="rating-display">
+                        <span id="ratingValue">0</span> / 5
+                    </div>
+                </div>
+                <input type="hidden" id="rating" name="rating" required>
+                <div class="form-text">對本次練習的整體滿意度（1-5分）</div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes" class="form-label">練習筆記</label>
+                <textarea name="notes" 
+                          id="notes"
+                          class="form-control" 
+                          rows="4" 
+                          placeholder="記錄今天的練習內容、感受、需要改進的地方或下次練習的重點..." 
+                          maxlength="1000"></textarea>
+                <div class="form-text">詳細記錄練習的內容、感受和需要注意的事項</div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    <i class="fas fa-save me-2"></i>
+                    記錄練習 ✨
+                </button>
+            </div>
+        </form>
+    </div>
 
     <div class="chart-container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -71,73 +423,6 @@
 </div>
 
 <style>
-    .form-group {
-        margin-bottom: 1.5rem;
-        position: relative;
-    }
-
-    .form-group::before {
-        content: attr(data-label);
-        position: absolute;
-        top: -0.75rem;
-        left: 1rem;
-        padding: 0 0.5rem;
-        background-color: white;
-        font-size: 0.875rem;
-        color: #666;
-        z-index: 1;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-        border-color: #7c4dff;
-        box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.1);
-        outline: none;
-    }
-
-    .form-group input::placeholder,
-    .form-group select::placeholder,
-    .form-group textarea::placeholder {
-        color: #999;
-    }
-
-    .form-group select {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5l-5-5h10l-5 5z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 1rem center;
-        padding-right: 2.5rem;
-    }
-
-    .form-group textarea {
-        resize: vertical;
-        min-height: 100px;
-    }
-
-    .btn-primary {
-        padding: 0.75rem 2rem;
-        font-size: 1.1rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(124, 77, 255, 0.2);
-    }
-
     .chart-container {
         background: white;
         border-radius: 12px;
@@ -150,6 +435,24 @@
         color: #666;
         margin: 1rem 0;
     }
+
+    /* 響應式設計 */
+    @media (max-width: 768px) {
+        .practice-form-container {
+            padding: 20px;
+            margin: 10px;
+        }
+        
+        .star {
+            font-size: 1.5rem;
+        }
+        
+        .rating-container {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+    }
 </style>
 
 <!-- 將 Django 變量傳遞給 JavaScript -->
@@ -157,6 +460,12 @@
     window.INITIAL_STUDENT = "{{ current_student|default:'null' }}";
     window.CSRF_TOKEN = "{{ csrf_token }}";
 </script>
+
+<!-- 3D角色配置已移除 -->
+
+<!-- Three.js引用已移除 -->
+
+<!-- 3D角色系統已移除 -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module">
@@ -203,6 +512,12 @@
         }
     }
 
+    // 3D角色功能已移除
+
+    // Three.js相關代碼已移除
+
+    // 角色佔位符功能已移除
+
     async function initializeApp() {
         try {
             // 等待 Chart.js
@@ -236,6 +551,9 @@
 
                 try {
                     toggleLoading(true);
+                    
+                    // 3D角色動畫已移除
+                    
                     const formData = new FormData(form);
                     const data = {};
                     formData.forEach((value, key) => {
@@ -274,6 +592,8 @@
                     // 重新載入圖表
                     await loadWeeklyData(studentName);
 
+                    // 3D角色慶祝動畫已移除
+
                     // 顯示成功消息
                     const successAlert = document.createElement('div');
                     successAlert.className = 'alert alert-success alert-dismissible fade show';
@@ -290,6 +610,7 @@
                     }, 3000);
 
                 } catch (error) {
+                    // 3D角色錯誤動畫已移除
                     showError(error.message);
                 } finally {
                     toggleLoading(false);
@@ -317,5 +638,235 @@
         console.error('應用啟動失敗:', error);
         showError('應用啟動失敗');
     });
+
+    // 設置默認日期為今天
+    document.getElementById('practiceDate').value = new Date().toISOString().split('T')[0];
+    
+    // 星級評分功能
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('rating');
+    const ratingValue = document.getElementById('ratingValue');
+    
+    stars.forEach((star, index) => {
+        star.addEventListener('click', function() {
+            const rating = index + 1;
+            ratingInput.value = rating;
+            ratingValue.textContent = rating;
+            
+            // 更新星星顯示
+            stars.forEach((s, i) => {
+                if (i < rating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const rating = index + 1;
+            stars.forEach((s, i) => {
+                if (i < rating) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#ddd';
+                }
+            });
+        });
+    });
+    
+    document.querySelector('.star-rating').addEventListener('mouseleave', function() {
+        const currentRating = parseInt(ratingInput.value) || 0;
+        stars.forEach((s, i) => {
+            if (i < currentRating) {
+                s.style.color = '#ffc107';
+                s.classList.add('active');
+            } else {
+                s.style.color = '#ddd';
+                s.classList.remove('active');
+            }
+        });
+    });
+
+    // 表單驗證增強
+    document.getElementById('practiceForm').addEventListener('submit', function(e) {
+        const rating = document.getElementById('rating').value;
+        if (!rating || rating < 1 || rating > 5) {
+            e.preventDefault();
+            showError('請選擇練習評分（1-5分）');
+            return false;
+        }
+        
+        const minutes = document.getElementById('minutes').value;
+        if (!minutes || minutes < 1 || minutes > 600) {
+            e.preventDefault();
+            showError('練習時間必須在1-600分鐘之間');
+            return false;
+        }
+        
+        return true;
+    });
+
+    // 模態框控制函數
+    window.showLoginModal = function() {
+        const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+        modal.show();
+    };
+
+    window.showRegisterModal = function() {
+        const modal = new bootstrap.Modal(document.getElementById('registerModal'));
+        modal.show();
+    };
+
+    window.switchToRegister = function() {
+        bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+        setTimeout(() => showRegisterModal(), 300);
+    };
+
+    window.switchToLogin = function() {
+        bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+        setTimeout(() => showLoginModal(), 300);
+    };
+
+    // 處理登入表單提交
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('/auth/login/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': window.CSRF_TOKEN,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || '登入成功！');
+                location.reload();
+            } else {
+                alert(data.message || '登入失敗，請檢查用戶名和密碼');
+            }
+        })
+        .catch(error => {
+            console.error('登入錯誤:', error);
+            alert('登入時發生錯誤');
+        });
+    });
+
+    // 處理註冊表單提交
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('/auth/register/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': window.CSRF_TOKEN,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || '註冊成功！');
+                location.reload();
+            } else {
+                alert(data.message || '註冊失敗，請檢查信息是否正確');
+            }
+        })
+        .catch(error => {
+            console.error('註冊錯誤:', error);
+            alert('註冊時發生錯誤');
+        });
+    });
 </script>
+
+<!-- 登入模態框 -->
+<div class="modal fade auth-modal" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content auth-modal-content">
+            <div class="modal-header">
+                <div class="violin-icon">🎻</div>
+                <h5 class="modal-title">歡迎回來</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" method="post">
+                    {% csrf_token %}
+                    <div class="form-group-modal">
+                        <label class="form-label-modal">用戶名或電子郵件</label>
+                        <input type="text" name="username" class="form-control-modal" required>
+                    </div>
+                    <div class="form-group-modal">
+                        <label class="form-label-modal">密碼</label>
+                        <input type="password" name="password" class="form-control-modal" required>
+                    </div>
+                    <button type="submit" class="btn-auth-modal">登入</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="auth-switch">
+                    還沒有帳戶？<a href="#" onclick="switchToRegister()">立即註冊</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 註冊模態框 -->
+<div class="modal fade auth-modal" id="registerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content auth-modal-content">
+            <div class="modal-header">
+                <div class="violin-icon">🎻</div>
+                <h5 class="modal-title">加入我們</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm" method="post">
+                    {% csrf_token %}
+                    <div class="form-group-modal">
+                        <label class="form-label-modal">用戶名</label>
+                        <input type="text" name="username" class="form-control-modal" required>
+                    </div>
+                    <div class="form-group-modal">
+                        <label class="form-label-modal">電子郵件</label>
+                        <input type="email" name="email" class="form-control-modal" required>
+                    </div>
+                    <div class="form-group-modal">
+                        <label class="form-label-modal">中文姓名</label>
+                        <input type="text" name="chinese_name" class="form-control-modal" required>
+                    </div>
+                    <div class="form-group-modal">
+                        <label class="form-label-modal">角色</label>
+                        <select name="role" class="form-control-modal" required>
+                            <option value="student">學生</option>
+                            <option value="teacher">教師</option>
+                            <option value="parent">家長</option>
+                        </select>
+                    </div>
+                    <div class="form-group-modal">
+                        <label class="form-label-modal">密碼</label>
+                        <input type="password" name="password1" class="form-control-modal" required>
+                    </div>
+                    <div class="form-group-modal">
+                        <label class="form-label-modal">確認密碼</label>
+                        <input type="password" name="password2" class="form-control-modal" required>
+                    </div>
+                    <button type="submit" class="btn-auth-modal">註冊</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="auth-switch">
+                    已有帳戶？<a href="#" onclick="switchToLogin()">立即登入</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

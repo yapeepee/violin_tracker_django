@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 from datetime import datetime
+from django.core.cache import cache
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,11 +46,13 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',  # Cache middleware (top)
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',  # Cache middleware (bottom)
 ]
 
 ROOT_URLCONF = 'violin_tracker.urls'
@@ -79,6 +82,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        # Connection pooling for better performance
+        'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
     }
 }
 
@@ -122,10 +127,41 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+# Media files (uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = FILE_UPLOAD_MAX_MEMORY_SIZE
+
+# Custom settings for recording uploads
+RECORDING_UPLOAD_SETTINGS = {
+    'MAX_FILE_SIZE': 100 * 1024 * 1024,  # 100MB per file
+    'ALLOWED_AUDIO_EXTENSIONS': ['mp3', 'wav', 'ogg', 'm4a'],
+    'ALLOWED_VIDEO_EXTENSIONS': ['mp4', 'avi', 'mov', 'webm'],
+    'ALLOWED_IMAGE_EXTENSIONS': ['jpg', 'jpeg', 'png', 'gif'],
+    'AUTO_DELETE_OLD_FILES': True,  # 自動刪除舊檔案
+    'DAYS_TO_KEEP_FILES': 365,  # 保留檔案的天數
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 暫時使用Django內建用戶模型，後續升級為自定義用戶模型
+# AUTH_USER_MODEL = 'practice_logs.CustomUser'
+
+# 登入/登出重定向
+LOGIN_URL = '/auth/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/auth/login/'
+
+# 會話設定
+SESSION_COOKIE_AGE = 24 * 60 * 60  # 24小時
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
 
 # Logging Configuration
 
@@ -259,3 +295,50 @@ if not DEBUG:
     for logger in LOGGING['loggers'].values():
         if 'level' in logger and logger['level'] == 'DEBUG':
             logger['level'] = 'INFO'
+
+# Cache Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutes default timeout
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    },
+    'session': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'session_cache_table',
+        'TIMEOUT': 86400,  # 24 hours
+    },
+    'staticfiles': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'cache', 'staticfiles'),
+        'TIMEOUT': 604800,  # 7 days
+        'OPTIONS': {
+            'MAX_ENTRIES': 5000,
+        }
+    }
+}
+
+# Session Configuration - Use cache for better performance
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'session'
+
+# Cache key prefix to avoid collisions
+CACHE_MIDDLEWARE_KEY_PREFIX = 'violin_tracker'
+CACHE_MIDDLEWARE_SECONDS = 600  # 10 minutes
+
+# Query optimization settings
+DATABASE_QUERY_LOG = DEBUG  # Log queries in debug mode
+
+# Batch size for bulk operations
+DATABASE_BATCH_SIZE = 1000
+
+# Performance settings
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000  # Increase for bulk operations
+
+# Compression for responses
+if not DEBUG:
+    MIDDLEWARE.insert(0, 'django.middleware.gzip.GZipMiddleware')

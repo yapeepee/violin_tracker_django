@@ -1,0 +1,305 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}FAQ管理 - 教師系統{% endblock %}
+
+{% block extra_css %}
+<style>
+    .faq-management-container {
+        padding: 20px;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .faq-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table th {
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .faq-question {
+        font-weight: 500;
+        color: #2c5f3d;
+    }
+    
+    .faq-answer {
+        color: #666;
+        font-size: 0.9em;
+        max-width: 400px;
+    }
+    
+    .category-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+    
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .status-published {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .status-draft {
+        background: #f5f5f5;
+        color: #757575;
+    }
+    
+    .btn-toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-toggle:hover {
+        background: #f5f5f5;
+    }
+    
+    .btn-edit {
+        color: #1976d2;
+    }
+    
+    .btn-delete {
+        color: #d32f2f;
+    }
+    
+    .view-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .creator-info {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+    
+    .empty-state i {
+        font-size: 4em;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .admin-notice {
+        background: #fff3e0;
+        border: 1px solid #ffcc80;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        color: #e65100;
+    }
+    
+    .admin-notice i {
+        margin-right: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block teacher_content %}
+<div class="faq-management-container">
+    <div class="page-header">
+        <h1>FAQ管理</h1>
+        <a href="{% url 'practice_logs:teacher_qa' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回問答中心
+        </a>
+    </div>
+    
+    {% if not can_publish %}
+    <div class="admin-notice">
+        <i class="fas fa-info-circle"></i>
+        您創建的FAQ需要管理員審核後才能發布
+    </div>
+    {% endif %}
+    
+    <div class="faq-table">
+        {% if page_obj %}
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th width="25%">問題</th>
+                    <th width="35%">回答摘要</th>
+                    <th>分類</th>
+                    <th>查看次數</th>
+                    <th>創建者</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for faq in page_obj %}
+                <tr>
+                    <td class="faq-question">{{ faq.question|truncatewords:10 }}</td>
+                    <td class="faq-answer">{{ faq.answer|truncatewords:20 }}</td>
+                    <td>
+                        {% if faq.category %}
+                        <span class="category-tag">
+                            <i class="{{ faq.category.icon }}"></i>
+                            {{ faq.category.name }}
+                        </span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="view-count">
+                            <i class="fas fa-eye"></i>
+                            {{ faq.view_count }}
+                        </span>
+                    </td>
+                    <td class="creator-info">
+                        {{ faq.created_by.profile.display_name|default:faq.created_by.username }}
+                    </td>
+                    <td>
+                        {% if can_publish %}
+                        <span class="status-badge {% if faq.is_published %}status-published{% else %}status-draft{% endif %}"
+                              onclick="togglePublish({{ faq.id }})">
+                            {% if faq.is_published %}
+                                <i class="fas fa-check-circle"></i> 已發布
+                            {% else %}
+                                <i class="fas fa-circle"></i> 草稿
+                            {% endif %}
+                        </span>
+                        {% else %}
+                        <span class="status-badge {% if faq.is_published %}status-published{% else %}status-draft{% endif %}">
+                            {% if faq.is_published %}已發布{% else %}待審核{% endif %}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn-toggle btn-edit" onclick="editFAQ({{ faq.id }})" title="編輯">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-toggle btn-delete" onclick="deleteFAQ({{ faq.id }})" title="刪除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- 分頁 -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="p-3">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        上一頁
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        下一頁
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-question-circle"></i>
+            <h3>還沒有FAQ</h3>
+            <p>回答學生問題時可以選擇加入FAQ</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block page_js %}
+<script>
+// 切換發布狀態
+function togglePublish(faqId) {
+    if (!confirm('確定要切換發布狀態嗎？')) {
+        return;
+    }
+    
+    fetch(`{% url 'practice_logs:toggle_faq_publish' 0 %}`.replace('0', faqId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || '操作失敗');
+        }
+    });
+}
+
+// 編輯FAQ（待實現）
+function editFAQ(faqId) {
+    alert('編輯功能開發中...');
+}
+
+// 刪除FAQ（待實現）
+function deleteFAQ(faqId) {
+    if (!confirm('確定要刪除這個FAQ嗎？')) {
+        return;
+    }
+    alert('刪除功能開發中...');
+}
+</script>
+{% endblock %}

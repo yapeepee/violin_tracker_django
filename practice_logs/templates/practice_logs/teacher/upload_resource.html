@@ -1,0 +1,792 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}上傳資源 - 教師系統{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 上傳頁面容器 */
+.upload-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 頁面標題 */
+.page-title {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.page-subtitle {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* 表單卡片 */
+.upload-form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+/* 表單區塊 */
+.form-section {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c5f3d;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 表單元素 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.required {
+    color: #d32f2f;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2c5f3d;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* 檔案上傳區 */
+.file-upload-area {
+    border: 2px dashed #2c5f3d;
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.file-upload-area:hover {
+    background: #e8f5e9;
+    border-color: #1b5e20;
+}
+
+.file-upload-area.dragover {
+    background: #e8f5e9;
+    border-color: #1b5e20;
+    transform: scale(1.02);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #2c5f3d;
+    margin-bottom: 15px;
+}
+
+.upload-text {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.upload-hint {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.file-input {
+    display: none;
+}
+
+/* 已選擇檔案顯示 */
+.selected-file {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #e8f5e9;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+.file-icon {
+    font-size: 2rem;
+    color: #2c5f3d;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.file-size {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.remove-file {
+    padding: 8px 15px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.remove-file:hover {
+    background: #d32f2f;
+}
+
+/* 選擇框群組 */
+.select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+/* 標籤輸入 */
+.tags-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    min-height: 50px;
+    cursor: text;
+}
+
+.tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: #2c5f3d;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.tag-remove {
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.tag-input-field {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 100px;
+    font-size: 1rem;
+}
+
+/* 學生選擇 */
+.student-select {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.student-checkbox {
+    display: block;
+    padding: 8px;
+    margin-bottom: 5px;
+    transition: background 0.3s ease;
+}
+
+.student-checkbox:hover {
+    background: #f5f5f5;
+}
+
+.student-checkbox input {
+    margin-right: 10px;
+}
+
+/* 提交按鈕區 */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #2c5f3d;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #245030;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* 進度條 */
+.upload-progress {
+    display: none;
+    margin-top: 20px;
+}
+
+.progress-bar {
+    height: 20px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #2c5f3d;
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+/* 錯誤訊息 */
+.error-message {
+    padding: 15px;
+    background: #ffebee;
+    color: #c62828;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+/* 成功訊息 */
+.success-message {
+    padding: 15px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .upload-container {
+        padding: 10px;
+    }
+    
+    .upload-form-card {
+        padding: 20px;
+    }
+    
+    .select-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <h1 class="page-title">📤 上傳教學資源</h1>
+    <p class="page-subtitle">上傳樂譜、教學影片、音頻示範等資源，與學生分享</p>
+    
+    <div class="upload-form-card">
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- 基本資訊 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i> 基本資訊
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        資源標題 <span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           name="title" 
+                           class="form-control" 
+                           placeholder="例如：巴哈小步舞曲 G大調樂譜"
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">資源描述</label>
+                    <textarea name="description" 
+                              class="form-control" 
+                              placeholder="描述這個資源的內容、用途、適合程度等..."></textarea>
+                </div>
+                
+                <div class="select-grid">
+                    <div class="form-group">
+                        <label class="form-label">
+                            資源分類 <span class="required">*</span>
+                        </label>
+                        <select name="category" class="form-control" required>
+                            <option value="">選擇分類</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">資源類型</label>
+                        <select name="resource_type" class="form-control">
+                            <option value="other">其他</option>
+                            <option value="pdf">PDF文件</option>
+                            <option value="video">教學影片</option>
+                            <option value="audio">音頻示範</option>
+                            <option value="image">圖片</option>
+                            <option value="link">外部連結</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">適合程度</label>
+                        <select name="difficulty_level" class="form-control">
+                            <option value="all">不限</option>
+                            <option value="beginner">初級</option>
+                            <option value="intermediate">中級</option>
+                            <option value="advanced">高級</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 檔案上傳 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-file-upload"></i> 檔案上傳
+                </h2>
+                
+                <div class="file-upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <div class="upload-text">點擊或拖曳檔案到此處上傳</div>
+                    <div class="upload-hint">支援 PDF、影片、音頻、圖片等格式，最大 50MB</div>
+                    <input type="file" 
+                           name="file" 
+                           id="fileInput" 
+                           class="file-input"
+                           accept=".pdf,.doc,.docx,.mp4,.avi,.mov,.mp3,.wav,.jpg,.jpeg,.png,.gif">
+                </div>
+                
+                <div id="selectedFile" style="display: none;"></div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label">或提供外部連結</label>
+                    <input type="url" 
+                           name="external_link" 
+                           class="form-control" 
+                           placeholder="https://example.com/resource">
+                </div>
+            </div>
+            
+            <!-- 額外資訊 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-tags"></i> 額外資訊
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label">標籤</label>
+                    <div class="tags-input" id="tagsContainer">
+                        <input type="text" 
+                               class="tag-input-field" 
+                               id="tagInput"
+                               placeholder="輸入標籤後按 Enter">
+                    </div>
+                    <input type="hidden" name="tags" id="tagsHidden">
+                    <small class="form-text text-muted">用逗號分隔多個標籤</small>
+                </div>
+                
+                <div class="select-grid">
+                    <div class="form-group">
+                        <label class="form-label">作曲家</label>
+                        <input type="text" 
+                               name="composer" 
+                               class="form-control" 
+                               placeholder="例如：巴哈、莫札特">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">曲目名稱</label>
+                        <input type="text" 
+                               name="piece_name" 
+                               class="form-control" 
+                               placeholder="例如：小步舞曲 G大調">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 分享設定 -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-share-alt"></i> 分享設定
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-check">
+                        <input type="checkbox" 
+                               name="is_public" 
+                               value="true"
+                               class="form-check-input">
+                        <span class="form-check-label">
+                            公開此資源（其他教師也能查看和使用）
+                        </span>
+                    </label>
+                </div>
+                
+                {% if students %}
+                <div class="form-group">
+                    <label class="form-label">分享給特定學生</label>
+                    <div class="student-select">
+                        {% for student in students %}
+                        <label class="student-checkbox">
+                            <input type="checkbox" 
+                                   name="shared_students[]" 
+                                   value="{{ student.id }}">
+                            {{ student.profile.display_name|default:student.username }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 提交按鈕 -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="history.back()">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-upload"></i> 上傳資源
+                </button>
+            </div>
+            
+            <!-- 上傳進度 -->
+            <div class="upload-progress" id="uploadProgress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 檔案上傳處理
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFile = document.getElementById('selectedFile');
+    let selectedFileObj = null;
+    
+    // 點擊上傳區域
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    // 拖放處理
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    // 檔案選擇處理
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+    
+    // 處理選擇的檔案
+    function handleFileSelect(file) {
+        selectedFileObj = file;
+        
+        // 檢查檔案大小
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (file.size > maxSize) {
+            showError('檔案大小不能超過 50MB');
+            return;
+        }
+        
+        // 顯示選擇的檔案
+        const fileIcon = getFileIcon(file.type);
+        const fileSize = formatFileSize(file.size);
+        
+        selectedFile.innerHTML = `
+            <div class="selected-file">
+                <i class="${fileIcon} file-icon"></i>
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${fileSize}</div>
+                </div>
+                <button type="button" class="remove-file" onclick="removeFile()">
+                    <i class="fas fa-times"></i> 移除
+                </button>
+            </div>
+        `;
+        selectedFile.style.display = 'block';
+        
+        // 自動偵測資源類型
+        const resourceType = detectResourceType(file.type, file.name);
+        document.querySelector('select[name="resource_type"]').value = resourceType;
+    }
+    
+    // 獲取檔案圖標
+    function getFileIcon(fileType) {
+        if (fileType.includes('pdf')) return 'fas fa-file-pdf';
+        if (fileType.includes('video')) return 'fas fa-file-video';
+        if (fileType.includes('audio')) return 'fas fa-file-audio';
+        if (fileType.includes('image')) return 'fas fa-file-image';
+        return 'fas fa-file';
+    }
+    
+    // 格式化檔案大小
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+    
+    // 偵測資源類型
+    function detectResourceType(mimeType, fileName) {
+        if (mimeType.includes('pdf') || fileName.endsWith('.pdf')) return 'pdf';
+        if (mimeType.includes('video')) return 'video';
+        if (mimeType.includes('audio')) return 'audio';
+        if (mimeType.includes('image')) return 'image';
+        return 'other';
+    }
+    
+    // 移除檔案
+    window.removeFile = function() {
+        selectedFileObj = null;
+        fileInput.value = '';
+        selectedFile.style.display = 'none';
+    };
+    
+    // 標籤處理
+    const tagsContainer = document.getElementById('tagsContainer');
+    const tagInput = document.getElementById('tagInput');
+    const tagsHidden = document.getElementById('tagsHidden');
+    let tags = [];
+    
+    tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            const tag = tagInput.value.trim();
+            if (tag && !tags.includes(tag)) {
+                addTag(tag);
+                tagInput.value = '';
+            }
+        }
+    });
+    
+    function addTag(tag) {
+        tags.push(tag);
+        updateTagsDisplay();
+        updateTagsHidden();
+    }
+    
+    function removeTag(tag) {
+        tags = tags.filter(t => t !== tag);
+        updateTagsDisplay();
+        updateTagsHidden();
+    }
+    
+    function updateTagsDisplay() {
+        const tagElements = tags.map(tag => `
+            <span class="tag-item">
+                ${tag}
+                <span class="tag-remove" onclick="removeTag('${tag}')">&times;</span>
+            </span>
+        `).join('');
+        
+        // 清除舊標籤，保留輸入框
+        const existingTags = tagsContainer.querySelectorAll('.tag-item');
+        existingTags.forEach(tag => tag.remove());
+        
+        // 插入新標籤
+        tagsContainer.insertAdjacentHTML('afterbegin', tagElements);
+    }
+    
+    function updateTagsHidden() {
+        tagsHidden.value = tags.join(',');
+    }
+    
+    window.removeTag = removeTag;
+    
+    // 表單提交
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // 驗證
+        if (!fileInput.files.length && !document.querySelector('input[name="external_link"]').value) {
+            showError('請選擇檔案或提供外部連結');
+            return;
+        }
+        
+        // 準備表單數據
+        const formData = new FormData(uploadForm);
+        
+        // 顯示進度條
+        submitBtn.disabled = true;
+        uploadProgress.style.display = 'block';
+        
+        try {
+            const response = await uploadWithProgress(formData);
+            
+            if (response.success) {
+                showSuccess('資源上傳成功！');
+                setTimeout(() => {
+                    window.location.href = "{% url 'practice_logs:teacher_resources' %}";
+                }, 1500);
+            } else {
+                showError(response.error || '上傳失敗');
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            showError('上傳過程中發生錯誤');
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // 帶進度的上傳
+    function uploadWithProgress(formData) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressFill.style.width = percentComplete + '%';
+                    progressFill.textContent = Math.round(percentComplete) + '%';
+                }
+            });
+            
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        resolve(response);
+                    } catch (e) {
+                        reject(new Error('Invalid response'));
+                    }
+                } else {
+                    reject(new Error('Upload failed'));
+                }
+            });
+            
+            xhr.addEventListener('error', () => reject(new Error('Network error')));
+            
+            xhr.open('POST', uploadForm.action);
+            xhr.send(formData);
+        });
+    }
+    
+    // 顯示錯誤訊息
+    function showError(message) {
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
+    }
+    
+    // 顯示成功訊息
+    function showSuccess(message) {
+        const successMessage = document.getElementById('successMessage');
+        successMessage.textContent = message;
+        successMessage.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

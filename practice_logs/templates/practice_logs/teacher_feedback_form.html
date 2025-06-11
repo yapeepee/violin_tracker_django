@@ -1,0 +1,678 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}教師回饋 - {{ practice_log.piece }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.feedback-container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.practice-info-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid rgba(139, 69, 19, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.practice-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b4513, #d4a574, #8b4513);
+}
+
+.practice-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.summary-item {
+    text-align: center;
+    padding: 15px;
+    background: rgba(139, 69, 19, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(139, 69, 19, 0.1);
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #8b4513;
+    display: block;
+}
+
+.summary-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.feedback-form {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.form-section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-title {
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-label {
+    display: block;
+    color: #2c3e50;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #fafafa;
+}
+
+.form-control:focus {
+    border-color: #8b4513;
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    outline: none;
+    background: white;
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.rating-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.rating-item {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.rating-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.star {
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.star:hover,
+.star.active {
+    color: #ffd700;
+    transform: scale(1.1);
+}
+
+.star.active {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.rating-desc {
+    font-size: 0.9rem;
+    color: #6c757d;
+    text-align: center;
+    min-height: 20px;
+}
+
+.checkbox-group {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.checkbox-item:hover {
+    background: #e9ecef;
+    border-color: #8b4513;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #8b4513;
+}
+
+.checkbox-item input[type="checkbox"]:checked + .checkbox-label {
+    color: #8b4513;
+    font-weight: 600;
+}
+
+.submit-section {
+    text-align: center;
+    padding-top: 30px;
+}
+
+.btn-submit {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    margin-right: 15px;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+
+.voice-upload {
+    border: 2px dashed #8b4513;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    background: rgba(139, 69, 19, 0.02);
+    transition: all 0.3s ease;
+}
+
+.voice-upload:hover {
+    background: rgba(139, 69, 19, 0.05);
+    border-color: #d4a574;
+}
+
+.voice-upload input[type="file"] {
+    display: none;
+}
+
+.voice-upload-btn {
+    background: #8b4513;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.voice-upload-btn:hover {
+    background: #d4a574;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .feedback-container {
+        padding: 0 15px;
+    }
+    
+    .practice-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .rating-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .checkbox-group {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .feedback-form {
+        padding: 25px;
+    }
+}
+
+.help-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.existing-feedback {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.existing-feedback h4 {
+    color: #856404;
+    margin-bottom: 15px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feedback-container">
+    <!-- 練習記錄資訊 -->
+    <div class="practice-info-card">
+        <h1 style="color: #2c3e50; margin-bottom: 10px;">
+            🎼 為學生提供回饋
+        </h1>
+        <h2 style="color: #8b4513; margin-bottom: 20px;">
+            {{ practice_log.student_name }} - 《{{ practice_log.piece }}》
+        </h2>
+        
+        <div class="practice-summary">
+            <div class="summary-item">
+                <span class="summary-value">{{ practice_log.date|date:"Y/m/d" }}</span>
+                <div class="summary-label">練習日期</div>
+            </div>
+            <div class="summary-item">
+                <span class="summary-value">{{ practice_log.minutes }}</span>
+                <div class="summary-label">練習時間 (分鐘)</div>
+            </div>
+            <div class="summary-item">
+                <span class="summary-value">{{ practice_log.get_focus_display }}</span>
+                <div class="summary-label">練習重點</div>
+            </div>
+            <div class="summary-item">
+                <span class="summary-value">{{ practice_log.rating }} / 5</span>
+                <div class="summary-label">學生自評</div>
+            </div>
+        </div>
+        
+        {% if practice_log.notes %}
+        <div style="margin-top: 20px; padding: 15px; background: rgba(139, 69, 19, 0.05); border-radius: 8px;">
+            <strong>學生筆記：</strong>{{ practice_log.notes }}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 如果已有回饋，顯示編輯提示 -->
+    {% if existing_feedback %}
+    <div class="existing-feedback">
+        <h4>📝 編輯現有回饋</h4>
+        <p>您之前已為此練習記錄提供回饋，現在可以進行修改。原回饋創建於：{{ existing_feedback.created_at|date:"Y年m月d日 H:i" }}</p>
+    </div>
+    {% endif %}
+
+    <!-- 回饋表單 -->
+    <form method="post" enctype="multipart/form-data" class="feedback-form" id="feedbackForm">
+        {% csrf_token %}
+        
+        <!-- 基本回饋 -->
+        <div class="form-section">
+            <h3 class="section-title">
+                📝 基本回饋
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="feedback_type">回饋類型</label>
+                <select name="feedback_type" id="feedback_type" class="form-control form-select" required>
+                    <option value="">請選擇回饋類型</option>
+                    {% for value, label in feedback_type_choices %}
+                    <option value="{{ value }}" {% if existing_feedback and existing_feedback.feedback_type == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="feedback_text">詳細回饋內容</label>
+                <textarea name="feedback_text" id="feedback_text" rows="6" class="form-control" 
+                          placeholder="請提供具體的建議和評語，幫助學生改進..." required>{% if existing_feedback %}{{ existing_feedback.feedback_text }}{% endif %}</textarea>
+                <div class="help-text">請提供具體、建設性的回饋，幫助學生成長</div>
+            </div>
+        </div>
+
+        <!-- 技術評估 -->
+        <div class="form-section">
+            <h3 class="section-title">
+                ⭐ 技術評估
+            </h3>
+            
+            <div class="rating-group">
+                <div class="rating-item">
+                    <div class="rating-label">
+                        🎯 技巧掌握
+                    </div>
+                    <div class="star-rating" data-rating="technique_rating">
+                        <span class="star" data-value="1">⭐</span>
+                        <span class="star" data-value="2">⭐</span>
+                        <span class="star" data-value="3">⭐</span>
+                        <span class="star" data-value="4">⭐</span>
+                        <span class="star" data-value="5">⭐</span>
+                    </div>
+                    <div class="rating-desc" id="technique_desc">請點擊星星評分</div>
+                    <input type="hidden" name="technique_rating" id="technique_rating" value="{% if existing_feedback %}{{ existing_feedback.technique_rating }}{% else %}3{% endif %}">
+                </div>
+                
+                <div class="rating-item">
+                    <div class="rating-label">
+                        🎵 音樂性表現
+                    </div>
+                    <div class="star-rating" data-rating="musicality_rating">
+                        <span class="star" data-value="1">⭐</span>
+                        <span class="star" data-value="2">⭐</span>
+                        <span class="star" data-value="3">⭐</span>
+                        <span class="star" data-value="4">⭐</span>
+                        <span class="star" data-value="5">⭐</span>
+                    </div>
+                    <div class="rating-desc" id="musicality_desc">請點擊星星評分</div>
+                    <input type="hidden" name="musicality_rating" id="musicality_rating" value="{% if existing_feedback %}{{ existing_feedback.musicality_rating }}{% else %}3{% endif %}">
+                </div>
+                
+                <div class="rating-item">
+                    <div class="rating-label">
+                        📈 進步程度
+                    </div>
+                    <div class="star-rating" data-rating="progress_rating">
+                        <span class="star" data-value="1">⭐</span>
+                        <span class="star" data-value="2">⭐</span>
+                        <span class="star" data-value="3">⭐</span>
+                        <span class="star" data-value="4">⭐</span>
+                        <span class="star" data-value="5">⭐</span>
+                    </div>
+                    <div class="rating-desc" id="progress_desc">請點擊星星評分</div>
+                    <input type="hidden" name="progress_rating" id="progress_rating" value="{% if existing_feedback %}{{ existing_feedback.progress_rating }}{% else %}3{% endif %}">
+                </div>
+            </div>
+        </div>
+
+        <!-- 學習狀態 -->
+        <div class="form-section">
+            <h3 class="section-title">
+                📊 學習狀態評估
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="mastery_level">掌握程度</label>
+                <select name="mastery_level" id="mastery_level" class="form-control form-select" required>
+                    {% for value, label in mastery_level_choices %}
+                    <option value="{{ value }}" {% if existing_feedback and existing_feedback.mastery_level == value %}selected{% elif not existing_feedback and value == 'developing' %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="checkbox-group">
+                <label class="checkbox-item">
+                    <input type="checkbox" name="need_retry" {% if existing_feedback and existing_feedback.need_retry %}checked{% endif %}>
+                    <span class="checkbox-label">🔄 建議重新練習</span>
+                </label>
+                
+                <label class="checkbox-item">
+                    <input type="checkbox" name="mastered_well" {% if existing_feedback and existing_feedback.mastered_well %}checked{% endif %}>
+                    <span class="checkbox-label">✅ 掌握良好</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 練習建議 -->
+        <div class="form-section">
+            <h3 class="section-title">
+                💡 練習建議
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="suggested_focus">建議練習重點</label>
+                <input type="text" name="suggested_focus" id="suggested_focus" class="form-control" 
+                       placeholder="例如：弓法控制、音準調整..." 
+                       value="{% if existing_feedback %}{{ existing_feedback.suggested_focus }}{% endif %}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="practice_tips">練習小貼士</label>
+                <textarea name="practice_tips" id="practice_tips" rows="3" class="form-control" 
+                          placeholder="提供具體的練習方法和技巧...">{% if existing_feedback %}{{ existing_feedback.practice_tips }}{% endif %}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="suggested_pieces">推薦曲目</label>
+                <textarea name="suggested_pieces" id="suggested_pieces" rows="2" class="form-control" 
+                          placeholder="推薦其他適合的練習曲目...">{% if existing_feedback %}{{ existing_feedback.suggested_pieces }}{% endif %}</textarea>
+            </div>
+        </div>
+
+        <!-- 語音回饋 -->
+        <div class="form-section">
+            <h3 class="section-title">
+                🎤 語音回饋 (選填)
+            </h3>
+            
+            <div class="voice-upload">
+                <div style="margin-bottom: 15px; color: #6c757d;">
+                    📱 錄製語音回饋，讓學生聽到您的親切指導
+                </div>
+                <label for="voice_feedback" class="voice-upload-btn">
+                    <input type="file" name="voice_feedback" id="voice_feedback" accept="audio/*">
+                    🎤 選擇語音檔案
+                </label>
+                <div style="margin-top: 10px; font-size: 0.9rem; color: #6c757d;">
+                    支援 MP3、WAV、M4A 格式，建議檔案大小不超過 10MB
+                </div>
+            </div>
+        </div>
+
+        <!-- 分享設定 -->
+        <div class="form-section">
+            <h3 class="section-title">
+                🔗 分享設定
+            </h3>
+            
+            <div class="checkbox-group">
+                <label class="checkbox-item">
+                    <input type="checkbox" name="notify_parents" {% if existing_feedback and existing_feedback.notify_parents %}checked{% endif %}>
+                    <span class="checkbox-label">📧 通知家長</span>
+                </label>
+                
+                <label class="checkbox-item">
+                    <input type="checkbox" name="is_public" {% if existing_feedback and existing_feedback.is_public %}checked{% endif %}>
+                    <span class="checkbox-label">🌟 公開展示</span>
+                </label>
+                
+                <label class="checkbox-item">
+                    <input type="checkbox" name="is_featured" {% if existing_feedback and existing_feedback.is_featured %}checked{% endif %}>
+                    <span class="checkbox-label">⭐ 標為精選</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 提交按鈕 -->
+        <div class="submit-section">
+            <a href="{% url 'practice_logs:teacher_video_dashboard' %}" class="btn-cancel">
+                ❌ 取消
+            </a>
+            <button type="submit" class="btn-submit">
+                💾 {% if existing_feedback %}更新回饋{% else %}提交回饋{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// 星級評分功能
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingDescriptions = {
+        1: '需要大幅改進',
+        2: '有待提升', 
+        3: '基本達標',
+        4: '表現良好',
+        5: '優秀出色'
+    };
+    
+    // 初始化現有評分
+    {% if existing_feedback %}
+    updateStarRating('technique_rating', {{ existing_feedback.technique_rating }});
+    updateStarRating('musicality_rating', {{ existing_feedback.musicality_rating }});
+    updateStarRating('progress_rating', {{ existing_feedback.progress_rating }});
+    {% else %}
+    updateStarRating('technique_rating', 3);
+    updateStarRating('musicality_rating', 3);
+    updateStarRating('progress_rating', 3);
+    {% endif %}
+    
+    // 為每個評分組添加事件監聽器
+    document.querySelectorAll('.star-rating').forEach(function(ratingGroup) {
+        const ratingName = ratingGroup.getAttribute('data-rating');
+        const stars = ratingGroup.querySelectorAll('.star');
+        
+        stars.forEach(function(star, index) {
+            star.addEventListener('click', function() {
+                const value = parseInt(star.getAttribute('data-value'));
+                updateStarRating(ratingName, value);
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                const value = parseInt(star.getAttribute('data-value'));
+                highlightStars(ratingGroup, value);
+                updateDescription(ratingName, value);
+            });
+        });
+        
+        ratingGroup.addEventListener('mouseleave', function() {
+            const currentValue = parseInt(document.getElementById(ratingName).value);
+            highlightStars(ratingGroup, currentValue);
+            updateDescription(ratingName, currentValue);
+        });
+    });
+    
+    function updateStarRating(ratingName, value) {
+        document.getElementById(ratingName).value = value;
+        const ratingGroup = document.querySelector(`[data-rating="${ratingName}"]`);
+        highlightStars(ratingGroup, value);
+        updateDescription(ratingName, value);
+    }
+    
+    function highlightStars(ratingGroup, value) {
+        const stars = ratingGroup.querySelectorAll('.star');
+        stars.forEach(function(star, index) {
+            if (index < value) {
+                star.classList.add('active');
+            } else {
+                star.classList.remove('active');
+            }
+        });
+    }
+    
+    function updateDescription(ratingName, value) {
+        const descId = ratingName.replace('_rating', '_desc');
+        const descElement = document.getElementById(descId);
+        if (descElement) {
+            descElement.textContent = ratingDescriptions[value] || '';
+        }
+    }
+    
+    // 檔案上傳顯示
+    document.getElementById('voice_feedback').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const label = e.target.parentNode;
+        if (file) {
+            label.textContent = `🎤 已選擇：${file.name}`;
+            label.style.background = '#d4a574';
+        }
+    });
+    
+    // 表單驗證
+    document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+        const feedbackText = document.getElementById('feedback_text').value.trim();
+        if (feedbackText.length < 10) {
+            e.preventDefault();
+            alert('請提供至少10個字符的詳細回饋內容');
+            document.getElementById('feedback_text').focus();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,687 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}教師影片儀表板{% endblock %}
+
+{% block extra_css %}
+<style>
+.teacher-dashboard-container {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid rgba(139, 69, 19, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b4513, #d4a574, #8b4513);
+}
+
+.dashboard-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.dashboard-title h1 {
+    color: #2c3e50;
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: rgba(139, 69, 19, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid rgba(139, 69, 19, 0.2);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(139, 69, 19, 0.15);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #8b4513;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    opacity: 0.8;
+}
+
+.notifications-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.notifications-title {
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-badge {
+    background: #dc3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.notifications-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 15px;
+    border-left: 4px solid #8b4513;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.notification-item.unread {
+    background: rgba(139, 69, 19, 0.05);
+    border-left-color: #dc3545;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+.notification-time {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.notification-message {
+    color: #495057;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.videos-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.videos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.videos-title {
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-tab {
+    padding: 8px 16px;
+    border: 1px solid #8b4513;
+    background: white;
+    color: #8b4513;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.filter-tab:hover,
+.filter-tab.active {
+    background: #8b4513;
+    color: white;
+    text-decoration: none;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.video-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.video-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.video-thumbnail {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-placeholder {
+    color: #8b4513;
+    font-size: 2.5rem;
+    opacity: 0.7;
+}
+
+.privacy-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: white;
+}
+
+.privacy-public {
+    background: #28a745;
+}
+
+.privacy-teacher {
+    background: #8b4513;
+}
+
+.privacy-private {
+    background: #6c757d;
+}
+
+.play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(139, 69, 19, 0.9);
+    color: white;
+    padding: 12px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.video-card:hover .play-button {
+    opacity: 1;
+}
+
+.video-info {
+    padding: 15px;
+}
+
+.video-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+.video-student {
+    color: #8b4513;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.video-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.feedback-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+}
+
+.feedback-needed {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.feedback-given {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.video-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-view {
+    flex: 1;
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.btn-view:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-feedback {
+    background: #28a745;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.btn-feedback:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.no-videos {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.no-videos-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .teacher-dashboard-container {
+        padding: 0 15px;
+    }
+    
+    .dashboard-header {
+        padding: 20px;
+    }
+    
+    .dashboard-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .video-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-tabs {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .notifications-header,
+    .videos-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="teacher-dashboard-container">
+    <!-- 儀表板標題和統計 -->
+    <div class="dashboard-header">
+        <div class="dashboard-title">
+            <h1>
+                👨‍🏫 教師影片儀表板
+            </h1>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <span class="stat-number">{{ stats.total_students }}</span>
+                <span class="stat-label">位學生</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎥</div>
+                <span class="stat-number">{{ stats.total_videos }}</span>
+                <span class="stat-label">個影片</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <span class="stat-number">{{ stats.pending_feedback }}</span>
+                <span class="stat-label">待回饋</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔔</div>
+                <span class="stat-number">{{ stats.unread_notifications }}</span>
+                <span class="stat-label">新通知</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知區域 -->
+    {% if unread_notifications %}
+        <div class="notifications-section">
+            <div class="notifications-header">
+                <h3 class="notifications-title">
+                    <i class="fas fa-bell"></i>
+                    最新通知
+                    {% if stats.unread_notifications > 0 %}
+                        <span class="notification-badge">{{ stats.unread_notifications }}</span>
+                    {% endif %}
+                </h3>
+            </div>
+            
+            <div class="notifications-list">
+                {% for notification in unread_notifications %}
+                    <div class="notification-item unread" 
+                         onclick="markNotificationRead({{ notification.id }})">
+                        <div class="notification-header">
+                            <span class="notification-title">{{ notification.title }}</span>
+                            <span class="notification-time">{{ notification.created_at|date:"m/d H:i" }}</span>
+                        </div>
+                        <div class="notification-message">{{ notification.message }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- 學生影片區域 -->
+    <div class="videos-section">
+        <div class="videos-header">
+            <h3 class="videos-title">
+                <i class="fas fa-video"></i>
+                學生影片
+            </h3>
+        </div>
+        
+        <div class="filter-tabs">
+            <a href="?filter=all" class="filter-tab {% if not request.GET.filter or request.GET.filter == 'all' %}active{% endif %}">
+                全部影片
+            </a>
+            <a href="?filter=teacher_only" class="filter-tab {% if request.GET.filter == 'teacher_only' %}active{% endif %}">
+                僅教師可見
+            </a>
+            <a href="?filter=no_feedback" class="filter-tab {% if request.GET.filter == 'no_feedback' %}active{% endif %}">
+                待回饋
+            </a>
+            <a href="?filter=recent" class="filter-tab {% if request.GET.filter == 'recent' %}active{% endif %}">
+                最近上傳
+            </a>
+        </div>
+
+        {% if page_obj.object_list %}
+            <div class="video-grid">
+                {% for video in page_obj.object_list %}
+                    <div class="video-card">
+                        <div class="video-thumbnail">
+                            {% if video.thumbnail %}
+                                <img src="{{ video.thumbnail.url }}" alt="{{ video.piece }}" style="width:100%;height:100%;object-fit:cover;">
+                            {% else %}
+                                <div class="video-placeholder">🎬</div>
+                            {% endif %}
+                            
+                            <div class="privacy-indicator privacy-{{ video.privacy_level }}">
+                                {% if video.privacy_level == 'public' %}
+                                    🌍 公開
+                                {% elif video.privacy_level == 'teacher_only' %}
+                                    👨‍🏫 教師可見
+                                {% else %}
+                                    🔒 私人
+                                {% endif %}
+                            </div>
+                            
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="video-info">
+                            <h4 class="video-title">{{ video.piece }}</h4>
+                            <div class="video-student">
+                                <i class="fas fa-user me-1"></i>{{ video.student_name }}
+                            </div>
+                            
+                            <div class="video-meta">
+                                <span>{{ video.recording_date|date:"Y/m/d"|default:video.upload_date|date:"Y/m/d" }}</span>
+                                <span>{{ video.view_count }} 次觀看</span>
+                            </div>
+                            
+                            <div class="feedback-status">
+                                {% if video.teacher_feedback %}
+                                    <i class="fas fa-check-circle feedback-given"></i>
+                                    <span class="feedback-given">已回饋</span>
+                                {% else %}
+                                    <i class="fas fa-exclamation-circle feedback-needed"></i>
+                                    <span class="feedback-needed">待回饋</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="video-actions">
+                                <a href="{% url 'practice_logs:video_player' video.id %}" class="btn-view">
+                                    <i class="fas fa-eye me-1"></i>觀看
+                                </a>
+                                <button class="btn-feedback" 
+                                        onclick="provideFeedback({{ video.id }})"
+                                        title="提供回饋">
+                                    <i class="fas fa-comment"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- 分頁 -->
+            {% if page_obj.has_other_pages %}
+                <div class="pagination-container mt-4">
+                    <div class="pagination">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1" class="page-link">首頁</a>
+                            <a href="?page={{ page_obj.previous_page_number }}" class="page-link">上一頁</a>
+                        {% endif %}
+                        
+                        <span class="page-link active">
+                            第 {{ page_obj.number }} 頁，共 {{ page_obj.paginator.num_pages }} 頁
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="page-link">下一頁</a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link">末頁</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="no-videos">
+                <div class="no-videos-icon">📹</div>
+                <h3>還沒有學生影片</h3>
+                <p>當學生上傳影片並設為「僅教師可見」或「公開」時，您就可以在這裡看到了。</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+async function markNotificationRead(notificationId) {
+    try {
+        const response = await fetch(`/api/notifications/${notificationId}/read/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // 移除未讀樣式
+            const notificationItem = document.querySelector(`[onclick="markNotificationRead(${notificationId})"]`);
+            if (notificationItem) {
+                notificationItem.classList.remove('unread');
+                notificationItem.onclick = null;
+            }
+            
+            // 更新通知計數
+            const badge = document.querySelector('.notification-badge');
+            if (badge) {
+                const count = parseInt(badge.textContent) - 1;
+                if (count > 0) {
+                    badge.textContent = count;
+                } else {
+                    badge.remove();
+                }
+            }
+        }
+    } catch (error) {
+        console.error('標記通知失敗:', error);
+    }
+}
+
+function provideFeedback(videoId) {
+    // 跳轉到教師回饋表單頁面
+    window.location.href = `/feedback/form/${videoId}/`;
+}
+
+// 點擊影片卡片播放影片
+document.addEventListener('DOMContentLoaded', function() {
+    const videoCards = document.querySelectorAll('.video-card');
+    
+    videoCards.forEach(card => {
+        const playButton = card.querySelector('.play-button');
+        const viewBtn = card.querySelector('.btn-view');
+        
+        if (playButton && viewBtn) {
+            playButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = viewBtn.href;
+            });
+        }
+    });
+});
+</script>
+
+<!-- CSRF Token for JavaScript -->
+{% csrf_token %}
+{% endblock %}

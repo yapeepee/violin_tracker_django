@@ -1,0 +1,491 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}註冊 - 小提琴練習追蹤系統{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/classical_theme.css' %}">
+<style>
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--parchment-gradient);
+        padding: 2rem 0;
+    }
+    
+    .auth-card {
+        background: var(--ivory-white);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: var(--gold-shadow);
+        border: 3px solid var(--classical-gold);
+        max-width: 600px;
+        width: 100%;
+        margin: 2rem auto;
+    }
+    
+    .auth-title {
+        font-family: var(--heading-font);
+        color: var(--deep-burgundy);
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 2.5rem;
+        font-weight: 600;
+    }
+    
+    .violin-icon {
+        font-size: 3rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        color: var(--classical-gold);
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: rgba(184, 134, 11, 0.05);
+        border-radius: 8px;
+        border: 1px solid rgba(184, 134, 11, 0.2);
+    }
+    
+    .section-title {
+        font-family: var(--heading-font);
+        color: var(--deep-burgundy);
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid var(--classical-gold);
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .form-label-auth {
+        font-family: var(--heading-font);
+        color: var(--deep-burgundy);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-help {
+        font-size: 0.85rem;
+        color: var(--dark-olive);
+        font-style: italic;
+        margin-top: 0.25rem;
+    }
+    
+    .role-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .role-option {
+        background: var(--ivory-white);
+        border: 2px solid rgba(184, 134, 11, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .role-option:hover {
+        border-color: var(--classical-gold);
+        transform: translateY(-2px);
+        box-shadow: var(--gold-shadow);
+    }
+    
+    .role-option.selected {
+        background: var(--classical-gold);
+        color: var(--ivory-white);
+        border-color: var(--warm-amber);
+    }
+    
+    .role-option input[type="radio"] {
+        display: none;
+    }
+    
+    .role-emoji {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .role-label {
+        font-family: var(--heading-font);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .btn-auth {
+        background: var(--gold-gradient);
+        border: none;
+        color: var(--midnight-blue);
+        font-family: var(--heading-font);
+        font-weight: 600;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        width: 100%;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--gold-shadow);
+        color: var(--midnight-blue);
+    }
+    
+    .auth-links {
+        text-align: center;
+        margin-top: 2rem;
+    }
+    
+    .auth-links a {
+        color: var(--classical-gold);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+    
+    .auth-links a:hover {
+        color: var(--warm-amber);
+    }
+    
+    .student-fields {
+        display: none;
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    .student-fields.show {
+        display: block;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .role-selector {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="violin-icon">🎻</div>
+        <h1 class="auth-title">加入我們</h1>
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- 基本資訊區塊 -->
+            <div class="form-section">
+                <h3 class="section-title">📝 基本資訊</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.username.id_for_label }}" class="form-label-auth">
+                            用戶名 *
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.username.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-help">用於登入系統，建議使用英文或數字</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.chinese_name.id_for_label }}" class="form-label-auth">
+                            中文姓名 *
+                        </label>
+                        {{ form.chinese_name }}
+                        {% if form.chinese_name.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.chinese_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}" class="form-label-auth">
+                        電子郵件 *
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.email.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.phone_number.id_for_label }}" class="form-label-auth">
+                            聯絡電話
+                        </label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.phone_number.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.birth_date.id_for_label }}" class="form-label-auth">
+                            出生日期
+                        </label>
+                        {{ form.birth_date }}
+                        {% if form.birth_date.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.birth_date.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 角色選擇區塊 -->
+            <div class="form-section">
+                <h3 class="section-title">👤 選擇您的角色</h3>
+                
+                <div class="role-selector">
+                    <label class="role-option" for="role_student">
+                        <input type="radio" name="role" value="student" id="role_student" checked>
+                        <span class="role-emoji">🎓</span>
+                        <span class="role-label">學生</span>
+                    </label>
+                    
+                    <label class="role-option" for="role_teacher">
+                        <input type="radio" name="role" value="teacher" id="role_teacher">
+                        <span class="role-emoji">👨‍🏫</span>
+                        <span class="role-label">教師</span>
+                    </label>
+                    
+                    <label class="role-option" for="role_parent">
+                        <input type="radio" name="role" value="parent" id="role_parent">
+                        <span class="role-emoji">👨‍👩‍👧‍👦</span>
+                        <span class="role-label">家長</span>
+                    </label>
+                </div>
+                
+                {% if form.role.errors %}
+                    <div class="text-danger mt-1">
+                        {% for error in form.role.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- 學生專用欄位 -->
+            <div class="form-section student-fields show" id="student-fields">
+                <h3 class="section-title">🎻 學習資訊（學生專用）</h3>
+                
+                <div class="form-group">
+                    <label for="{{ form.skill_level.id_for_label }}" class="form-label-auth">
+                        目前程度 *
+                    </label>
+                    {{ form.skill_level }}
+                    {% if form.skill_level.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.skill_level.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.learning_goals.id_for_label }}" class="form-label-auth">
+                        學習目標
+                    </label>
+                    {{ form.learning_goals }}
+                    {% if form.learning_goals.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.learning_goals.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-help">描述您的學習目標和期望</div>
+                </div>
+            </div>
+            
+            <!-- 密碼設定區塊 -->
+            <div class="form-section">
+                <h3 class="section-title">🔒 密碼設定</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.password1.id_for_label }}" class="form-label-auth">
+                            密碼 *
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.password1.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-help">至少8個字符，不能全為數字</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label-auth">
+                            確認密碼 *
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.password2.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <button type="submit" class="btn-auth">
+                🎼 立即註冊
+            </button>
+        </form>
+        
+        <div class="auth-links">
+            <p>已有帳戶？ <a href="{% url 'practice_logs:login' %}">立即登入</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 角色選擇功能
+    initRoleSelector();
+    
+    // 表單動畫
+    const authCard = document.querySelector('.auth-card');
+    authCard.style.animation = 'fadeInUp 0.8s ease-out';
+    
+    // 表單驗證
+    setupFormValidation();
+});
+
+function initRoleSelector() {
+    const roleOptions = document.querySelectorAll('.role-option');
+    const studentFields = document.getElementById('student-fields');
+    
+    roleOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // 移除其他選中狀態
+            roleOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // 添加選中狀態
+            this.classList.add('selected');
+            
+            // 選中對應的radio button
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // 顯示/隱藏學生專用欄位
+            if (radio.value === 'student') {
+                studentFields.classList.add('show');
+            } else {
+                studentFields.classList.remove('show');
+            }
+        });
+    });
+    
+    // 設置預設選中項
+    document.querySelector('input[name="role"]:checked').closest('.role-option').classList.add('selected');
+}
+
+function setupFormValidation() {
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', function(e) {
+        // 基本驗證
+        const requiredFields = [
+            '{{ form.username.id_for_label }}',
+            '{{ form.chinese_name.id_for_label }}',
+            '{{ form.email.id_for_label }}',
+            '{{ form.password1.id_for_label }}',
+            '{{ form.password2.id_for_label }}'
+        ];
+        
+        let hasError = false;
+        
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && !field.value.trim()) {
+                hasError = true;
+                field.style.borderColor = '#dc3545';
+            } else if (field) {
+                field.style.borderColor = '';
+            }
+        });
+        
+        // 檢查學生角色的技能等級
+        const roleStudent = document.getElementById('role_student');
+        const skillLevel = document.getElementById('{{ form.skill_level.id_for_label }}');
+        
+        if (roleStudent.checked && (!skillLevel.value || skillLevel.value === '')) {
+            hasError = true;
+            skillLevel.style.borderColor = '#dc3545';
+            alert('學生角色必須選擇技能等級');
+        }
+        
+        if (hasError) {
+            e.preventDefault();
+            alert('請填寫所有必填欄位');
+            return false;
+        }
+        
+        // 顯示註冊動畫
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '🎵 註冊中...';
+        submitBtn.disabled = true;
+    });
+}
+</script>
+{% endblock %}

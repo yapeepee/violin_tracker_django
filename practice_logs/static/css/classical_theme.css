@@ -1,0 +1,670 @@
+/*
+🎻 古典樂風格主題 CSS
+優雅、莊重、溫暖的小提琴練習記錄系統
+*/
+
+/* ===== 字體導入 ===== */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Crimson+Text:wght@400;600&family=Cinzel:wght@400;500;600&display=swap');
+
+/* ===== CSS 變數定義 ===== */
+:root {
+  /* 古典色彩調色板 */
+  --classical-gold: #B8860B;
+  --deep-burgundy: #722F37;
+  --ivory-white: #FDF5E6;
+  --dark-olive: #556B2F;
+  --parchment: #F4F1E8;
+  --copper-bronze: #CD7F32;
+  --warm-amber: #FFBF00;
+  --midnight-blue: #191970;
+  --soft-pearl: #F8F6F0;
+  
+  /* 陰影與漸變 */
+  --gold-shadow: 0 4px 20px rgba(184, 134, 11, 0.3);
+  --burgundy-shadow: 0 2px 10px rgba(114, 47, 55, 0.2);
+  --parchment-gradient: linear-gradient(135deg, #F4F1E8 0%, #FDF5E6 100%);
+  --gold-gradient: linear-gradient(135deg, #B8860B 0%, #FFBF00 100%);
+  
+  /* 字體家族 */
+  --heading-font: 'Playfair Display', serif;
+  --body-font: 'Crimson Text', serif;
+  --elegant-font: 'Cinzel', serif;
+  
+  /* 間距與尺寸 */
+  --border-radius: 8px;
+  --card-padding: 2rem;
+  --section-spacing: 3rem;
+}
+
+/* ===== 動畫定義 ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.8;
+  }
+}
+
+/* ===== 基礎樣式重置 ===== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--body-font);
+  background: var(--parchment-gradient);
+  color: var(--midnight-blue);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* ===== 古典裝飾邊框 ===== */
+.classical-border {
+  border: 2px solid var(--classical-gold);
+  border-image: linear-gradient(45deg, var(--classical-gold), var(--warm-amber)) 1;
+  position: relative;
+}
+
+.classical-border::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: var(--gold-gradient);
+  border-radius: var(--border-radius);
+  z-index: -1;
+  opacity: 0.1;
+}
+
+/* ===== 導航欄 ===== */
+.navbar-classical {
+  background: linear-gradient(135deg, var(--deep-burgundy) 0%, var(--midnight-blue) 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 1rem 0;
+}
+
+.navbar-classical .navbar-brand {
+  font-family: var(--elegant-font);
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--classical-gold) !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.navbar-classical .nav-link {
+  color: var(--ivory-white) !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.navbar-classical .nav-link:hover {
+  color: var(--classical-gold) !important;
+  transform: translateY(-2px);
+}
+
+.navbar-classical .nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  background: var(--classical-gold);
+  transition: all 0.3s ease;
+}
+
+.navbar-classical .nav-link:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+/* ===== 卡片系統 ===== */
+.practice-card {
+  background: var(--ivory-white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--gold-shadow);
+  padding: var(--card-padding);
+  margin-bottom: 2rem;
+  position: relative;
+  transition: all 0.3s ease;
+  border-left: 4px solid var(--classical-gold);
+}
+
+.practice-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(184, 134, 11, 0.4);
+}
+
+.practice-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gold-gradient);
+}
+
+/* 羊皮紙質感卡片 */
+.parchment-card {
+  background: var(--parchment);
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(184, 134, 11, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(114, 47, 55, 0.05) 0%, transparent 50%);
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  border-radius: var(--border-radius);
+  padding: var(--card-padding);
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.parchment-card::after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  bottom: 15px;
+  border: 1px solid rgba(184, 134, 11, 0.2);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* ===== 標題樣式 ===== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
+  color: var(--deep-burgundy);
+  margin-bottom: 1rem;
+}
+
+.elegant-title {
+  font-family: var(--elegant-font);
+  color: var(--classical-gold);
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.elegant-title::before,
+.elegant-title::after {
+  content: '🎼';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8em;
+  color: var(--classical-gold);
+}
+
+.elegant-title::before {
+  left: -50px;
+}
+
+.elegant-title::after {
+  right: -50px;
+}
+
+/* ===== 按鈕系統 ===== */
+.btn-classical {
+  background: var(--gold-gradient);
+  border: none;
+  color: var(--midnight-blue);
+  font-family: var(--heading-font);
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--gold-shadow);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-classical:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(184, 134, 11, 0.4);
+  color: var(--midnight-blue);
+}
+
+.btn-classical::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-classical:hover::before {
+  left: 100%;
+}
+
+.btn-burgundy {
+  background: linear-gradient(135deg, var(--deep-burgundy), #8B0000);
+  color: var(--ivory-white);
+  border: 1px solid var(--deep-burgundy);
+}
+
+.btn-burgundy:hover {
+  background: linear-gradient(135deg, #8B0000, var(--deep-burgundy));
+  color: var(--ivory-white);
+}
+
+/* ===== 表單元素 ===== */
+.form-classical {
+  background: var(--soft-pearl);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-control-classical {
+  border: 2px solid rgba(184, 134, 11, 0.3);
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1rem;
+  font-family: var(--body-font);
+  transition: all 0.3s ease;
+  background: var(--ivory-white);
+}
+
+.form-control-classical:focus {
+  border-color: var(--classical-gold);
+  box-shadow: 0 0 0 0.2rem rgba(184, 134, 11, 0.25);
+  outline: none;
+}
+
+.form-label-classical {
+  font-family: var(--heading-font);
+  color: var(--deep-burgundy);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* ===== 星級評分系統 ===== */
+.rating-stars {
+  display: flex;
+  gap: 0.25rem;
+  font-size: 1.5rem;
+  margin: 0.5rem 0;
+  justify-content: center;
+}
+
+.rating-star {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #ddd;
+}
+
+.rating-star.active,
+.rating-star:hover {
+  color: var(--classical-gold);
+  transform: scale(1.1);
+}
+
+.rating-star.musical-note::before {
+  content: '♪';
+}
+
+.rating-star.musical-note.active::before {
+  content: '♫';
+}
+
+/* ===== 心情選擇器 ===== */
+.mood-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.mood-option {
+  background: var(--ivory-white);
+  border: 2px solid rgba(184, 134, 11, 0.3);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.mood-option:hover {
+  border-color: var(--classical-gold);
+  transform: translateY(-2px);
+  box-shadow: var(--gold-shadow);
+}
+
+.mood-option.selected {
+  background: var(--classical-gold);
+  color: var(--ivory-white);
+  border-color: var(--warm-amber);
+}
+
+.mood-emoji {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.mood-label {
+  font-family: var(--heading-font);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ===== 影片上傳區域 ===== */
+.video-upload-area {
+  border: 3px dashed rgba(184, 134, 11, 0.5);
+  border-radius: var(--border-radius);
+  padding: 3rem 2rem;
+  text-align: center;
+  background: var(--parchment);
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.video-upload-area:hover,
+.video-upload-area.dragover {
+  border-color: var(--classical-gold);
+  background: var(--ivory-white);
+  transform: scale(1.02);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  color: var(--classical-gold);
+  margin-bottom: 1rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.upload-text {
+  font-family: var(--heading-font);
+  color: var(--deep-burgundy);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.upload-hint {
+  color: var(--dark-olive);
+  font-size: 0.9rem;
+}
+
+/* ===== 進度條 ===== */
+.progress-classical {
+  background: rgba(184, 134, 11, 0.2);
+  border-radius: 20px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.progress-bar-classical {
+  background: var(--gold-gradient);
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-bar-classical::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ===== 影片播放器 ===== */
+.video-player-classical {
+  background: var(--midnight-blue);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--burgundy-shadow);
+  position: relative;
+}
+
+.video-controls-classical {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 1rem;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.control-button {
+  background: var(--classical-gold);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--midnight-blue);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.control-button:hover {
+  background: var(--warm-amber);
+  transform: scale(1.1);
+}
+
+/* ===== 成就徽章 ===== */
+.achievement-badge {
+  background: var(--gold-gradient);
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: var(--gold-shadow);
+  position: relative;
+  margin: 0 auto 1rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.achievement-badge::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border: 2px solid var(--classical-gold);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+/* ===== 通知訊息 ===== */
+.notification-classical {
+  background: var(--ivory-white);
+  border-left: 4px solid var(--classical-gold);
+  border-radius: var(--border-radius);
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  box-shadow: var(--burgundy-shadow);
+  position: relative;
+}
+
+.notification-classical.success {
+  border-left-color: #28a745;
+  background: #f8fff9;
+}
+
+.notification-classical.warning {
+  border-left-color: #ffc107;
+  background: #fffbf0;
+}
+
+.notification-classical.error {
+  border-left-color: #dc3545;
+  background: #fff5f5;
+}
+
+/* ===== 統計儀表板 ===== */
+.stats-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.stat-card {
+  background: var(--ivory-white);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--gold-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gold-gradient);
+}
+
+.stat-value {
+  font-family: var(--elegant-font);
+  font-size: 3rem;
+  font-weight: 600;
+  color: var(--classical-gold);
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-label {
+  font-family: var(--heading-font);
+  color: var(--deep-burgundy);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* ===== 響應式設計 ===== */
+@media (max-width: 768px) {
+  :root {
+    --card-padding: 1.5rem;
+    --section-spacing: 2rem;
+  }
+  
+  .elegant-title::before,
+  .elegant-title::after {
+    display: none;
+  }
+  
+  .mood-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stats-dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 動畫效果 ===== */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes starTwinkle {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 1;
+  }
+  25% { 
+    transform: scale(1.2) rotate(-5deg); 
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.4) rotate(5deg); 
+    opacity: 1;
+  }
+  75% { 
+    transform: scale(1.2) rotate(-3deg); 
+    opacity: 0.9;
+  }
+}

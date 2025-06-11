@@ -1,0 +1,1035 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}{{ recording.piece }} - {{ recording.student_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.video-player-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.video-section {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.video-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b4513, #d4a574, #8b4513);
+}
+
+.video-header {
+    margin-bottom: 25px;
+}
+
+.video-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-family: 'Georgia', serif;
+}
+
+.video-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.video-student {
+    color: #8b4513;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.video-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.video-player-wrapper {
+    position: relative;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.video-player {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+    display: block;
+}
+
+.video-controls {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 15px;
+    border: 1px solid #e9ecef;
+}
+
+.timeline-container {
+    margin-bottom: 20px;
+}
+
+.timeline-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timeline-markers {
+    position: relative;
+    height: 60px;
+    background: linear-gradient(to right, #f8f9fa, #e9ecef);
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+}
+
+.timeline-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #8b4513;
+    transform: translateY(-50%);
+}
+
+.timeline-marker {
+    position: absolute;
+    top: 10px;
+    width: 3px;
+    height: 40px;
+    background: #dc3545;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.timeline-marker:hover {
+    width: 6px;
+    background: #c82333;
+}
+
+.timeline-marker::after {
+    content: attr(data-time);
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.timeline-marker:hover::after {
+    opacity: 1;
+}
+
+.current-time-indicator {
+    position: absolute;
+    top: 5px;
+    width: 2px;
+    height: 50px;
+    background: #28a745;
+    z-index: 3;
+    transition: left 0.1s ease;
+}
+
+.add-marker-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-add-marker {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-add-marker:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+}
+
+.time-display {
+    background: rgba(139, 69, 19, 0.1);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-weight: 500;
+    color: #8b4513;
+}
+
+.video-info-section {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.video-details {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.details-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rating-stars {
+    color: #ffc107;
+}
+
+.video-notes {
+    margin-top: 20px;
+}
+
+.notes-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    color: #2c3e50;
+    line-height: 1.6;
+    margin-top: 10px;
+}
+
+.comments-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.comments-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.add-comment-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #8b4513;
+    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    outline: none;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 15px;
+}
+
+.rating-input {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.rating-star {
+    font-size: 1.2rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.rating-star.active,
+.rating-star:hover {
+    color: #ffc107;
+}
+
+.btn-comment {
+    background: linear-gradient(45deg, #8b4513, #d4a574);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-comment:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+}
+
+.comments-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.comment-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid #8b4513;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.comment-time {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.comment-rating {
+    color: #ffc107;
+    margin-left: 10px;
+}
+
+.comment-content {
+    color: #2c3e50;
+    line-height: 1.5;
+}
+
+.related-videos {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.related-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.related-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.related-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: inherit;
+}
+
+.related-thumbnail {
+    width: 100%;
+    height: 120px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8b4513;
+    font-size: 2rem;
+}
+
+.related-info {
+    padding: 12px;
+}
+
+.related-piece {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    line-height: 1.3;
+}
+
+.related-meta {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .video-player-container {
+        padding: 0 15px;
+    }
+    
+    .video-section {
+        padding: 20px 15px;
+    }
+    
+    .video-info-section {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .video-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .add-marker-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .related-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .video-stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .timeline-markers {
+        height: 50px;
+    }
+    
+    .timeline-marker {
+        height: 30px;
+        top: 10px;
+    }
+    
+    .current-time-indicator {
+        height: 40px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="video-player-container">
+    <!-- 影片播放區域 -->
+    <div class="video-section">
+        <div class="video-header">
+            <h1 class="video-title">{{ recording.piece }}</h1>
+            <div class="video-meta">
+                <div class="video-student">
+                    <i class="fas fa-user me-2"></i>{{ recording.student_name }}
+                </div>
+                <div class="video-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>第 {{ recording.week_number }} 週</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ recording.upload_date|date:"Y/m/d" }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-eye"></i>
+                        <span>{{ recording.view_count }} 次觀看</span>
+                    </div>
+                    {% if recording.duration %}
+                        <div class="stat-item">
+                            <i class="fas fa-stopwatch"></i>
+                            <span>{{ recording.duration_display }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="video-player-wrapper">
+            <video class="video-player" id="videoPlayer" controls preload="metadata">
+                <source src="{{ recording.file_path.url }}" type="video/mp4">
+                您的瀏覽器不支援影片播放。
+            </video>
+        </div>
+
+        <div class="video-controls">
+            <div class="timeline-container">
+                <h5 class="timeline-title">
+                    <i class="fas fa-map-marker-alt"></i>
+                    時間軸標記
+                </h5>
+                <div class="timeline-markers" id="timelineMarkers">
+                    <div class="timeline-track"></div>
+                    <div class="current-time-indicator" id="currentTimeIndicator"></div>
+                </div>
+                <div class="add-marker-controls">
+                    <button class="btn-add-marker" onclick="addTimeMarker()">
+                        <i class="fas fa-plus me-1"></i>添加標記
+                    </button>
+                    <div class="time-display" id="currentTimeDisplay">00:00</div>
+                    <small class="text-muted">點擊時間軸或使用按鈕添加重要時間點</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 影片詳情和評論區域 -->
+    <div class="video-info-section">
+        <div class="video-details">
+            <h4 class="details-title">
+                <i class="fas fa-info-circle"></i>
+                影片詳情
+            </h4>
+            
+            <div class="detail-item">
+                <span class="detail-label">自我評分</span>
+                <div class="detail-value">
+                    <div class="rating-display">
+                        <div class="rating-stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= recording.self_rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span>{{ recording.self_rating }}/5</span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if recording.average_rating %}
+                <div class="detail-item">
+                    <span class="detail-label">平均評分</span>
+                    <div class="detail-value">
+                        <div class="rating-display">
+                            <div class="rating-stars">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= recording.average_rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <span>{{ recording.average_rating|floatformat:1 }}/5</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if recording.teacher_score %}
+                <div class="detail-item">
+                    <span class="detail-label">教師評分</span>
+                    <div class="detail-value">{{ recording.teacher_score_display }}</div>
+                </div>
+            {% endif %}
+            
+            <div class="detail-item">
+                <span class="detail-label">檔案大小</span>
+                <div class="detail-value">{{ recording.file_size_display }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">上傳狀態</span>
+                <div class="detail-value">
+                    {% if recording.status == 'ready' %}
+                        <span class="badge bg-success">就緒</span>
+                    {% elif recording.status == 'processing' %}
+                        <span class="badge bg-warning">處理中</span>
+                    {% elif recording.status == 'failed' %}
+                        <span class="badge bg-danger">失敗</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ recording.get_status_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if recording.notes %}
+                <div class="video-notes">
+                    <h5 class="details-title">
+                        <i class="fas fa-sticky-note"></i>
+                        練習筆記
+                    </h5>
+                    <div class="notes-content">
+                        {{ recording.notes|linebreaks }}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="comments-section">
+            <div class="comments-title">
+                <span>
+                    <i class="fas fa-comments"></i>
+                    評論 ({{ comments.count }})
+                </span>
+            </div>
+
+            {% if can_comment %}
+                <form class="add-comment-form" id="commentForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label">添加評論</label>
+                        <textarea class="form-control" 
+                                  name="comment" 
+                                  rows="3" 
+                                  placeholder="分享您的想法、建議或鼓勵..."
+                                  required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">您的姓名</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="commenter_name" 
+                                   placeholder="請輸入您的姓名"
+                                   required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">身份</label>
+                            <select class="form-control" name="commenter_type">
+                                <option value="self">學生本人</option>
+                                <option value="teacher">教師</option>
+                                <option value="parent">家長</option>
+                                <option value="peer">同學</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">評分（可選）</label>
+                            <div class="rating-input" id="commentRating">
+                                {% for i in "12345" %}
+                                    <span class="rating-star" data-rating="{{ forloop.counter }}">★</span>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="rating" id="commentRatingValue">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-comment">
+                        <i class="fas fa-paper-plane me-1"></i>發表評論
+                    </button>
+                </form>
+            {% endif %}
+
+            <div class="comments-list" id="commentsList">
+                {% for comment in comments %}
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <div>
+                                <span class="comment-author">{{ comment.commenter_display_name }}</span>
+                                {% if comment.rating %}
+                                    <span class="comment-rating">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= comment.rating %}★{% endif %}
+                                        {% endfor %}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <span class="comment-time">{{ comment.timestamp|date:"m/d H:i" }}</span>
+                        </div>
+                        <div class="comment-content">{{ comment.comment|linebreaks }}</div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-comment-dots fa-3x mb-3 opacity-50"></i>
+                        <p>還沒有評論，成為第一個評論者吧！</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 相關影片 -->
+    {% if related_videos %}
+        <div class="related-videos">
+            <h4 class="related-title">
+                <i class="fas fa-video"></i>
+                {{ recording.student_name }} 的其他影片
+            </h4>
+            <div class="related-grid">
+                {% for video in related_videos %}
+                    <a href="{% url 'practice_logs:video_player' video.id %}" class="related-item">
+                        <div class="related-thumbnail">
+                            {% if video.thumbnail %}
+                                <img src="{{ video.thumbnail.url }}" alt="{{ video.piece }}" style="width:100%;height:100%;object-fit:cover;">
+                            {% else %}
+                                🎬
+                            {% endif %}
+                        </div>
+                        <div class="related-info">
+                            <div class="related-piece">{{ video.piece }}</div>
+                            <div class="related-meta">
+                                第 {{ video.week_number }} 週 • {{ video.upload_date|date:"m/d" }}
+                                {% if video.duration %}
+                                    • {{ video.duration_display }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const videoPlayer = document.getElementById('videoPlayer');
+    const timelineMarkers = document.getElementById('timelineMarkers');
+    const currentTimeIndicator = document.getElementById('currentTimeIndicator');
+    const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+    const commentForm = document.getElementById('commentForm');
+    
+    let timeMarkers = [];
+    let videoDuration = 0;
+    
+    // 影片載入完成後初始化
+    videoPlayer.addEventListener('loadedmetadata', function() {
+        videoDuration = videoPlayer.duration;
+        updateTimelineDisplay();
+    });
+    
+    // 更新時間顯示和時間軸指示器
+    videoPlayer.addEventListener('timeupdate', function() {
+        const currentTime = videoPlayer.currentTime;
+        const percentage = (currentTime / videoDuration) * 100;
+        
+        // 更新時間顯示
+        currentTimeDisplay.textContent = formatTime(currentTime);
+        
+        // 更新時間軸指示器位置
+        currentTimeIndicator.style.left = percentage + '%';
+    });
+    
+    // 點擊時間軸跳轉
+    timelineMarkers.addEventListener('click', function(e) {
+        if (e.target === timelineMarkers || e.target.classList.contains('timeline-track')) {
+            const rect = timelineMarkers.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            const newTime = percentage * videoDuration;
+            
+            videoPlayer.currentTime = newTime;
+        }
+    });
+    
+    // 添加時間標記
+    window.addTimeMarker = function() {
+        const currentTime = videoPlayer.currentTime;
+        const percentage = (currentTime / videoDuration) * 100;
+        
+        // 檢查是否已存在相近的標記
+        const exists = timeMarkers.some(marker => Math.abs(marker - currentTime) < 2);
+        if (exists) {
+            alert('此時間點附近已有標記');
+            return;
+        }
+        
+        timeMarkers.push(currentTime);
+        
+        // 創建標記元素
+        const marker = document.createElement('div');
+        marker.className = 'timeline-marker';
+        marker.style.left = percentage + '%';
+        marker.setAttribute('data-time', formatTime(currentTime));
+        marker.addEventListener('click', function() {
+            videoPlayer.currentTime = currentTime;
+        });
+        
+        timelineMarkers.appendChild(marker);
+        
+        // 如果正在添加評論，將時間戳添加到評論表單
+        if (commentForm) {
+            const timestampField = document.createElement('input');
+            timestampField.type = 'hidden';
+            timestampField.name = 'timestamp';
+            timestampField.value = currentTime;
+            commentForm.appendChild(timestampField);
+        }
+    };
+    
+    // 評論評分功能
+    const ratingStars = document.querySelectorAll('.rating-star');
+    const ratingValue = document.getElementById('commentRatingValue');
+    
+    ratingStars.forEach((star, index) => {
+        star.addEventListener('click', function() {
+            const rating = index + 1;
+            ratingValue.value = rating;
+            
+            ratingStars.forEach((s, i) => {
+                if (i < rating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const rating = index + 1;
+            ratingStars.forEach((s, i) => {
+                if (i < rating) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#ddd';
+                }
+            });
+        });
+    });
+    
+    document.getElementById('commentRating').addEventListener('mouseleave', function() {
+        const currentRating = parseInt(ratingValue.value) || 0;
+        ratingStars.forEach((s, i) => {
+            if (i < currentRating) {
+                s.style.color = '#ffc107';
+                s.classList.add('active');
+            } else {
+                s.style.color = '#ddd';
+                s.classList.remove('active');
+            }
+        });
+    });
+    
+    // 評論表單提交
+    if (commentForm) {
+        commentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(commentForm);
+            
+            try {
+                const response = await fetch('{% url "practice_logs:add_video_comment" recording.id %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 添加新評論到列表
+                    addCommentToList(data.comment);
+                    
+                    // 清空表單
+                    commentForm.reset();
+                    ratingValue.value = '';
+                    ratingStars.forEach(s => {
+                        s.classList.remove('active');
+                        s.style.color = '#ddd';
+                    });
+                    
+                    // 顯示成功消息
+                    showMessage('評論已發表！', 'success');
+                } else {
+                    showMessage(data.error || '發表評論失敗', 'error');
+                }
+            } catch (error) {
+                showMessage('網路錯誤，請重試', 'error');
+            }
+        });
+    }
+    
+    function addCommentToList(comment) {
+        const commentsList = document.getElementById('commentsList');
+        const emptyMessage = commentsList.querySelector('.text-center');
+        
+        if (emptyMessage) {
+            emptyMessage.remove();
+        }
+        
+        const commentHtml = `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <div>
+                        <span class="comment-author">${comment.commenter_display_name}</span>
+                        ${comment.rating ? `<span class="comment-rating">${'★'.repeat(comment.rating)}</span>` : ''}
+                    </div>
+                    <span class="comment-time">${comment.timestamp}</span>
+                </div>
+                <div class="comment-content">${comment.comment.replace(/\n/g, '<br>')}</div>
+            </div>
+        `;
+        
+        commentsList.insertAdjacentHTML('afterbegin', commentHtml);
+    }
+    
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    
+    function updateTimelineDisplay() {
+        // 這裡可以添加已存在的時間標記的顯示邏輯
+        // 從服務器獲取已保存的標記
+    }
+    
+    function showMessage(message, type) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alert);
+        
+        setTimeout(() => {
+            alert.remove();
+        }, 3000);
+    }
+    
+    // 鍵盤快捷鍵
+    document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        switch(e.key) {
+            case ' ':
+                e.preventDefault();
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                } else {
+                    videoPlayer.pause();
+                }
+                break;
+            case 'ArrowLeft':
+                e.preventDefault();
+                videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 5);
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                videoPlayer.currentTime = Math.min(videoDuration, videoPlayer.currentTime + 5);
+                break;
+            case 'm':
+                e.preventDefault();
+                addTimeMarker();
+                break;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,436 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}{{ user.display_name }} - 個人資料{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/classical_theme.css' %}">
+<style>
+    .profile-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .profile-header {
+        background: var(--parchment-gradient);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 3px solid var(--classical-gold);
+        text-align: center;
+        position: relative;
+    }
+    
+    .avatar-section {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    
+    .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid var(--classical-gold);
+        object-fit: cover;
+        background: var(--ivory-white);
+    }
+    
+    .avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid var(--classical-gold);
+        background: var(--ivory-white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--classical-gold);
+    }
+    
+    .profile-name {
+        font-family: var(--heading-font);
+        color: var(--deep-burgundy);
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .profile-role {
+        display: inline-block;
+        background: var(--classical-gold);
+        color: var(--ivory-white);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .stat-item {
+        background: rgba(184, 134, 11, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-family: var(--heading-font);
+        font-size: 2rem;
+        color: var(--classical-gold);
+        font-weight: 600;
+    }
+    
+    .stat-label {
+        color: var(--dark-olive);
+        font-size: 0.9rem;
+    }
+    
+    .profile-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    .info-card {
+        background: var(--ivory-white);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: var(--gold-shadow);
+        border: 2px solid rgba(184, 134, 11, 0.3);
+    }
+    
+    .card-title {
+        font-family: var(--heading-font);
+        color: var(--deep-burgundy);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid var(--classical-gold);
+        padding-bottom: 0.5rem;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(184, 134, 11, 0.1);
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: var(--dark-olive);
+    }
+    
+    .info-value {
+        color: var(--midnight-blue);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+    
+    .btn-profile {
+        background: var(--gold-gradient);
+        border: none;
+        color: var(--midnight-blue);
+        font-family: var(--heading-font);
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-profile:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--gold-shadow);
+        color: var(--midnight-blue);
+        text-decoration: none;
+    }
+    
+    .btn-secondary {
+        background: var(--deep-burgundy);
+        color: var(--ivory-white);
+    }
+    
+    .btn-secondary:hover {
+        background: #8B3A42;
+        color: var(--ivory-white);
+    }
+    
+    .relations-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .relation-item {
+        background: rgba(184, 134, 11, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid rgba(184, 134, 11, 0.2);
+    }
+    
+    .relation-name {
+        font-weight: 600;
+        color: var(--deep-burgundy);
+    }
+    
+    .relation-date {
+        font-size: 0.85rem;
+        color: var(--dark-olive);
+    }
+    
+    .empty-state {
+        text-align: center;
+        color: var(--dark-olive);
+        font-style: italic;
+        padding: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- 個人資料頭部 -->
+    <div class="profile-header">
+        <div class="avatar-section">
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="{{ user.display_name }}" class="avatar">
+            {% else %}
+                <div class="avatar-placeholder">
+                    {% if user.is_student %}🎓
+                    {% elif user.is_teacher %}👨‍🏫
+                    {% elif user.is_parent %}👨‍👩‍👧‍👦
+                    {% else %}👤{% endif %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <h1 class="profile-name">{{ user.display_name }}</h1>
+        <span class="profile-role">{{ user.get_role_display }}</span>
+        
+        {% if user.bio %}
+            <div style="margin-top: 1rem; color: var(--dark-olive); font-style: italic;">
+                "{{ user.bio }}"
+            </div>
+        {% endif %}
+        
+        {% if practice_stats or teaching_stats %}
+            <div class="profile-stats">
+                {% if practice_stats %}
+                    <div class="stat-item">
+                        <div class="stat-number">{{ practice_stats.total_sessions }}</div>
+                        <div class="stat-label">練習次數</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ practice_stats.total_minutes }}</div>
+                        <div class="stat-label">總練習分鐘</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ practice_stats.average_rating|floatformat:1 }}</div>
+                        <div class="stat-label">平均評分</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ practice_stats.recent_sessions }}</div>
+                        <div class="stat-label">本週練習</div>
+                    </div>
+                {% endif %}
+                
+                {% if teaching_stats %}
+                    <div class="stat-item">
+                        <div class="stat-number">{{ teaching_stats.students_taught }}</div>
+                        <div class="stat-label">教授學生</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ teaching_stats.total_feedback_given }}</div>
+                        <div class="stat-label">回饋次數</div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- 詳細資訊 -->
+    <div class="profile-content">
+        <!-- 基本資訊 -->
+        <div class="info-card">
+            <h3 class="card-title">📋 基本資訊</h3>
+            
+            <div class="info-item">
+                <span class="info-label">用戶名</span>
+                <span class="info-value">{{ user.username }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">電子郵件</span>
+                <span class="info-value">{{ user.email }}</span>
+            </div>
+            
+            {% if user.phone_number %}
+                <div class="info-item">
+                    <span class="info-label">聯絡電話</span>
+                    <span class="info-value">{{ user.phone_number }}</span>
+                </div>
+            {% endif %}
+            
+            {% if user.birth_date %}
+                <div class="info-item">
+                    <span class="info-label">年齡</span>
+                    <span class="info-value">{{ user.age }} 歲</span>
+                </div>
+            {% endif %}
+            
+            <div class="info-item">
+                <span class="info-label">註冊時間</span>
+                <span class="info-value">{{ user.date_joined|date:"Y年m月d日" }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">最後登入</span>
+                <span class="info-value">{{ user.last_login|date:"Y年m月d日 H:i" }}</span>
+            </div>
+        </div>
+        
+        <!-- 音樂相關資訊 -->
+        {% if user.is_student %}
+            <div class="info-card">
+                <h3 class="card-title">🎻 學習資訊</h3>
+                
+                <div class="info-item">
+                    <span class="info-label">技能等級</span>
+                    <span class="info-value">{{ user.get_skill_level_display }}</span>
+                </div>
+                
+                {% if user.learning_start_date %}
+                    <div class="info-item">
+                        <span class="info-label">學習時長</span>
+                        <span class="info-value">{{ user.learning_duration_days }} 天</span>
+                    </div>
+                {% endif %}
+                
+                {% if user.favorite_composers %}
+                    <div class="info-item">
+                        <span class="info-label">喜愛作曲家</span>
+                        <span class="info-value">{{ user.favorite_composers }}</span>
+                    </div>
+                {% endif %}
+                
+                {% if user.learning_goals %}
+                    <div class="info-item" style="flex-direction: column; align-items: flex-start;">
+                        <span class="info-label">學習目標</span>
+                        <span class="info-value" style="margin-top: 0.5rem;">{{ user.learning_goals }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <!-- 師生關係 -->
+        {% if teachers or students %}
+            <div class="info-card" style="grid-column: 1 / -1;">
+                <h3 class="card-title">
+                    {% if user.is_student %}👨‍🏫 我的老師{% else %}🎓 我的學生{% endif %}
+                </h3>
+                
+                <ul class="relations-list">
+                    {% if teachers %}
+                        {% for relation in teachers %}
+                            <li class="relation-item">
+                                <div class="relation-name">{{ relation.teacher.display_name }}</div>
+                                <div class="relation-date">
+                                    師生關係開始：{{ relation.start_date|date:"Y年m月d日" }}
+                                    （{{ relation.duration_days }} 天）
+                                </div>
+                                {% if relation.notes %}
+                                    <div style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--dark-olive);">
+                                        {{ relation.notes }}
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if students %}
+                        {% for relation in students %}
+                            <li class="relation-item">
+                                <div class="relation-name">{{ relation.student.display_name }}</div>
+                                <div class="relation-date">
+                                    師生關係開始：{{ relation.start_date|date:"Y年m月d日" }}
+                                    （{{ relation.duration_days }} 天）
+                                </div>
+                                {% if relation.notes %}
+                                    <div style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--dark-olive);">
+                                        {{ relation.notes }}
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- 操作按鈕 -->
+    <div class="action-buttons">
+        <a href="{% url 'practice_logs:edit_profile' %}" class="btn-profile">
+            ✏️ 編輯資料
+        </a>
+        
+        <a href="{% url 'practice_logs:change_password' %}" class="btn-profile btn-secondary">
+            🔒 變更密碼
+        </a>
+        
+        <a href="{% url 'practice_logs:login_history' %}" class="btn-profile btn-secondary">
+            📊 登入記錄
+        </a>
+        
+        {% if user.is_student %}
+            <a href="{% url 'practice_logs:student_dashboard' %}" class="btn-profile">
+                📊 學生儀表板
+            </a>
+        {% elif user.is_teacher %}
+            <a href="{% url 'practice_logs:teacher_dashboard' %}" class="btn-profile">
+                👨‍🏫 教師儀表板
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 添加頁面載入動畫
+    const cards = document.querySelectorAll('.info-card, .profile-header');
+    cards.forEach((card, index) => {
+        card.style.animation = `fadeInUp 0.6s ease-out ${index * 0.1}s both`;
+    });
+});
+</script>
+{% endblock %}

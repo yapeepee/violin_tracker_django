@@ -1,51 +1,55 @@
 {% extends "practice_logs/base.html" %}
 {% load static %}
 
-{% block content %}
+{% block extra_css %}
 <style>
     .error-container {
         text-align: center;
         padding: 2rem;
         margin-top: 3rem;
+        max-width: 600px;
+        margin: 3rem auto;
     }
 
     .error-icon {
         font-size: 4rem;
-        color: var(--color-violin);
+        color: #8b4513;
         margin-bottom: 1rem;
     }
 
     .error-title {
-        color: var(--color-violin);
-        font-family: var(--font-serif);
+        color: #2c3e50;
+        font-family: 'Georgia', serif;
         font-size: 2rem;
         margin-bottom: 1rem;
+        font-weight: 600;
     }
 
     .error-message {
-        color: var(--color-piano);
-        font-family: var(--font-sans);
+        color: #6c757d;
         font-size: 1.2rem;
         margin-bottom: 2rem;
+        line-height: 1.5;
     }
 
     .back-button {
         display: inline-flex;
         align-items: center;
         padding: 0.75rem 1.5rem;
-        background-color: var(--color-brass);
+        background: linear-gradient(45deg, #8b4513, #d4a574);
         color: white;
         border: none;
-        border-radius: var(--radius-md);
+        border-radius: 10px;
         text-decoration: none;
-        font-family: var(--font-sans);
-        transition: all var(--transition-normal);
+        font-weight: 500;
+        transition: all 0.3s ease;
     }
 
     .back-button:hover {
-        background-color: var(--color-violin);
         transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
         color: white;
+        text-decoration: none;
     }
 
     .back-button i {
@@ -54,32 +58,47 @@
 
     .error-note {
         margin-top: 2rem;
-        color: var(--color-piano);
+        color: #6c757d;
         opacity: 0.7;
         font-size: 0.9rem;
     }
-</style>
 
+    .error-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
 <div class="container">
     <div class="error-container">
-        <div class="error-icon">
-            {% if error_title == '找不到學生' %}
-            🎻
-            {% elif error_title == '驗證錯誤' %}
-            ⚠️
-            {% else %}
-            ❌
+        <div class="error-card">
+            <div class="error-icon">
+                {% if error_title == '找不到學生' %}
+                🎻
+                {% elif error_title == '驗證錯誤' %}
+                ⚠️
+                {% else %}
+                ❌
+                {% endif %}
+            </div>
+            <h1 class="error-title">{{ error_title|default:"發生錯誤" }}</h1>
+            <p class="error-message">{{ error_message|default:"系統遇到了一個錯誤，請稍後再試。" }}</p>
+            <a href="{{ back_url|default:'/' }}" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                {{ back_text|default:"返回首頁" }}
+            </a>
+            {% if error_note %}
+            <p class="error-note">{{ error_note }}</p>
+            {% endif %}
+            {% if error_code %}
+            <p class="error-note">錯誤代碼: {{ error_code }}</p>
             {% endif %}
         </div>
-        <h1 class="error-title">{{ error_title|default:"發生錯誤" }}</h1>
-        <p class="error-message">{{ error_message }}</p>
-        <a href="{{ back_url|default:'/' }}" class="back-button">
-            <i class="fas fa-arrow-left"></i>
-            返回{{ back_text|default:"首頁" }}
-        </a>
-        {% if error_note %}
-        <p class="error-note">{{ error_note }}</p>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

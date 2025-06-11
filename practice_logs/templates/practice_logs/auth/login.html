@@ -1,0 +1,281 @@
+{% extends "practice_logs/base.html" %}
+{% load static %}
+
+{% block title %}登入 - 小提琴練習追蹤系統{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/classical_theme.css' %}">
+<style>
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--parchment-gradient);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .auth-card {
+        background: var(--ivory-white);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: var(--gold-shadow);
+        border: 3px solid var(--classical-gold);
+        max-width: 450px;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .auth-title {
+        font-family: var(--heading-font);
+        color: var(--deep-burgundy);
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 2.5rem;
+        font-weight: 600;
+    }
+    
+    .violin-icon {
+        font-size: 3rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        color: var(--classical-gold);
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label-auth {
+        font-family: var(--heading-font);
+        color: var(--deep-burgundy);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .btn-auth {
+        background: var(--gold-gradient);
+        border: none;
+        color: var(--midnight-blue);
+        font-family: var(--heading-font);
+        font-weight: 600;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        width: 100%;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--gold-shadow);
+        color: var(--midnight-blue);
+    }
+    
+    .auth-links {
+        text-align: center;
+        margin-top: 2rem;
+    }
+    
+    .auth-links a {
+        color: var(--classical-gold);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+    
+    .auth-links a:hover {
+        color: var(--warm-amber);
+    }
+    
+    .floating-notes {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    .note {
+        position: absolute;
+        font-size: 1.5rem;
+        color: rgba(184, 134, 11, 0.1);
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    .note:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+    .note:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; }
+    .note:nth-child(3) { top: 60%; left: 8%; animation-delay: 2s; }
+    .note:nth-child(4) { bottom: 20%; right: 10%; animation-delay: 3s; }
+    .note:nth-child(5) { bottom: 10%; left: 20%; animation-delay: 4s; }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        33% { transform: translateY(-20px) rotate(10deg); }
+        66% { transform: translateY(10px) rotate(-5deg); }
+    }
+    
+    .welcome-message {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--dark-olive);
+        font-style: italic;
+    }
+    
+    .feature-highlights {
+        background: rgba(184, 134, 11, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 2rem;
+        border: 1px solid rgba(184, 134, 11, 0.2);
+    }
+    
+    .feature-highlights h4 {
+        font-family: var(--heading-font);
+        color: var(--deep-burgundy);
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .feature-highlights ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .feature-highlights li {
+        margin-bottom: 0.3rem;
+        color: var(--dark-olive);
+        font-size: 0.9rem;
+    }
+    
+    .feature-highlights li::before {
+        content: '♪ ';
+        color: var(--classical-gold);
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/classical_animations.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <!-- 浮動音符背景 -->
+    <div class="floating-notes">
+        <div class="note">♪</div>
+        <div class="note">♫</div>
+        <div class="note">♪</div>
+        <div class="note">♫</div>
+        <div class="note">♪</div>
+    </div>
+    
+    <div class="auth-card">
+        <div class="violin-icon">🎻</div>
+        <h1 class="auth-title">歡迎回來</h1>
+        
+        <div class="welcome-message">
+            登入您的小提琴練習追蹤帳戶
+        </div>
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}" class="form-label-auth">
+                    用戶名或電子郵件
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="text-danger mt-1">
+                        {% for error in form.username.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}" class="form-label-auth">
+                    密碼
+                </label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <div class="text-danger mt-1">
+                        {% for error in form.password.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <button type="submit" class="btn-auth">
+                🎼 登入系統
+            </button>
+        </form>
+        
+        <div class="auth-links">
+            <p>還沒有帳戶？ <a href="{% url 'practice_logs:register' %}">立即註冊</a></p>
+            <p><a href="#" onclick="alert('請聯繫系統管理員重設密碼')">忘記密碼？</a></p>
+        </div>
+        
+        <div class="feature-highlights">
+            <h4>🌟 系統特色</h4>
+            <ul>
+                <li>個人化練習記錄追蹤</li>
+                <li>多維度技能評分系統</li>
+                <li>影片上傳與教師回饋</li>
+                <li>古典樂風格精美界面</li>
+                <li>學習進度視覺化分析</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 添加登入表單動畫
+    const authCard = document.querySelector('.auth-card');
+    authCard.style.animation = 'fadeInUp 0.8s ease-out';
+    
+    // 表單驗證
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const username = document.getElementById('{{ form.username.id_for_label }}').value;
+        const password = document.getElementById('{{ form.password.id_for_label }}').value;
+        
+        if (!username.trim() || !password.trim()) {
+            e.preventDefault();
+            alert('請填寫完整的登入資訊');
+            return false;
+        }
+        
+        // 顯示登入動畫
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '🎵 登入中...';
+        submitBtn.disabled = true;
+    });
+    
+    // 初始化古典動畫效果
+    if (window.classicalAnimations) {
+        window.classicalAnimations.createFloatingNotes();
+    }
+});
+</script>
+{% endblock %}

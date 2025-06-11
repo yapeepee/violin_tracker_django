@@ -169,6 +169,40 @@
         transition: all var(--transition-normal);
     }
 
+    /* 時間段按鈕組 */
+    .btn-group .btn {
+        position: relative;
+        border: 2px solid var(--color-violin);
+        color: var(--color-violin);
+        background-color: transparent;
+        margin-right: 2px;
+    }
+
+    .btn-group .btn:hover {
+        background-color: var(--color-violin);
+        color: var(--color-score);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-group .btn.active {
+        background-color: var(--color-violin);
+        color: var(--color-score);
+        border-color: var(--color-violin);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+
+    .btn-group .btn.active::before {
+        content: "♪";
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        font-size: 1rem;
+        color: var(--color-brass);
+        animation: pulse 1.5s infinite;
+    }
+
     /* 首頁按鈕 */
     .home-button {
         position: relative;
@@ -675,7 +709,145 @@
         }
     }
 
+    // 全局圖表管理器
+    window.globalCharts = window.globalCharts || {};
+    
+    // 全局圖表銷毀函數
+    window.destroyAllGlobalCharts = function() {
+        console.log('🗑️ 銷毀所有全局圖表...');
+        Object.keys(window.globalCharts).forEach(chartId => {
+            if (window.globalCharts[chartId]) {
+                try {
+                    window.globalCharts[chartId].destroy();
+                    console.log(`🗑️ 銷毀圖表: ${chartId}`);
+                } catch (error) {
+                    console.warn(`⚠️ 銷毀圖表時發生錯誤 ${chartId}:`, error);
+                }
+                delete window.globalCharts[chartId];
+            }
+        });
+    };
+
     // 啟動應用
     initializeApp();
+
+    // 時間段切換功能
+    function initTimePeriodControls() {
+        const periodButtons = document.querySelectorAll('[data-days]');
+        const studentName = '{{ student_name|escapejs }}';
+        
+        // 獲取當前URL參數中的days值
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentDays = urlParams.get('days') || '30'; // 預設30天
+        
+        // 設置初始的活動按鈕狀態
+        periodButtons.forEach(btn => {
+            const days = btn.getAttribute('data-days');
+            btn.classList.remove('active');
+            if (days === currentDays) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // 為每個時間段按鈕添加點擊事件
+        periodButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const days = this.getAttribute('data-days');
+                
+                // 更新按鈕狀態
+                periodButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 更新URL參數
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('days', days);
+                window.history.pushState({}, '', newUrl);
+                
+                // 重新載入所有圖表
+                refreshAllCharts(studentName);
+            });
+        });
+    }
+    
+    // 更新頁面上方統計區域
+    async function updateTopStats(studentName) {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            params.set('student_name', studentName);
+            
+            const response = await fetch(`/api/period-stats/?${params}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const stats = await response.json();
+            console.log('📊 更新頁面統計:', stats);
+            
+            // 更新統計卡片
+            document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = 
+                `${stats.total_practice_time}`;
+            document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = 
+                `${stats.total_sessions}`;
+            document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = 
+                `${stats.avg_rating}`;
+            document.querySelector('.stat-card:nth-child(4) .stat-value').textContent = 
+                `${stats.avg_session_length}`;
+                
+        } catch (error) {
+            console.error('更新統計數據時發生錯誤:', error);
+        }
+    }
+
+    // 重新載入所有圖表的函數
+    async function refreshAllCharts(studentName) {
+        if (!studentName || studentName.trim() === '') {
+            console.warn('未提供學生姓名');
+            return;
+        }
+        
+        try {
+            // 等待模組載入
+            const [chartsModule] = await Promise.all([
+                import('{% static "js/charts/charts.js" %}')
+            ]);
+            
+            const {
+                loadWeeklyData,
+                loadPieceData,
+                loadRecentTrendData,
+                loadFocusStats,
+                loadPieceEffectivenessData,
+                loadTimeEffectAnalysis,
+                destroyAllCharts
+            } = chartsModule;
+            
+            // 先銷毀所有現有圖表
+            window.destroyAllGlobalCharts();
+            
+            // 並行更新統計數據和圖表
+            await Promise.all([
+                updateTopStats(studentName),
+                loadWeeklyData(studentName),
+                loadPieceData(studentName),
+                loadRecentTrendData(studentName),
+                loadFocusStats(studentName),
+                loadPieceEffectivenessData(studentName),
+                loadTimeEffectAnalysis(studentName)
+            ]);
+            
+            console.log('所有圖表和統計已更新');
+        } catch (error) {
+            console.error('重新載入圖表時發生錯誤:', error);
+        }
+    }
+    
+    // 在頁面載入完成後初始化時間段控制
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTimePeriodControls);
+    } else {
+        initTimePeriodControls();
+    }
 </script>
 {% endblock %}

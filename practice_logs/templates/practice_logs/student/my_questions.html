@@ -1,0 +1,487 @@
+{% extends 'practice_logs/base.html' %}
+{% load static %}
+
+{% block title %}我的提問 - 小提琴練習系統{% endblock %}
+
+{% block extra_css %}
+<style>
+    .my-questions-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .page-title {
+        color: #2c5f3d;
+        margin: 0;
+    }
+    
+    .btn-ask {
+        background: #2c5f3d;
+        color: white;
+        padding: 10px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-ask:hover {
+        background: #1e7c5e;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    }
+    
+    .stat-number {
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .questions-section {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .question-item {
+        border-bottom: 1px solid #eee;
+        padding: 25px 0;
+        transition: background 0.2s ease;
+    }
+    
+    .question-item:hover {
+        background: #f8f9fa;
+        margin: 0 -30px;
+        padding: 25px 30px;
+    }
+    
+    .question-item:last-child {
+        border-bottom: none;
+    }
+    
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    
+    .question-title {
+        font-size: 1.2em;
+        color: #2c5f3d;
+        text-decoration: none;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+    }
+    
+    .question-title:hover {
+        color: #1e7c5e;
+    }
+    
+    .question-meta {
+        display: flex;
+        gap: 20px;
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+    
+    .status-pending {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+    
+    .status-answered {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .status-closed {
+        background: #f5f5f5;
+        color: #757575;
+    }
+    
+    .question-preview {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+    
+    .answer-section {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        border-left: 4px solid #2c5f3d;
+    }
+    
+    .answer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .answer-teacher {
+        font-weight: 600;
+        color: #2c5f3d;
+    }
+    
+    .answer-time {
+        color: #999;
+        font-size: 0.85em;
+    }
+    
+    .answer-content {
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .btn-small {
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-view {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+    
+    .btn-view:hover {
+        background: #bbdefb;
+    }
+    
+    .btn-rate {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+    
+    .btn-rate:hover {
+        background: #ffe0b2;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+    
+    .empty-state i {
+        font-size: 4em;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+        color: #666;
+        margin-bottom: 10px;
+    }
+    
+    .priority-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    
+    .priority-high {
+        background: #ff5252;
+    }
+    
+    .priority-medium {
+        background: #ffa726;
+    }
+    
+    .priority-low {
+        background: #66bb6a;
+    }
+    
+    .new-badge {
+        background: #ff5252;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75em;
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="my-questions-container">
+    <div class="page-header">
+        <h1 class="page-title">我的提問</h1>
+        <a href="{% url 'practice_logs:student_ask_question' %}" class="btn-ask">
+            <i class="fas fa-plus"></i> 提出新問題
+        </a>
+    </div>
+    
+    <!-- 統計卡片 -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number text-primary">{{ stats.total }}</div>
+            <div class="stat-label">總提問數</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-warning">{{ stats.pending }}</div>
+            <div class="stat-label">待回答</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-success">{{ stats.answered }}</div>
+            <div class="stat-label">已回答</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-secondary">{{ stats.closed }}</div>
+            <div class="stat-label">已關閉</div>
+        </div>
+    </div>
+    
+    <!-- 問題列表 -->
+    <div class="questions-section">
+        {% if page_obj %}
+            {% for question in page_obj %}
+            <div class="question-item">
+                <div class="question-header">
+                    <div>
+                        <a href="#" class="question-title" onclick="toggleQuestion({{ question.id }}); return false;">
+                            {{ question.title }}
+                            {% if question.answers.exists and not question.student_read %}
+                            <span class="new-badge">新回覆</span>
+                            {% endif %}
+                        </a>
+                        <div class="question-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                {{ question.created_at|date:"Y/m/d H:i" }}
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-tag"></i>
+                                {{ question.category.name }}
+                            </div>
+                            <div class="meta-item">
+                                <span class="priority-indicator priority-{{ question.priority }}"></span>
+                                {{ question.get_priority_display }}
+                            </div>
+                            {% if question.teacher %}
+                            <div class="meta-item">
+                                <i class="fas fa-user-tie"></i>
+                                指定：{{ question.teacher.profile.display_name|default:question.teacher.username }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="status-badge status-{{ question.status }}">
+                        {{ question.get_status_display }}
+                    </span>
+                </div>
+                
+                <div class="question-preview">
+                    {{ question.question_text|truncatewords:30 }}
+                </div>
+                
+                <!-- 展開的問題內容 -->
+                <div id="question-detail-{{ question.id }}" style="display: none;">
+                    <div class="question-content mt-3">
+                        {{ question.question_text|linebreaks }}
+                    </div>
+                    
+                    {% if question.answers.exists %}
+                        {% for answer in question.answers.all %}
+                        <div class="answer-section">
+                            <div class="answer-header">
+                                <span class="answer-teacher">
+                                    <i class="fas fa-user-tie"></i>
+                                    {{ answer.teacher.profile.display_name|default:answer.teacher.username }} 回答
+                                </span>
+                                <span class="answer-time">{{ answer.created_at|timesince }}前</span>
+                            </div>
+                            <div class="answer-content">
+                                {{ answer.answer_text|linebreaks }}
+                            </div>
+                            
+                            <div class="action-buttons">
+                                <button class="btn-small btn-rate" onclick="rateAnswer({{ answer.id }}, true)">
+                                    <i class="fas fa-thumbs-up"></i> 有幫助
+                                </button>
+                                <button class="btn-small btn-rate" onclick="rateAnswer({{ answer.id }}, false)">
+                                    <i class="fas fa-thumbs-down"></i> 沒幫助
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <div class="action-buttons mt-3">
+                        {% if question.status == 'pending' %}
+                        <a href="{% url 'practice_logs:student_ask_question' %}" class="btn-small btn-view">
+                            <i class="fas fa-edit"></i> 編輯問題
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- 分頁 -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            上一頁
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            下一頁
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>還沒有提出任何問題</h3>
+                <p>有疑問嗎？點擊上方按鈕向教師提問！</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 展開/收起問題詳情
+function toggleQuestion(questionId) {
+    const detail = document.getElementById(`question-detail-${questionId}`);
+    if (detail.style.display === 'none') {
+        detail.style.display = 'block';
+        // 標記為已讀
+        markAsRead(questionId);
+    } else {
+        detail.style.display = 'none';
+    }
+}
+
+// 標記問題為已讀
+function markAsRead(questionId) {
+    // 可以發送 AJAX 請求標記為已讀
+    const newBadge = document.querySelector(`#question-${questionId} .new-badge`);
+    if (newBadge) {
+        newBadge.remove();
+    }
+}
+
+// 評價回答
+function rateAnswer(answerId, helpful) {
+    fetch(`{% url 'practice_logs:rate_answer' 0 %}`.replace('0', answerId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ helpful: helpful })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 顯示成功提示
+            const btn = event.target.closest('button');
+            btn.disabled = true;
+            btn.innerHTML = helpful ? 
+                '<i class="fas fa-check"></i> 已評價' : 
+                '<i class="fas fa-check"></i> 已評價';
+        } else {
+            alert(data.error || '評價失敗');
+        }
+    });
+}
+
+// 自動展開有新回覆的問題
+document.addEventListener('DOMContentLoaded', function() {
+    const newBadges = document.querySelectorAll('.new-badge');
+    if (newBadges.length === 1) {
+        // 如果只有一個新回覆，自動展開
+        const questionTitle = newBadges[0].closest('.question-title');
+        if (questionTitle) {
+            questionTitle.click();
+        }
+    }
+});
+</script>
+{% endblock %}

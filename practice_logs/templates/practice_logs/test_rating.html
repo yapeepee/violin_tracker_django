@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試動態評分系統</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        .rating-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .rating-item {
+            text-align: center;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .rating-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .rating-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        .rating-stars {
+            display: flex;
+            gap: 0.25rem;
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+            justify-content: center;
+        }
+        .rating-star {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #ddd;
+        }
+        .rating-star.active,
+        .rating-star:hover {
+            color: #B8860B;
+            transform: scale(1.1);
+        }
+        .rating-star.musical-note::before {
+            content: '♪';
+        }
+        .rating-star.musical-note.active::before {
+            content: '♫';
+        }
+        .rating-placeholder {
+            padding: 2rem;
+            text-align: center;
+            background: rgba(184, 134, 11, 0.05);
+            border-radius: 8px;
+            border: 2px dashed rgba(184, 134, 11, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎻 動態評分系統測試</h1>
+        
+        <div>
+            <label for="focus">練習重點：</label>
+            <select class="form-control" id="focus" name="focus">
+                <option value="technique">技巧練習</option>
+                <option value="expression">表現力</option>
+                <option value="rhythm">節奏</option>
+                <option value="sight_reading">視奏</option>
+                <option value="memorization">記譜</option>
+                <option value="ensemble">重奏</option>
+                <option value="other">其他</option>
+            </select>
+        </div>
+        
+        <div id="dynamic-rating-section" class="rating-section">
+            <div class="rating-placeholder">
+                <p>請選擇練習重點</p>
+            </div>
+        </div>
+        
+        <div id="debug-info" style="background: #f0f0f0; padding: 1rem; border-radius: 4px; margin-top: 2rem;">
+            <h3>調試信息：</h3>
+            <div id="debug-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // 練習重點評分配置
+        const FOCUS_RATING_CONFIG = {
+            'technique': {
+                'name': '技巧練習',
+                'ratings': [
+                    ['technique_bow_control', '運弓控制', '運弓技巧和控制力'],
+                    ['technique_finger_position', '按弦準確度', '左手按弦位置準確性'],
+                    ['technique_intonation', '音準', '音高準確度'],
+                ]
+            },
+            'expression': {
+                'name': '表現力',
+                'ratings': [
+                    ['expression_dynamics', '力度變化', '音量強弱的表現控制'],
+                    ['expression_phrasing', '樂句處理', '音樂線條與樂句表現'],
+                    ['expression_emotion', '情感表達', '音樂情感的傳達'],
+                ]
+            },
+            'rhythm': {
+                'name': '節奏',
+                'ratings': [
+                    ['rhythm_tempo_stability', '速度穩定度', '節拍速度保持穩定'],
+                    ['rhythm_pattern_accuracy', '節奏型準確度', '複雜節奏型的準確演奏'],
+                    ['technique_intonation', '音準配合', '節奏中的音準維持'],
+                ]
+            },
+            'sight_reading': {
+                'name': '視奏',
+                'ratings': [
+                    ['sight_reading_fluency', '視奏流暢度', '第一次看譜演奏的流暢程度'],
+                    ['sight_reading_accuracy', '視奏準確度', '音符、節奏讀譜準確度'],
+                    ['rhythm_tempo_stability', '速度控制', '視奏時的速度穩定性'],
+                ]
+            },
+            'memorization': {
+                'name': '記譜',
+                'ratings': [
+                    ['memorization_stability', '記憶穩定度', '背譜演奏的穩定程度'],
+                    ['memorization_confidence', '記譜信心', '背譜演奏的自信程度'],
+                    ['technique_intonation', '音準穩定', '背譜時的音準維持'],
+                ]
+            },
+            'ensemble': {
+                'name': '重奏',
+                'ratings': [
+                    ['ensemble_listening', '聆聽配合', '與其他聲部的聆聽配合'],
+                    ['ensemble_timing', '時間同步', '與其他樂器的時間同步'],
+                    ['expression_dynamics', '音量平衡', '在合奏中的音量控制'],
+                ]
+            },
+            'other': {
+                'name': '其他',
+                'ratings': [
+                    ['technique_bow_control', '技巧表現', '整體技巧展現'],
+                    ['expression_emotion', '音樂表現', '整體音樂性表現'],
+                    ['rhythm_tempo_stability', '穩定度', '整體演奏穩定性'],
+                ]
+            }
+        };
+
+        function debug(message) {
+            const debugOutput = document.getElementById('debug-output');
+            const time = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `<div>[${time}] ${message}</div>`;
+            console.log(message);
+        }
+
+        function initDynamicRatingSystem() {
+            const focusSelect = document.getElementById('focus');
+            
+            if (!focusSelect) {
+                debug('錯誤：練習重點選擇器未找到！');
+                return;
+            }
+            
+            debug(`初始化動態評分系統，當前選項: ${focusSelect.value}`);
+            
+            // 監聽練習重點變化
+            focusSelect.addEventListener('change', function() {
+                debug(`練習重點已變更為: ${this.value}`);
+                updateRatingSection(this.value);
+            });
+            
+            // 初始化預設評分區塊
+            updateRatingSection(focusSelect.value);
+        }
+
+        function updateRatingSection(focusType) {
+            const ratingSection = document.getElementById('dynamic-rating-section');
+            
+            if (!ratingSection) {
+                debug('錯誤：評分區域元素未找到');
+                return;
+            }
+            
+            debug(`更新評分區塊，類型: ${focusType}`);
+            
+            if (!FOCUS_RATING_CONFIG[focusType]) {
+                debug(`錯誤：找不到配置 ${focusType}`);
+                ratingSection.innerHTML = '<div class="rating-placeholder"><p>找不到對應的評分配置</p></div>';
+                return;
+            }
+            
+            const config = FOCUS_RATING_CONFIG[focusType];
+            debug(`找到配置: ${config.name}，包含 ${config.ratings.length} 個評分項目`);
+            
+            let html = '';
+            
+            config.ratings.forEach(([fieldName, displayName, description]) => {
+                html += `
+                    <div class="rating-item">
+                        <label class="rating-label">${displayName}</label>
+                        <p class="rating-description">${description}</p>
+                        <div class="rating-stars" data-field="${fieldName}">
+                            <span class="rating-star musical-note" data-value="1"></span>
+                            <span class="rating-star musical-note" data-value="2"></span>
+                            <span class="rating-star musical-note" data-value="3"></span>
+                            <span class="rating-star musical-note" data-value="4"></span>
+                            <span class="rating-star musical-note" data-value="5"></span>
+                        </div>
+                        <input type="hidden" name="${fieldName}" value="3">
+                    </div>
+                `;
+            });
+            
+            ratingSection.innerHTML = html;
+            debug(`評分HTML已更新，包含 ${config.ratings.length} 個評分項目`);
+            
+            // 重新初始化星級評分
+            initRatingStars();
+        }
+
+        function initRatingStars() {
+            debug('初始化星級評分系統');
+            
+            document.querySelectorAll('.rating-stars').forEach(ratingContainer => {
+                const stars = ratingContainer.querySelectorAll('.rating-star');
+                const hiddenInput = ratingContainer.parentElement.querySelector('input[type="hidden"]');
+                const currentRating = parseInt(hiddenInput.value);
+                
+                // 設置初始評分顯示
+                updateStarDisplay(stars, currentRating);
+                
+                stars.forEach((star, index) => {
+                    star.addEventListener('click', function() {
+                        const rating = parseInt(this.dataset.value);
+                        hiddenInput.value = rating;
+                        updateStarDisplay(stars, rating);
+                        debug(`評分已更新: ${hiddenInput.name} = ${rating}`);
+                    });
+                    
+                    star.addEventListener('mouseenter', function() {
+                        const rating = parseInt(this.dataset.value);
+                        updateStarDisplay(stars, rating);
+                    });
+                });
+                
+                ratingContainer.addEventListener('mouseleave', function() {
+                    const currentRating = parseInt(hiddenInput.value);
+                    updateStarDisplay(stars, currentRating);
+                });
+            });
+        }
+
+        function updateStarDisplay(stars, rating) {
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            debug('頁面載入完成，開始初始化');
+            initDynamicRatingSystem();
+        });
+    </script>
+</body>
+</html>

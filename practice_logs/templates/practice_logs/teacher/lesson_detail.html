@@ -1,0 +1,803 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}課程詳情 - {{ lesson.student.profile.display_name|default:lesson.student.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 容器 */
+.lesson-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 頁面標題 */
+.page-header {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.page-title {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-scheduled {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-completed {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.status-cancelled {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+.status-rescheduled {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.status-no_show {
+    background: #fafafa;
+    color: #616161;
+}
+
+/* 主要內容佈局 */
+.lesson-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+/* 課程資訊卡片 */
+.info-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c5f3d;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 資訊列表 */
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.info-value {
+    color: #333;
+    font-weight: 400;
+}
+
+/* 課程筆記區 */
+.notes-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.notes-content {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    color: #444;
+}
+
+.empty-notes {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+}
+
+/* 操作按鈕 */
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #2c5f3d;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #245030;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #333;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+/* 歷史課程 */
+.history-lesson {
+    padding: 15px;
+    border-radius: 10px;
+    background: #f8f9fa;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.history-lesson:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.history-date {
+    font-weight: 600;
+    color: #2c5f3d;
+    margin-bottom: 5px;
+}
+
+.history-info {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* 學生進度 */
+.progress-section {
+    background: #e8f5e9;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.skill-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.skill-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.skill-name {
+    flex: 1;
+    font-weight: 500;
+    color: #333;
+}
+
+.skill-level {
+    display: flex;
+    gap: 3px;
+}
+
+.star {
+    color: #ddd;
+    font-size: 1.2rem;
+}
+
+.star.filled {
+    color: #ffc107;
+}
+
+/* 詳細筆記表單 */
+.detailed-notes-form {
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2c5f3d;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* 模態框 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    margin: 5% auto;
+    padding: 30px;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 20px;
+    box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.close-modal {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+/* 響應式設計 */
+@media (max-width: 1024px) {
+    .lesson-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .lesson-detail-container {
+        padding: 10px;
+    }
+    
+    .page-header {
+        padding: 20px;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lesson-detail-container">
+    <!-- 頁面標題 -->
+    <div class="page-header">
+        <h1 class="page-title">
+            📚 課程詳情
+            <span class="status-badge status-{{ lesson.status }}">
+                {{ lesson.get_status_display }}
+            </span>
+        </h1>
+        <p class="text-muted">
+            {{ lesson.student.profile.display_name|default:lesson.student.username }} - 
+            {{ lesson.lesson_date|date:"Y年m月d日" }} 
+            {{ lesson.start_time|time:"H:i" }}
+        </p>
+    </div>
+    
+    <div class="lesson-main">
+        <!-- 左側：主要資訊 -->
+        <div>
+            <!-- 基本資訊 -->
+            <div class="info-card">
+                <h2 class="card-title">
+                    <i class="fas fa-info-circle"></i> 課程資訊
+                </h2>
+                
+                <ul class="info-list">
+                    <li class="info-item">
+                        <span class="info-label">課程類型</span>
+                        <span class="info-value">{{ lesson.get_lesson_type_display }}</span>
+                    </li>
+                    <li class="info-item">
+                        <span class="info-label">課程日期</span>
+                        <span class="info-value">{{ lesson.lesson_date|date:"Y年m月d日 (l)" }}</span>
+                    </li>
+                    <li class="info-item">
+                        <span class="info-label">上課時間</span>
+                        <span class="info-value">
+                            {{ lesson.start_time|time:"H:i" }} - 
+                            {% if lesson.end_time %}
+                                {{ lesson.end_time|time:"H:i" }}
+                            {% else %}
+                                {{ lesson.calculated_end_time|time:"H:i" }}
+                            {% endif %}
+                            ({{ lesson.duration_minutes }}分鐘)
+                        </span>
+                    </li>
+                    <li class="info-item">
+                        <span class="info-label">課程主題</span>
+                        <span class="info-value">{{ lesson.topic|default:"未設定" }}</span>
+                    </li>
+                    {% if lesson.original_date %}
+                    <li class="info-item">
+                        <span class="info-label">原定日期</span>
+                        <span class="info-value">{{ lesson.original_date|date:"Y年m月d日" }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- 操作按鈕 -->
+                <div class="action-buttons">
+                    {% if lesson.status == 'scheduled' %}
+                        <button class="btn btn-success" onclick="updateStatus('completed')">
+                            <i class="fas fa-check"></i> 標記完成
+                        </button>
+                        <a href="{% url 'practice_logs:reschedule_lesson' lesson.id %}" class="btn btn-warning">
+                            <i class="fas fa-calendar-alt"></i> 改期
+                        </a>
+                        <button class="btn btn-danger" onclick="updateStatus('cancelled')">
+                            <i class="fas fa-times"></i> 取消課程
+                        </button>
+                    {% elif lesson.status == 'completed' %}
+                        <a href="{% url 'practice_logs:create_lesson_note' lesson.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> 編輯詳細筆記
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'practice_logs:lesson_calendar' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> 返回日曆
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 課程內容 -->
+            {% if lesson.objectives or lesson.materials_needed %}
+            <div class="info-card">
+                <h2 class="card-title">
+                    <i class="fas fa-clipboard-list"></i> 課程規劃
+                </h2>
+                
+                {% if lesson.objectives %}
+                <div class="notes-section">
+                    <h4>學習目標</h4>
+                    <div class="notes-content">{{ lesson.objectives }}</div>
+                </div>
+                {% endif %}
+                
+                {% if lesson.materials_needed %}
+                <div class="notes-section">
+                    <h4>所需教材</h4>
+                    <div class="notes-content">{{ lesson.materials_needed }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- 課程筆記 -->
+            {% if lesson.status == 'completed' %}
+            <div class="info-card">
+                <h2 class="card-title">
+                    <i class="fas fa-sticky-note"></i> 課程筆記
+                </h2>
+                
+                {% if lesson_note %}
+                    <!-- 顯示詳細筆記 -->
+                    <div class="detailed-notes">
+                        {% if lesson_note.warm_up_exercises %}
+                        <div class="notes-section">
+                            <h4>熱身練習</h4>
+                            <div class="notes-content">{{ lesson_note.warm_up_exercises }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if lesson_note.technique_work %}
+                        <div class="notes-section">
+                            <h4>技巧練習</h4>
+                            <div class="notes-content">{{ lesson_note.technique_work }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if lesson_note.repertoire_covered %}
+                        <div class="notes-section">
+                            <h4>練習曲目</h4>
+                            <div class="notes-content">{{ lesson_note.repertoire_covered }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if lesson_note.improvements_noted %}
+                        <div class="notes-section">
+                            <h4>進步表現</h4>
+                            <div class="notes-content">{{ lesson_note.improvements_noted }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if lesson_note.areas_need_work %}
+                        <div class="notes-section">
+                            <h4>需加強部分</h4>
+                            <div class="notes-content">{{ lesson_note.areas_need_work }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                {% elif lesson.lesson_notes %}
+                    <div class="notes-section">
+                        <div class="notes-content">{{ lesson.lesson_notes }}</div>
+                    </div>
+                {% else %}
+                    <div class="empty-notes">
+                        <i class="fas fa-sticky-note" style="font-size: 3rem; color: #ddd;"></i>
+                        <p>尚未添加課程筆記</p>
+                        <a href="{% url 'practice_logs:create_lesson_note' lesson.id %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 添加筆記
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- 右側：側邊資訊 -->
+        <div>
+            <!-- 學生資訊 -->
+            <div class="info-card">
+                <h2 class="card-title">
+                    <i class="fas fa-user-graduate"></i> 學生資訊
+                </h2>
+                
+                <ul class="info-list">
+                    <li class="info-item">
+                        <span class="info-label">姓名</span>
+                        <span class="info-value">
+                            <a href="{% url 'practice_logs:student_detail' lesson.student.id %}">
+                                {{ lesson.student.profile.display_name|default:lesson.student.username }}
+                            </a>
+                        </span>
+                    </li>
+                    {% if lesson.student.profile.skill_level %}
+                    <li class="info-item">
+                        <span class="info-label">程度</span>
+                        <span class="info-value">{{ lesson.student.profile.get_skill_level_display }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                {% if progress %}
+                <div class="progress-section">
+                    <h4>學習進度</h4>
+                    <div class="skill-grid">
+                        <div class="skill-item">
+                            <span class="skill-name">音準</span>
+                            <div class="skill-level">
+                                {% for i in "12345" %}
+                                    <span class="star {% if forloop.counter <= progress.pitch_accuracy %}filled{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">節奏</span>
+                            <div class="skill-level">
+                                {% for i in "12345" %}
+                                    <span class="star {% if forloop.counter <= progress.rhythm_precision %}filled{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">音色</span>
+                            <div class="skill-level">
+                                {% for i in "12345" %}
+                                    <span class="star {% if forloop.counter <= progress.tone_quality %}filled{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">技巧</span>
+                            <div class="skill-level">
+                                {% for i in "12345" %}
+                                    <span class="star {% if forloop.counter <= progress.technique_level %}filled{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 歷史課程 -->
+            <div class="info-card">
+                <h2 class="card-title">
+                    <i class="fas fa-history"></i> 歷史課程
+                </h2>
+                
+                {% if history_lessons %}
+                    {% for h_lesson in history_lessons %}
+                    <div class="history-lesson" onclick="location.href='{% url 'practice_logs:lesson_detail' h_lesson.id %}'">
+                        <div class="history-date">
+                            {{ h_lesson.lesson_date|date:"m/d" }} {{ h_lesson.start_time|time:"H:i" }}
+                        </div>
+                        <div class="history-info">
+                            <span class="status-badge status-{{ h_lesson.status }}" style="font-size: 0.8rem; padding: 4px 8px;">
+                                {{ h_lesson.get_status_display }}
+                            </span>
+                            {% if h_lesson.topic %}
+                                · {{ h_lesson.topic|truncatechars:20 }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center">沒有其他課程記錄</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 狀態更新模態框 -->
+<div id="statusModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">更新課程狀態</h2>
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+        </div>
+        
+        <form id="statusForm">
+            <input type="hidden" id="newStatus" name="status">
+            
+            <!-- 完成課程表單 -->
+            <div id="completedForm" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">學生表現評分 (1-5)</label>
+                    <select name="performance_rating" class="form-control">
+                        <option value="">請選擇</option>
+                        <option value="5">5 - 優秀</option>
+                        <option value="4">4 - 良好</option>
+                        <option value="3">3 - 一般</option>
+                        <option value="2">2 - 需改進</option>
+                        <option value="1">1 - 不佳</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">課程筆記</label>
+                    <textarea name="notes" class="form-control" rows="4" placeholder="記錄本次課程的重點內容..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">練習曲目</label>
+                    <input type="text" name="pieces" class="form-control" placeholder="例如：巴哈小步舞曲">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">技巧重點</label>
+                    <input type="text" name="skills" class="form-control" placeholder="例如：弓法、音準">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">作業</label>
+                    <textarea name="homework" class="form-control" rows="3" placeholder="下次上課前需要練習的內容..."></textarea>
+                </div>
+            </div>
+            
+            <!-- 取消/改期原因 -->
+            <div id="reasonForm" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">原因說明</label>
+                    <textarea name="reason" class="form-control" rows="3" placeholder="請說明取消或改期的原因..."></textarea>
+                </div>
+            </div>
+            
+            <div class="action-buttons" style="margin-top: 20px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                    取消
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    確認更新
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// 更新課程狀態
+function updateStatus(status) {
+    const modal = document.getElementById('statusModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const newStatus = document.getElementById('newStatus');
+    const completedForm = document.getElementById('completedForm');
+    const reasonForm = document.getElementById('reasonForm');
+    
+    // 設置狀態
+    newStatus.value = status;
+    
+    // 根據狀態顯示不同的表單
+    if (status === 'completed') {
+        modalTitle.textContent = '標記課程完成';
+        completedForm.style.display = 'block';
+        reasonForm.style.display = 'none';
+    } else if (status === 'cancelled') {
+        modalTitle.textContent = '取消課程';
+        completedForm.style.display = 'none';
+        reasonForm.style.display = 'block';
+    }
+    
+    modal.style.display = 'block';
+}
+
+// 關閉模態框
+function closeModal() {
+    document.getElementById('statusModal').style.display = 'none';
+    document.getElementById('statusForm').reset();
+}
+
+// 提交狀態更新
+document.getElementById('statusForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        status: formData.get('status')
+    };
+    
+    // 根據狀態添加相應的資料
+    if (data.status === 'completed') {
+        data.performance_rating = formData.get('performance_rating');
+        data.notes = formData.get('notes');
+        data.pieces = formData.get('pieces');
+        data.skills = formData.get('skills');
+        data.homework = formData.get('homework');
+    } else if (data.status === 'cancelled') {
+        data.reason = formData.get('reason');
+    }
+    
+    try {
+        const response = await fetch('{% url "practice_logs:update_lesson_status" lesson.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(result.message);
+            window.location.reload();
+        } else {
+            alert('更新失敗：' + result.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('更新時發生錯誤');
+    }
+});
+
+// 點擊模態框外部關閉
+window.onclick = function(event) {
+    const modal = document.getElementById('statusModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+}
+</script>
+{% endblock %}

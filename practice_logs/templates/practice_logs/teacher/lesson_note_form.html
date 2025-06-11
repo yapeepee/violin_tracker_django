@@ -1,0 +1,445 @@
+{% extends 'practice_logs/teacher/base_teacher.html' %}
+{% load static %}
+
+{% block title %}課程筆記 - {{ lesson.student.profile.display_name|default:lesson.student.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 容器 */
+.note-form-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 頁面標題 */
+.page-header {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.page-title {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.lesson-info {
+    color: #666;
+    font-size: 1rem;
+}
+
+/* 表單卡片 */
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+/* 表單區塊 */
+.form-section {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c5f3d;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 表單元素 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-hint {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2c5f3d;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* 快速輸入按鈕 */
+.quick-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.quick-btn {
+    padding: 6px 12px;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-btn:hover {
+    background: #2c5f3d;
+    color: white;
+    border-color: #2c5f3d;
+}
+
+/* 總結區 */
+.summary-section {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+/* 提交按鈕 */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.auto-save-indicator {
+    color: #666;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #2c5f3d;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #245030;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* 提示工具 */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+    color: #999;
+    margin-left: 5px;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+    background: #333;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 12px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    width: 200px;
+    transition: opacity 0.3s;
+    font-size: 0.85rem;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .note-form-container {
+        padding: 10px;
+    }
+    
+    .form-card {
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .auto-save-indicator {
+        order: -1;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="note-form-container">
+    <!-- 頁面標題 -->
+    <div class="page-header">
+        <h1 class="page-title">📝 課程筆記</h1>
+        <p class="lesson-info">
+            <strong>{{ lesson.student.profile.display_name|default:lesson.student.username }}</strong> - 
+            {{ lesson.lesson_date|date:"Y年m月d日" }} {{ lesson.start_time|time:"H:i" }}
+        </p>
+    </div>
+    
+    <form method="post" id="lessonNoteForm">
+        {% csrf_token %}
+        
+        <!-- 課程總結 -->
+        <div class="summary-section">
+            <h2 class="section-title">
+                <i class="fas fa-clipboard"></i> 課程總結
+                <span class="tooltip">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="tooltip-text">簡短總結本次課程的重點</span>
+                </span>
+            </h2>
+            <div class="form-group">
+                <textarea name="summary" 
+                          class="form-control" 
+                          placeholder="簡述本次課程的重點和學生表現..."
+                          rows="3">{{ lesson.lesson_notes }}</textarea>
+            </div>
+        </div>
+        
+        <div class="form-card">
+            <!-- 課前準備 -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-book-open"></i> 課前準備
+                </h3>
+                
+                <div class="form-group">
+                    <label class="form-label">課程計畫</label>
+                    <textarea name="pre_lesson_plan" 
+                              class="form-control" 
+                              placeholder="本次課程的教學目標和計畫...">{{ lesson_note.pre_lesson_plan|default:'' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">熱身練習</label>
+                    <textarea name="warm_up_exercises" 
+                              class="form-control" 
+                              placeholder="音階、練習曲、技巧熱身等...">{{ lesson_note.warm_up_exercises|default:'' }}</textarea>
+                    <div class="quick-inputs">
+                        <button type="button" class="quick-btn" onclick="appendText('warm_up_exercises', 'C大調音階')">C大調音階</button>
+                        <button type="button" class="quick-btn" onclick="appendText('warm_up_exercises', 'G大調音階')">G大調音階</button>
+                        <button type="button" class="quick-btn" onclick="appendText('warm_up_exercises', '弓法練習')">弓法練習</button>
+                        <button type="button" class="quick-btn" onclick="appendText('warm_up_exercises', '顫音練習')">顫音練習</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 課程內容 -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-music"></i> 課程內容
+                </h3>
+                
+                <div class="form-group">
+                    <label class="form-label">技巧練習</label>
+                    <textarea name="technique_work" 
+                              class="form-control" 
+                              placeholder="本次課程練習的技巧項目...">{{ lesson_note.technique_work|default:'' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">練習曲目</label>
+                    <textarea name="repertoire_covered" 
+                              class="form-control" 
+                              placeholder="練習的樂曲和進度...">{{ lesson_note.repertoire_covered|default:'' }}</textarea>
+                </div>
+            </div>
+            
+            <!-- 學生表現 -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user-check"></i> 學生表現
+                </h3>
+                
+                <div class="form-group">
+                    <label class="form-label">發現的問題</label>
+                    <textarea name="problems_identified" 
+                              class="form-control" 
+                              placeholder="學生在演奏中出現的問題...">{{ lesson_note.problems_identified|default:'' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">解決方案</label>
+                    <textarea name="solutions_provided" 
+                              class="form-control" 
+                              placeholder="針對問題提供的練習方法和建議...">{{ lesson_note.solutions_provided|default:'' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">進步表現</label>
+                    <textarea name="improvements_noted" 
+                              class="form-control" 
+                              placeholder="學生相較上次的進步...">{{ lesson_note.improvements_noted|default:'' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">需加強部分</label>
+                    <textarea name="areas_need_work" 
+                              class="form-control" 
+                              placeholder="仍需要持續練習的部分...">{{ lesson_note.areas_need_work|default:'' }}</textarea>
+                </div>
+            </div>
+            
+            <!-- 後續計畫 -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-forward"></i> 後續計畫
+                </h3>
+                
+                <div class="form-group">
+                    <label class="form-label">下次課程計畫</label>
+                    <textarea name="next_lesson_plan" 
+                              class="form-control" 
+                              placeholder="下次課程的教學重點...">{{ lesson_note.next_lesson_plan|default:'' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">家長溝通事項</label>
+                    <textarea name="parent_communication" 
+                              class="form-control" 
+                              placeholder="需要告知家長的事項（選填）...">{{ lesson_note.parent_communication|default:'' }}</textarea>
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i> 
+                        這些內容會在家長查看時顯示
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 提交按鈕 -->
+            <div class="form-actions">
+                <div class="auto-save-indicator">
+                    <i class="fas fa-save"></i>
+                    <span id="saveStatus">自動儲存已啟用</span>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 儲存筆記
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// 快速輸入功能
+function appendText(fieldName, text) {
+    const field = document.querySelector(`textarea[name="${fieldName}"]`);
+    if (field.value) {
+        field.value += '、' + text;
+    } else {
+        field.value = text;
+    }
+    field.focus();
+}
+
+// 自動儲存功能
+let saveTimeout;
+const form = document.getElementById('lessonNoteForm');
+const saveStatus = document.getElementById('saveStatus');
+
+form.addEventListener('input', function() {
+    clearTimeout(saveTimeout);
+    saveStatus.textContent = '正在編輯...';
+    
+    saveTimeout = setTimeout(function() {
+        // 這裡可以實現自動儲存到localStorage或通過AJAX儲存草稿
+        localStorage.setItem('lessonNote_{{ lesson.id }}', JSON.stringify({
+            timestamp: new Date().toISOString(),
+            data: new FormData(form)
+        }));
+        saveStatus.textContent = '已自動儲存';
+        
+        setTimeout(function() {
+            saveStatus.textContent = '自動儲存已啟用';
+        }, 2000);
+    }, 2000);
+});
+
+// 載入草稿
+document.addEventListener('DOMContentLoaded', function() {
+    const savedData = localStorage.getItem('lessonNote_{{ lesson.id }}');
+    if (savedData && !form.querySelector('textarea[name="summary"]').value) {
+        if (confirm('發現未儲存的草稿，是否要載入？')) {
+            // 實現草稿載入邏輯
+        }
+    }
+});
+</script>
+{% endblock %}
