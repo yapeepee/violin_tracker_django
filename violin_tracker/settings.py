@@ -119,10 +119,40 @@ USE_I18N = True
 USE_TZ = True
 
 
+# Cache Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    },
+    # 可選：使用 Redis 作為快取後端（需要安裝 django-redis）
+    # 'default': {
+    #     'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+    #     'LOCATION': 'redis://127.0.0.1:6379/1',
+    #     'OPTIONS': {
+    #         'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+    #     },
+    #     'KEY_PREFIX': 'violin_tracker',
+    #     'TIMEOUT': 300,  # 預設 5 分鐘
+    # }
+}
+
+# Cache key prefix
+CACHE_KEY_PREFIX = 'vt'
+
+# Session engine (可選：使用快取作為 session 儲存)
+# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# SESSION_CACHE_ALIAS = 'default'
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
@@ -149,6 +179,81 @@ RECORDING_UPLOAD_SETTINGS = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'error.log'),
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        'performance_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'performance.log'),
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'practice_logs': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'practice_logs.performance': {
+            'handlers': ['performance_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 # 暫時使用Django內建用戶模型，後續升級為自定義用戶模型
 # AUTH_USER_MODEL = 'practice_logs.CustomUser'

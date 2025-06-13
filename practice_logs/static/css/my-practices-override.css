@@ -1,0 +1,329 @@
+/* 強制覆蓋樣式 - 確保我的紀錄頁面正確顯示 */
+
+/* 重置可能的衝突樣式 */
+.timeline-container-enhanced * {
+    box-sizing: border-box !important;
+}
+
+/* 強制顯示時間軸容器 */
+.timeline-container-enhanced {
+    position: relative !important;
+    padding: 40px 20px !important;
+    min-height: 500px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 確保時間軸中心線可見 */
+.timeline-line-enhanced {
+    position: absolute !important;
+    left: 50% !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 4px !important;
+    background: #E0E0E0 !important;
+    transform: translateX(-50%) !important;
+    z-index: 1 !important;
+}
+
+/* 確保時間軸項目正確顯示 */
+.timeline-item-enhanced {
+    position: relative !important;
+    margin-bottom: 40px !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.timeline-item-enhanced.left {
+    padding-right: calc(50% - 20px) !important;
+    padding-left: 20px !important;
+    justify-content: flex-end !important;
+}
+
+.timeline-item-enhanced.right {
+    padding-left: calc(50% + 20px) !important;
+    padding-right: 20px !important;
+    justify-content: flex-start !important;
+}
+
+/* 確保時間軸內容可見 */
+.timeline-content-enhanced {
+    width: 100% !important;
+    max-width: 500px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 強制練習卡片樣式 */
+.practice-card-enhanced {
+    background: #FFFFFF !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    border: 2px solid #E0E0E0 !important;
+    transition: all 0.3s ease !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.practice-card-enhanced:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15) !important;
+    border-color: #8B4513 !important;
+}
+
+/* 確保日期標籤樣式 */
+.practice-date-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DC 100%) !important;
+    padding: 10px 20px !important;
+    border-radius: 25px !important;
+    font-size: 14px !important;
+    color: #8B4513 !important;
+    margin-bottom: 16px !important;
+    border: 2px solid #FFD7B9 !important;
+    font-weight: 600 !important;
+}
+
+/* 確保練習標題可見 */
+.practice-title-enhanced {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #1A1A1A !important;
+    margin-bottom: 12px !important;
+    line-height: 1.3 !important;
+}
+
+/* 確保練習標籤樣式 */
+.practice-tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin: 16px 0 !important;
+}
+
+.practice-tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: #F5F5F5 !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-size: 14px !important;
+    color: #666 !important;
+    border: 1px solid #E0E0E0 !important;
+    transition: all 0.2s ease !important;
+}
+
+.practice-tag:hover {
+    background: #8B4513 !important;
+    color: #FFFFFF !important;
+    border-color: #8B4513 !important;
+}
+
+.practice-tag i {
+    font-size: 14px !important;
+}
+
+/* 確保時間軸點可見 */
+.timeline-dot-enhanced {
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 24px !important;
+    height: 24px !important;
+    background: #FFFFFF !important;
+    border: 4px solid #8B4513 !important;
+    border-radius: 50% !important;
+    z-index: 5 !important;
+    box-shadow: 0 2px 8px rgba(139, 69, 19, 0.3) !important;
+}
+
+.dot-pulse {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    background: rgba(139, 69, 19, 0.2) !important;
+    transform: translate(-50%, -50%) !important;
+    animation: pulse 2s infinite !important;
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2.5);
+        opacity: 0;
+    }
+}
+
+/* 確保評分星星可見 */
+.practice-rating-enhanced {
+    display: flex !important;
+    gap: 4px !important;
+    margin: 12px 0 !important;
+}
+
+.star-rating {
+    font-size: 20px !important;
+    color: #E0E0E0 !important;
+    transition: all 0.2s ease !important;
+}
+
+.star-rating.filled {
+    color: #FFD700 !important;
+}
+
+/* 確保練習筆記區域樣式 */
+.practice-notes-enhanced {
+    background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%) !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    margin: 16px 0 !important;
+    border: 1px solid #E8DFD3 !important;
+}
+
+.notes-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-weight: 600 !important;
+    color: #666 !important;
+    margin-bottom: 8px !important;
+    cursor: pointer !important;
+}
+
+.notes-content {
+    color: #4A4A4A !important;
+    line-height: 1.6 !important;
+    padding-top: 8px !important;
+}
+
+/* 確保動作按鈕樣式 */
+.practice-actions {
+    display: flex !important;
+    gap: 12px !important;
+    margin-top: 20px !important;
+    padding-top: 20px !important;
+    border-top: 1px solid #F0F0F0 !important;
+    justify-content: flex-end !important;
+}
+
+.action-icon {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: #F5F5F5 !important;
+    border: 2px solid #E0E0E0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    color: #666 !important;
+    font-size: 16px !important;
+}
+
+.action-icon:hover {
+    background: #8B4513 !important;
+    color: #FFFFFF !important;
+    border-color: #8B4513 !important;
+    transform: scale(1.1) !important;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .timeline-line-enhanced {
+        left: 30px !important;
+    }
+    
+    .timeline-item-enhanced {
+        padding-left: 60px !important;
+        padding-right: 20px !important;
+    }
+    
+    .timeline-item-enhanced.left,
+    .timeline-item-enhanced.right {
+        padding-left: 60px !important;
+        padding-right: 20px !important;
+        justify-content: flex-start !important;
+    }
+    
+    .timeline-dot-enhanced {
+        left: 30px !important;
+    }
+    
+    .timeline-content-enhanced {
+        width: 100% !important;
+    }
+    
+    .practice-card-enhanced {
+        padding: 20px !important;
+    }
+    
+    .practice-title-enhanced {
+        font-size: 18px !important;
+    }
+}
+
+/* 確保分頁樣式 */
+.pagination-enhanced {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 60px 0 40px !important;
+    gap: 20px !important;
+    padding: 20px !important;
+    background: #FAF8F5 !important;
+    border-radius: 16px !important;
+}
+
+.page-info {
+    color: #666 !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+}
+
+.page-buttons {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+.page-btn {
+    width: 45px !important;
+    height: 45px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #FFFFFF !important;
+    border: 2px solid #E0E0E0 !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    color: #666 !important;
+    transition: all 0.3s ease !important;
+    font-size: 16px !important;
+}
+
+.page-btn:hover {
+    background: #8B4513 !important;
+    color: #FFFFFF !important;
+    border-color: #8B4513 !important;
+    transform: translateY(-2px) !important;
+}
+
+/* 調試用 - 確保所有元素可見 */
+.timeline-container-enhanced,
+.timeline-container-enhanced * {
+    visibility: visible !important;
+    opacity: 1 !important;
+}

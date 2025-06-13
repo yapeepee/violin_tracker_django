@@ -1,0 +1,279 @@
+/* 我的紀錄頁面樣式修復 */
+
+/* 確保基本的容器樣式 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 修復時間軸容器基本樣式 */
+.timeline-container-enhanced {
+    position: relative;
+    padding: 40px 0;
+    min-height: 500px;
+}
+
+/* 確保時間軸項目可見 */
+.timeline-item-enhanced {
+    position: relative;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.timeline-item-enhanced.left {
+    padding-right: 50%;
+    justify-content: flex-end;
+}
+
+.timeline-item-enhanced.right {
+    padding-left: 50%;
+    justify-content: flex-start;
+}
+
+/* 時間軸內容基本樣式 */
+.timeline-content-enhanced {
+    width: 90%;
+    max-width: 500px;
+}
+
+/* 練習卡片基本樣式 */
+.practice-card-enhanced {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E0E0E0;
+    transition: all 0.3s ease;
+}
+
+.practice-card-enhanced:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* 日期標籤樣式 */
+.practice-date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FFF5F0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #8B4513;
+    margin-bottom: 16px;
+    border: 1px solid #FFE0CC;
+}
+
+/* 練習標題樣式 */
+.practice-title-enhanced {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 12px;
+}
+
+/* 練習標籤樣式 */
+.practice-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+}
+
+.practice-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #F5F5F5;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+    color: #666;
+    border: 1px solid #E0E0E0;
+}
+
+/* 時間軸中心線 */
+.timeline-line-enhanced {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #E0E0E0;
+    transform: translateX(-50%);
+}
+
+/* 時間軸點 */
+.timeline-dot-enhanced {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background: #FFFFFF;
+    border: 4px solid #8B4513;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .timeline-line-enhanced {
+        left: 30px;
+    }
+    
+    .timeline-item-enhanced {
+        padding-left: 60px !important;
+        padding-right: 20px !important;
+    }
+    
+    .timeline-dot-enhanced {
+        left: 30px;
+    }
+    
+    .timeline-content-enhanced {
+        width: 100%;
+    }
+}
+
+/* 確保評分星星可見 */
+.practice-rating-enhanced {
+    display: flex;
+    gap: 4px;
+    margin: 12px 0;
+}
+
+.star-rating {
+    font-size: 18px;
+    color: #E0E0E0;
+}
+
+.star-rating.filled {
+    color: #FFD700;
+}
+
+/* 練習筆記區域 */
+.practice-notes-enhanced {
+    background: #FAF8F5;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+    border: 1px solid #F0E8E0;
+}
+
+.notes-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.notes-content {
+    color: #4A4A4A;
+    line-height: 1.6;
+}
+
+/* 動作按鈕 */
+.practice-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #F0F0F0;
+}
+
+.action-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #F5F5F5;
+    border: 1px solid #E0E0E0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #666;
+}
+
+.action-icon:hover {
+    background: #8B4513;
+    color: #FFFFFF;
+    border-color: #8B4513;
+}
+
+/* 分頁樣式 */
+.pagination-enhanced {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 40px 0;
+    gap: 20px;
+}
+
+.page-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.page-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.page-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F5F5F5;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.page-btn:hover {
+    background: #8B4513;
+    color: #FFFFFF;
+    border-color: #8B4513;
+}
+
+/* 空狀態樣式 */
+.empty-state-enhanced {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-title {
+    font-size: 24px;
+    color: #333;
+    margin: 20px 0 10px;
+}
+
+.empty-subtitle {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.empty-action {
+    display: inline-block;
+    padding: 14px 28px;
+    background: #8B4513;
+    color: #FFFFFF;
+    text-decoration: none;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.empty-action:hover {
+    background: #A0522D;
+    transform: translateY(-2px);
+}

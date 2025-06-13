@@ -6,181 +6,395 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}小提琴練習記錄{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    {% block extra_css %}{% endblock %}
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <!-- 網站統一增強樣式 -->
+    <link rel="stylesheet" href="{% static 'css/site-wide-enhancements.css' %}">
+    <!-- 增強設計系統 -->
+    <link rel="stylesheet" href="{% static 'css/enhanced-design.css' %}">
+    <!-- 簡潔導航列樣式 -->
+    <link rel="stylesheet" href="{% static 'css/nav-simple.css' %}">
+    <!-- 動畫庫 -->
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
+    <!-- 文字對比度修復和智能導航列 -->
+    <link rel="stylesheet" href="{% static 'css/contrast-fix.css' %}">
+    <!-- 響應式修復和排版優化 -->
+    <link rel="stylesheet" href="{% static 'css/responsive-fixes.css' %}">
+    <!-- 英雄區段修復 -->
+    <link rel="stylesheet" href="{% static 'css/hero-section-fix.css' %}">
     
-    <!-- 導航樣式 -->
+    <!-- 全局增強樣式 -->
     <style>
-        .main-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            padding: 0.5rem 0;
-            transition: all 0.3s ease;
+        /* 基礎設定 */
+        :root {
+            --primary-orange: #FF6B35;
+            --primary-orange-hover: #E55A25;
+            --primary-orange-light: #FFF5F0;
+            --wood-brown: #8B4513;
+            --wood-lightest: #FAF8F5;
+            --gray-900: #1A1A1A;
+            --text-primary: #1A1A1A;
+            --text-secondary: #666666;
         }
         
-        .nav-container {
+        /* 確保基礎文字排版 */
+        body {
+            font-family: 'Noto Sans TC', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+        
+        /* 確保導航列文字正常顯示 */
+        .navbar-enhanced {
+            font-size: 16px;
+        }
+        
+        /* 確保容器寬度 */
+        .container {
+            width: 100%;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 0 20px;
         }
         
-        .nav-brand {
-            font-size: 1.5rem;
-            font-weight: 500;
-            color: #2c3e50;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: 'Georgia', serif;
-        }
-        
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .nav-link {
-            color: #37474f;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .nav-link:hover, .nav-link.active {
-            background: linear-gradient(135deg, #2c3e50, #8b4513);
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .nav-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: #2c3e50;
-            cursor: pointer;
-        }
-        
-        @media (max-width: 768px) {
-            .nav-links {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: rgba(255, 255, 255, 0.98);
-                flex-direction: column;
-                padding: 1rem;
-                border-top: 1px solid rgba(0, 0, 0, 0.1);
-                display: none;
-            }
-            
-            .nav-links.active {
-                display: flex;
-            }
-            
-            .nav-toggle {
-                display: block;
-            }
-        }
-        
-        /* 為內容添加頂部間距 */
+        /* 修正頁面頂部間距 */
         body {
-            padding-top: 70px;
+            padding-top: 80px;
         }
     </style>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- AOS 動畫庫 -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    {% block extra_css %}{% endblock %}
+    
 </head>
 
-<body>
-    <!-- 主導航欄 -->
-    <nav class="main-nav">
-        <div class="nav-container">
-            <a href="/" class="nav-brand">
-                🎻 小提琴練習追蹤
-            </a>
-            
-            <ul class="nav-links" id="navLinks">
-                <li><a href="/" class="nav-link">♩ 記錄練習</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="{% url 'practice_logs:my_practices' %}" class="nav-link">♪ 我的記錄</a></li>
-                    <li><a href="{% url 'practice_logs:video_library' %}" class="nav-link">🎥 影片庫</a></li>
-                    <li><a href="{% url 'practice_logs:video_upload' %}" class="nav-link">📹 上傳影片</a></li>
-                    {% if user.profile and user.profile.is_student %}
-                        <li><a href="{% url 'practice_logs:student_dashboard' %}" class="nav-link">♬ 儀表板</a></li>
-                        <li><a href="{% url 'practice_logs:analytics' student_name=user.profile.display_name %}" class="nav-link">♭ 練習分析</a></li>
-                        <li><a href="{% url 'practice_logs:teacher_selection' %}" class="nav-link">👨‍🏫 我的教師</a></li>
-                        <li><a href="{% url 'practice_logs:feedback_history' %}" class="nav-link">💬 回饋記錄</a></li>
-                    {% elif user.profile and user.profile.is_teacher %}
-                        <li><a href="{% url 'practice_logs:teacher_dashboard' %}" class="nav-link">♬ 教師台</a></li>
-                        <li><a href="{% url 'practice_logs:teacher_video_dashboard' %}" class="nav-link">🎥 學生影片</a></li>
-                        <li><a href="{% url 'practice_logs:feedback_history' %}" class="nav-link">📋 回饋記錄</a></li>
+<body x-data="navigation" x-init="init()">
+    <!-- 統一載入動畫 -->
+    <div class="unified-loader" id="pageLoader">
+        <div class="music-loader"></div>
+    </div>
+    
+    <!-- 音樂主題背景 -->
+    <div class="music-notes-bg">
+        <span class="floating-note">♪</span>
+        <span class="floating-note">♫</span>
+        <span class="floating-note">♪</span>
+        <span class="floating-note">♬</span>
+        <span class="floating-note">♪</span>
+    </div>
+    
+    <!-- 音樂背景裝飾 -->
+    <div class="music-bg-decoration"></div>
+    
+    <!-- 進度條將由 JS 動態插入 -->
+    
+    <!-- 主導航欄 - 增強版 -->
+    <nav class="navbar-enhanced" :class="{ 'scrolled': scrolled }">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/" class="nav-logo group">
+                    <span class="nav-logo-icon">🎻</span>
+                    <span class="hidden sm:inline">音樂練習追蹤</span>
+                </a>
+                
+                <!-- 桌面版導航 -->
+                <nav class="hidden lg:flex items-center gap-2">
+                    <a href="/" class="nav-link-enhanced gsap-nav-item">
+                        <i class="fas fa-home mr-2"></i>記錄練習
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'practice_logs:my_practices' %}" class="nav-link-enhanced gsap-nav-item">
+                            <i class="fas fa-book mr-2"></i>我的記錄
+                        </a>
+                        
+                        <!-- 影片下拉選單 -->
+                        <div class="dropdown-enhanced gsap-nav-item" @mouseenter="activeDropdown = 'video'" @mouseleave="activeDropdown = null">
+                            <button class="nav-link-enhanced flex items-center">
+                                <i class="fas fa-video mr-2"></i>影片中心
+                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                            </button>
+                            <div class="dropdown-menu" :class="{ 'show': activeDropdown === 'video' }">
+                                <a href="{% url 'practice_logs:video_library' %}" class="dropdown-item">
+                                    <i class="fas fa-film mr-2"></i>影片庫
+                                </a>
+                                <a href="{% url 'practice_logs:video_upload' %}" class="dropdown-item">
+                                    <i class="fas fa-upload mr-2"></i>上傳影片
+                                </a>
+                            </div>
+                        </div>
+                        {% if user.profile and user.profile.is_student %}
+                            <a href="{% url 'practice_logs:student_dashboard' %}" class="nav-link-enhanced gsap-nav-item">
+                                <i class="fas fa-tachometer-alt mr-2"></i>儀表板
+                            </a>
+                            <a href="{% url 'practice_logs:analytics' student_name=user.profile.display_name %}" class="nav-link-enhanced gsap-nav-item">
+                                <i class="fas fa-chart-line mr-2"></i>練習分析
+                            </a>
+                            
+                            <!-- 學生下拉選單 -->
+                            <div class="dropdown-enhanced gsap-nav-item" @mouseenter="activeDropdown = 'student'" @mouseleave="activeDropdown = null">
+                                <button class="nav-link-enhanced flex items-center">
+                                    <i class="fas fa-user-graduate mr-2"></i>學生中心
+                                    <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                                </button>
+                                <div class="dropdown-menu" :class="{ 'show': activeDropdown === 'student' }">
+                                    <a href="{% url 'practice_logs:teacher_selection' %}" class="dropdown-item">
+                                        <i class="fas fa-chalkboard-teacher mr-2"></i>我的教師
+                                    </a>
+                                    <a href="{% url 'practice_logs:feedback_history' %}" class="dropdown-item">
+                                        <i class="fas fa-comments mr-2"></i>回饋記錄
+                                    </a>
+                                </div>
+                            </div>
+                        {% elif user.profile and user.profile.is_teacher %}
+                            <a href="{% url 'practice_logs:teacher_dashboard' %}" class="nav-link-enhanced gsap-nav-item">
+                                <i class="fas fa-chalkboard mr-2"></i>教師台
+                            </a>
+                            <a href="{% url 'practice_logs:teacher_video_dashboard' %}" class="nav-link-enhanced gsap-nav-item">
+                                <i class="fas fa-video mr-2"></i>學生影片
+                            </a>
+                            <a href="{% url 'practice_logs:feedback_history' %}" class="nav-link-enhanced gsap-nav-item">
+                                <i class="fas fa-clipboard-list mr-2"></i>回饋記錄
+                            </a>
+                        {% endif %}
+                        
+                        <div class="nav-divider"></div>
+                        
+                        <!-- 用戶選單 -->
+                        <div class="user-menu dropdown-enhanced gsap-nav-item" @mouseenter="activeDropdown = 'user'" @mouseleave="activeDropdown = null">
+                            <button class="flex items-center gap-2 nav-link-enhanced">
+                                <div class="user-avatar bg-warm-brown text-white flex items-center justify-center font-bold">
+                                    {{ user.profile.display_name|default:user.username|first|upper }}
+                                </div>
+                                <span class="hidden md:inline">{{ user.profile.display_name|default:user.username }}</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <div class="dropdown-menu right-0" :class="{ 'show': activeDropdown === 'user' }">
+                                <a href="{% url 'practice_logs:profile' %}" class="dropdown-item">
+                                    <i class="fas fa-user-circle mr-2"></i>個人資料
+                                </a>
+                                <hr class="my-2">
+                                <a href="{% url 'practice_logs:logout' %}" class="dropdown-item text-red-600">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>登出
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'practice_logs:video_library' %}" class="nav-link-enhanced gsap-nav-item">
+                            <i class="fas fa-film mr-2"></i>影片庫
+                        </a>
+                        <button onclick="showLoginModal()" class="nav-link-enhanced gsap-nav-item">
+                            <i class="fas fa-sign-in-alt mr-2"></i>登入
+                        </button>
+                        <button onclick="showRegisterModal()" class="nav-cta gsap-nav-item">
+                            免費註冊
+                        </button>
                     {% endif %}
-                    <li><a href="{% url 'practice_logs:profile' %}" class="nav-link">♫ {{ user.profile.display_name|default:user.username }}</a></li>
-                    <li><a href="{% url 'practice_logs:logout' %}" class="nav-link">♩ 登出</a></li>
-                {% else %}
-                    <li><a href="{% url 'practice_logs:video_library' %}" class="nav-link">🎥 影片庫</a></li>
-                    <li><a href="#" class="nav-link" onclick="showLoginModal()">♫ 登入</a></li>
-                    <li><a href="#" class="nav-link" onclick="showRegisterModal()">♪ 註冊</a></li>
+                </nav>
+                
+                <!-- 移動版選單按鈕 -->
+                <button class="mobile-menu-btn lg:hidden" @click="toggleMobileMenu()" :class="{ 'active': isOpen }">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 移動端選單 -->
+        <div class="mobile-menu" :class="{ 'active': isOpen }">
+            <a href="/" class="mobile-nav-link">
+                <i class="fas fa-home mr-3"></i>記錄練習
+            </a>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'practice_logs:my_practices' %}" class="nav-link block py-2">♪ 我的記錄</a></li>
+                <li><a href="{% url 'practice_logs:video_library' %}" class="nav-link block py-2">🎥 影片庫</a></li>
+                <li><a href="{% url 'practice_logs:video_upload' %}" class="nav-link block py-2">📹 上傳影片</a></li>
+                {% if user.profile and user.profile.is_student %}
+                    <li><a href="{% url 'practice_logs:student_dashboard' %}" class="nav-link block py-2">♬ 儀表板</a></li>
+                    <li><a href="{% url 'practice_logs:analytics' student_name=user.profile.display_name %}" class="nav-link block py-2">♭ 練習分析</a></li>
+                    <li><a href="{% url 'practice_logs:teacher_selection' %}" class="nav-link block py-2">👨‍🏫 我的教師</a></li>
+                    <li><a href="{% url 'practice_logs:feedback_history' %}" class="nav-link block py-2">💬 回饋記錄</a></li>
+                {% elif user.profile and user.profile.is_teacher %}
+                    <li><a href="{% url 'practice_logs:teacher_dashboard' %}" class="nav-link block py-2">♬ 教師台</a></li>
+                    <li><a href="{% url 'practice_logs:teacher_video_dashboard' %}" class="nav-link block py-2">🎥 學生影片</a></li>
+                    <li><a href="{% url 'practice_logs:feedback_history' %}" class="nav-link block py-2">📋 回饋記錄</a></li>
                 {% endif %}
-            </ul>
-            
-            <button class="nav-toggle" id="navToggle">
-                <i class="fas fa-bars"></i>
-            </button>
+                <li><a href="{% url 'practice_logs:profile' %}" class="nav-link block py-2">♫ {{ user.profile.display_name|default:user.username }}</a></li>
+                <li><a href="{% url 'practice_logs:logout' %}" class="nav-link block py-2">♩ 登出</a></li>
+            {% else %}
+                <li><a href="{% url 'practice_logs:video_library' %}" class="nav-link block py-2">🎥 影片庫</a></li>
+                <li><a href="#" class="nav-link block py-2" onclick="showLoginModal()">♫ 登入</a></li>
+                <li><a href="#" class="nav-link block py-2" onclick="showRegisterModal()">♪ 註冊</a></li>
+            {% endif %}
         </div>
     </nav>
 
     {% block content %}
     {% endblock %}
+    
+    <!-- 增強版頁尾 -->
+    <footer class="footer-enhanced">
+        <div class="container">
+            <div class="footer-top">
+                <!-- 品牌區 -->
+                <div class="footer-brand">
+                    <a href="/" class="footer-logo">
+                        <span style="font-size: 36px;">🎻</span>
+                        <span>音樂練習追蹤</span>
+                    </a>
+                    <p class="footer-description">
+                        讓每一次練習都更有意義。我們提供科學化的練習追蹤系統，
+                        幫助音樂學習者持續進步，達成音樂夢想。
+                    </p>
+                    <div class="footer-social-enhanced">
+                        <a href="#" class="social-icon-enhanced" aria-label="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-icon-enhanced" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-icon-enhanced" aria-label="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="#" class="social-icon-enhanced" aria-label="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 快速連結 -->
+                <div class="footer-column">
+                    <h4>快速連結</h4>
+                    <ul class="footer-links-enhanced">
+                        <li><a href="/"><i class="fas fa-chevron-right"></i> 首頁</a></li>
+                        <li><a href="{% url 'practice_logs:video_library' %}"><i class="fas fa-chevron-right"></i> 影片庫</a></li>
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url 'practice_logs:my_practices' %}"><i class="fas fa-chevron-right"></i> 我的記錄</a></li>
+                        <li><a href="{% url 'practice_logs:profile' %}"><i class="fas fa-chevron-right"></i> 個人資料</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <!-- 支援中心 -->
+                <div class="footer-column">
+                    <h4>支援中心</h4>
+                    <ul class="footer-links-enhanced">
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> 使用教學</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> 常見問題</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> 聯絡我們</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> 隱私政策</a></li>
+                    </ul>
+                </div>
+                
+                <!-- 訂閱電子報 -->
+                <div class="footer-column">
+                    <h4>訂閱電子報</h4>
+                    <div class="footer-newsletter-enhanced">
+                        <p>獲取最新的練習技巧和音樂學習資源</p>
+                        <form class="newsletter-form-enhanced">
+                            <input type="email" class="newsletter-input-enhanced" placeholder="您的電子郵件" required>
+                            <button type="submit" class="newsletter-button-enhanced">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 音樂練習追蹤系統. All rights reserved. Made with ♪ in Taiwan</p>
+            </div>
+        </div>
+    </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Flowbite -->
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+    <!-- 導航列增強功能 (暫時停用) -->
+    <!-- <script src="{% static 'js/navigation-enhanced.js' %}"></script> -->
     
-    <!-- 導航欄JavaScript -->
+    <!-- 安全的頁面轉場（必須在 site-wide-enhancements.js 之前載入） -->
+    <script src="{% static 'js/safe-page-transition.js' %}"></script>
+    
+    <!-- 網站統一增強功能 -->
+    <script src="{% static 'js/site-wide-enhancements.js' %}"></script>
+    
+    <!-- 全局動畫設定 -->
     <script>
+        // 頁面載入完成後隱藏載入動畫（已由 loading-fix.js 處理）
+        // 保留此段落為空以避免衝突
+        
+        // 初始化 AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out',
+            once: true,
+            offset: 100
+        });
+        
+        // 簡單導航功能
         document.addEventListener('DOMContentLoaded', function() {
-            const navToggle = document.getElementById('navToggle');
-            const navLinks = document.getElementById('navLinks');
-            
-            // 移動端選單切換
-            navToggle.addEventListener('click', function() {
-                navLinks.classList.toggle('active');
-            });
-            
-            // 設置當前頁面的活動狀態
-            const currentPath = window.location.pathname;
-            const navLinksElements = document.querySelectorAll('.nav-link');
-            
-            navLinksElements.forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
+            // Alpine.js 導航數據
+            window.navigation = {
+                isOpen: false,
+                scrolled: false,
+                activeDropdown: null,
+                
+                toggleMobileMenu() {
+                    this.isOpen = !this.isOpen;
+                },
+                
+                init() {
+                    // 滾動監聽
+                    window.addEventListener('scroll', () => {
+                        this.scrolled = window.scrollY > 50;
+                    });
+                    
+                    // 設置當前頁面
+                    const currentPath = window.location.pathname;
+                    const navLinks = document.querySelectorAll('.nav-link-enhanced');
+                    
+                    navLinks.forEach(link => {
+                        if (link.getAttribute('href') === currentPath) {
+                            link.classList.add('active');
+                        }
+                    });
                 }
-            });
+            };
+            
+            // 頁面載入動畫
+            document.body.classList.add('page-transition');
         });
     </script>
+    
+    <!-- Headroom.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.12.0/headroom.min.js"></script>
+    
+    <!-- 導航修復腳本（最優先載入） -->
+    <script src="{% static 'js/navigation-fix.js' %}"></script>
+    
+    <!-- 載入修復腳本（優先載入） -->
+    <script src="{% static 'js/loading-fix.js' %}"></script>
+    
+    <!-- 資源優化器（優先載入） -->
+    <script src="{% static 'js/resource-optimizer.js' %}"></script>
+    
+    <!-- 進階互動式導航列 -->
+    <script src="{% static 'js/advanced-navigation.js' %}" defer></script>
     
     {% block extra_js %}{% endblock %}
 </body>

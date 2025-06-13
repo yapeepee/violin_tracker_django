@@ -30,3 +30,45 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+# Documentation and notes
+*.md
+!README.md
+*.txt
+*.docx
+*.pdf
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*~
+
+# SQLite temporary files
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Node modules (if using npm for frontend)
+node_modules/
+package-lock.json
+
+# Log files
+logs/
+*.log
+
+# Zone Identifier files (Windows)
+*:Zone.Identifier
+
+# Virtual environment
+violin/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Backup files
+*.backup

@@ -7,7 +7,12 @@ from django.core.management.base import BaseCommand
 from django.db import connection, transaction
 from django.core.cache import cache
 from django.db.models import Count, Sum, Avg, Q
-from practice_logs.models import PracticeLog, TeacherFeedback
+from django.utils import timezone
+from datetime import timedelta
+from practice_logs.models.practice import PracticeLog
+from practice_logs.models.user_profile import UserProfile, UserLoginLog
+from practice_logs.services.batch_service import BatchProcessingService
+from practice_logs.utils.cache_manager import CacheManager
 import time
 import logging
 
